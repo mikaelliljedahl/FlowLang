@@ -2,6 +2,19 @@
 
 Welcome to the comprehensive documentation for FlowLang - a backend programming language designed specifically for LLM-assisted development. This documentation covers everything from getting started to advanced topics and contribution guidelines.
 
+## Why FlowLang? The Problem with LLMs and Modern Code
+
+If you've used an LLM to code, you've seen the symptoms: it generates code that uses the wrong error handling pattern, introduces subtle side effects, or misses dependencies. This isn't the LLM's fault; it's a language problem.
+
+Current languages suffer from:
+
+1.  **Ambiguity:** There are often half a dozen ways to perform the same task, from error handling (exceptions, nulls, result objects) to dependency management. An LLM has no "right" way to choose.
+2.  **Hidden Side Effects:** A function that looks pure might be secretly writing to a database, calling a network endpoint, or logging to a file. This makes it impossible for an AI to reason about the code's safety and correctness.
+3.  **Implicit Error Handling:** Function signatures rarely tell you what can go wrong. LLMs are left to guess which exceptions to catch, leading to fragile code that crashes at runtime.
+4.  **Unclear Dependencies:** Code often depends on hidden services or configurations, making it difficult for an LLM to generate correct unit tests or understand the full context of a function.
+
+FlowLang solves these problems by prioritizing explicitness, safety, and predictability. It's designed to be the ideal partner for an LLM, enabling AI to generate correct, robust, and maintainable code on the first try.
+
 ## Documentation Overview
 
 FlowLang prioritizes explicitness, predictability, and safety while maintaining compatibility with the .NET ecosystem through C# transpilation. The documentation is organized to support both new users and experienced developers.
@@ -259,6 +272,3 @@ The FlowLang project is committed to maintaining high-quality documentation that
 
 **Happy coding with FlowLang!** 🚀
 
----
-
-*For the latest updates and community discussions, visit the [FlowLang GitHub repository](https://github.com/your-org/flowlang).*
