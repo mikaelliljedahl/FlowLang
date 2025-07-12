@@ -1,0 +1,7 @@
+function validate_age(age: int) -> Result<string, string> {
+    guard age >= 0 else {
+        return Error("Age cannot be negative")
+    }
+    
+    return Ok("Valid")
+}

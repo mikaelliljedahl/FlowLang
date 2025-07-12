@@ -1,0 +1,30 @@
+// Simple examples extracted from the complex module
+// Functions that our current transpiler can handle
+
+function calculate_total(unit_price: int, quantity: int) -> int {
+    return unit_price * quantity
+}
+
+function calculate_subtotal(item1: int, item2: int, item3: int) -> int {
+    return item1 + item2 + item3
+}
+
+function calculate_tax(subtotal: int) -> int {
+    return subtotal * 8
+}
+
+function get_total_amount(subtotal: int, tax_amount: int) -> int {
+    return subtotal + tax_amount
+}
+
+function validate_quantity(quantity: int) -> int {
+    return quantity + 1
+}
+
+function validate_price(price: int) -> int {
+    return price + 1
+}
+
+function max_quantity(a: int, b: int) -> int {
+    return a + b
+}

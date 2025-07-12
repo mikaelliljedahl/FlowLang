@@ -1,0 +1,11 @@
+function add(a: int, b: int) -> int {
+    return a + b
+}
+
+function multiply(x: int, y: int) -> int {
+    return x * y
+}
+
+function is_positive(n: int) -> bool {
+    return n > 0
+}

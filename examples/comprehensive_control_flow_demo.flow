@@ -1,0 +1,43 @@
+// Comprehensive Control Flow Demo - All Features
+
+// Example demonstrating nested conditions with multiple guard clauses
+function process_user_data(name: string, age: int, email: string) -> Result<string, string> {
+    // Multiple guard clauses for validation
+    guard name != "" else {
+        return Error("Name cannot be empty")
+    }
+    
+    guard age >= 0 && age <= 150 else {
+        return Error("Age must be between 0 and 150")
+    }
+    
+    guard email != "" else {
+        return Error("Email cannot be empty")
+    }
+    
+    // Complex nested if/else with boolean expressions
+    if age < 13 {
+        return Ok("Child user registered")
+    } else if age >= 13 && age < 18 {
+        return Ok("Teen user registered")
+    } else if age >= 18 && age < 65 {
+        return Ok("Adult user registered")
+    } else {
+        return Ok("Senior user registered")
+    }
+}
+
+// Complex boolean logic with parentheses and mixed operators
+function access_control(user_level: int, is_admin: bool, resource_level: int, is_owner: bool) -> bool {
+    return (is_admin || is_owner) && (user_level >= resource_level || is_admin)
+}
+
+// Logical NOT with nested conditions
+function validate_password_strength(password: string, min_length: int) -> bool {
+    guard password != "" else {
+        return false
+    }
+    
+    // Using logical NOT to check if password is NOT too short
+    return !(password == "") && !((min_length > 0) && (password == ""))
+}

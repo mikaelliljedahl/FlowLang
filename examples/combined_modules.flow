@@ -1,0 +1,15 @@
+// Example combining multiple modules and import styles
+import Math.{add, multiply}
+import Utils.*
+
+function calculate() -> int {
+    let x = add(10, 5)        // From Math selective import
+    let y = double(x)         // From Utils wildcard import
+    let z = Math.multiply(y, 2) // Qualified call to Math
+    return square(z)          // From Utils wildcard import
+}
+
+function main() -> string {
+    let result = calculate()
+    return greet($"Result is {result}")
+}

@@ -1,0 +1,66 @@
+// Control Flow Examples for FlowLang
+
+// Example 1: Basic if/else statements with boolean expressions
+function validate_age(age: int) -> Result<string, string> {
+    guard age >= 0 else {
+        return Error("Age cannot be negative")
+    }
+    
+    if age < 18 {
+        return Ok("Minor")
+    } else if age < 65 {
+        return Ok("Adult")
+    } else {
+        return Ok("Senior")
+    }
+}
+
+// Example 2: Complex boolean expressions with logical operators
+function is_valid_user(name: string, age: int, email: string) -> bool {
+    return name != "" && age > 0 && age < 150 && email != ""
+}
+
+// Example 3: Logical OR and grouping with parentheses
+function complex_logic(a: int, b: int, c: bool) -> bool {
+    return (a > 0 && b > 0) || (c && a != b)
+}
+
+// Example 4: Nested if statements with multiple conditions
+function check_permissions(user_level: int, is_admin: bool, resource_level: int) -> Result<string, string> {
+    guard user_level >= 0 && resource_level >= 0 else {
+        return Error("Invalid levels")
+    }
+    
+    if is_admin {
+        return Ok("Full access")
+    } else {
+        if user_level >= resource_level {
+            return Ok("Access granted")
+        } else {
+            return Error("Access denied")
+        }
+    }
+}
+
+// Example 5: Logical NOT operator
+function is_not_empty(value: string) -> bool {
+    return !(value == "")
+}
+
+// Example 6: Multiple guard clauses
+function divide(a: int, b: int) -> Result<int, string> {
+    guard a >= 0 else {
+        return Error("First number must be non-negative")
+    }
+    
+    guard b != 0 else {
+        return Error("Cannot divide by zero")
+    }
+    
+    return Ok(a / b)
+}
+
+// Example 7: Complex nested boolean expressions
+function validate_range(min: int, max: int, value: int) -> bool {
+    return min <= max && (value >= min && value <= max)
+}

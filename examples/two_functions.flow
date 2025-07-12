@@ -1,0 +1,7 @@
+function calculate_total(unit_price: int, quantity: int) -> int {
+    return unit_price * quantity
+}
+
+function calculate_subtotal(item1: int, item2: int) -> int {
+    return item1 + item2
+}

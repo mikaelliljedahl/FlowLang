@@ -1,0 +1,8 @@
+// Example demonstrating qualified function calls
+import Math
+
+function main() -> int {
+    let result = Math.add(10, 5)
+    let product = Math.multiply(result, 3)
+    return product
+}

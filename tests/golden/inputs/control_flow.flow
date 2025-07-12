@@ -1,0 +1,16 @@
+function classify_number(n: int) -> string {
+    if n > 0 {
+        return "positive"
+    } else if n < 0 {
+        return "negative"
+    } else {
+        return "zero"
+    }
+}
+
+function validate_input(x: int) -> int {
+    guard x > 0 else {
+        return -1
+    }
+    return x * 2
+}

@@ -1,0 +1,19 @@
+function test_boolean(a: int, b: int) -> bool {
+    return a > 0 && b > 0
+}
+
+function test_guard(value: int) -> Result<string, string> {
+    guard value >= 0 else {
+        return Error("Negative value")
+    }
+    
+    return Ok("Valid")
+}
+
+function test_if(age: int) -> string {
+    if age < 18 {
+        return "Minor"
+    } else {
+        return "Adult"
+    }
+}

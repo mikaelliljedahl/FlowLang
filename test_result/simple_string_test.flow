@@ -1,0 +1,7 @@
+function greet(name: string) -> string {
+    return "Hello, " + name + "!"
+}
+
+function format_message(user: string, count: int) -> string {
+    return $"User {user} has {count} items"
+}

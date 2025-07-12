@@ -1,0 +1,3 @@
+function test(a: int) -> int {
+    return a
+}

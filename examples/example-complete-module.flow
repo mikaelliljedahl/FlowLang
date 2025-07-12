@@ -1,0 +1,686 @@
+// File: ecommerce_order_service.flow
+// Complete example of a FlowLang module implementing an e-commerce order service
+
+module ECommerceOrderService {
+    // Module configuration
+    config {
+        database_url: String from env "DATABASE_URL",
+        payment_api_key: String from env "PAYMENT_API_KEY",
+        inventory_service_url: String from env "INVENTORY_SERVICE_URL",
+        max_retry_attempts: Int32 default 3,
+        order_timeout_seconds: Int32 default 30
+    }
+    
+    // External dependencies
+    dependencies {
+        "Microsoft.EntityFrameworkCore": "6.0.0",
+        "Newtonsoft.Json": "13.0.3",
+        "Microsoft.Extensions.Http": "6.0.0",
+        "Serilog": "2.12.0"
+    }
+    
+    // Foreign imports
+    foreign import "Microsoft.EntityFrameworkCore" {
+        interface DbContext {
+            function SaveChangesAsync() -> Task<Int32>
+                effects [Database]
+        }
+    }
+    
+    foreign import "Microsoft.Extensions.Http" {
+        interface HttpClient {
+            function PostAsync(url: String, content: HttpContent) -> Task<HttpResponseMessage>
+                effects [Network]
+        }
+    }
+    
+    // Custom types
+    type OrderId = UUID
+    type ProductId = UUID
+    type CustomerId = UUID
+    type PaymentId = UUID
+    
+    // Domain enums
+    enum OrderStatus {
+        Pending,
+        PaymentProcessing,
+        PaymentConfirmed,
+        InventoryReserved,
+        Shipped,
+        Delivered,
+        Cancelled,
+        Refunded
+    }
+    
+    enum PaymentStatus {
+        Pending,
+        Authorized,
+        Captured,
+        Failed,
+        Refunded
+    }
+    
+    // Domain records
+    record OrderItem {
+        product_id: ProductId,
+        quantity: Int32 where value > 0,
+        unit_price: Money where value > Money.zero(),
+        total_price: Money
+        
+        function calculate_total(self) -> Money {
+            return self.unit_price * Decimal.from_int32(self.quantity)
+        }
+    }
+    
+    record Order {
+        id: OrderId,
+        customer_id: CustomerId,
+        items: List<OrderItem> where not_empty,
+        subtotal: Money,
+        tax_amount: Money,
+        total_amount: Money,
+        status: OrderStatus,
+        created_at: DateTime,
+        updated_at: DateTime
+        
+        function calculate_subtotal(self) -> Money {
+            return self.items.fold(Money.zero(), |acc, item| acc + item.total_price)
+        }
+        
+        function is_cancellable(self) -> Bool {
+            return match self.status {
+                OrderStatus.Pending | OrderStatus.PaymentProcessing => true,
+                _ => false
+            }
+        }
+    }
+    
+    record CreateOrderRequest {
+        customer_id: CustomerId,
+        items: List<OrderItemRequest> where not_empty,
+        billing_address: Address,
+        shipping_address: Address,
+        payment_method: PaymentMethod
+    }
+    
+    record OrderItemRequest {
+        product_id: ProductId,
+        quantity: Int32 where value > 0 and value <= 100
+    }
+    
+    record Address {
+        street: String where length > 0,
+        city: String where length > 0,
+        state: String where length == 2,
+        postal_code: String where matches "^[0-9]{5}(-[0-9]{4})?$",
+        country: String default "US"
+    }
+    
+    union PaymentMethod {
+        CreditCard { 
+            number: String where matches "^[0-9]{13,19}$",
+            expiry_month: Int32 where value >= 1 and value <= 12,
+            expiry_year: Int32 where value >= 2024,
+            cvv: String where matches "^[0-9]{3,4}$"
+        },
+        PayPal { 
+            email: Email 
+        },
+        BankTransfer { 
+            account_number: String where matches "^[0-9]{8,17}$",
+            routing_number: String where matches "^[0-9]{9}$"
+        }
+    }
+    
+    // Error types
+    enum OrderError {
+        InvalidCustomer(CustomerId),
+        InvalidProduct(ProductId),
+        InsufficientInventory(ProductId, Int32, Int32), // product_id, requested, available
+        PaymentFailed(String),
+        DatabaseError(String),
+        NetworkError(String),
+        ValidationError(String),
+        OrderNotFound(OrderId),
+        OrderNotCancellable(OrderId, OrderStatus)
+    }
+    
+    record PaymentRequest {
+        amount: Money,
+        currency: String,
+        payment_method: PaymentMethod,
+        customer_id: CustomerId,
+        order_id: OrderId
+    }
+    
+    record PaymentResponse {
+        payment_id: PaymentId,
+        status: PaymentStatus,
+        transaction_id: String,
+        message: String
+    }
+    
+    record InventoryReservation {
+        product_id: ProductId,
+        quantity: Int32,
+        reservation_id: String
+    }
+    
+    // Database context
+    record OrderDbContext {
+        connection: DatabaseConnection,
+        
+        function save_order(self, order: Order) 
+            uses [Database] 
+            -> Result<OrderId, OrderError> {
+            
+            let sql = "INSERT INTO orders (id, customer_id, items, subtotal, tax_amount, total_amount, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            let params = [
+                order.id,
+                order.customer_id,
+                Json.serialize(order.items),
+                order.subtotal,
+                order.tax_amount,
+                order.total_amount,
+                order.status.to_string(),
+                order.created_at,
+                order.updated_at
+            ]
+            
+            let result = self.connection.execute(sql, params)
+                .map_error(|err| OrderError.DatabaseError(err.message))
+            
+            return result.map(|_| order.id)
+        }
+        
+        function get_order_by_id(self, id: OrderId) 
+            uses [Database] 
+            -> Result<Order, OrderError> {
+            
+            let sql = "SELECT * FROM orders WHERE id = ?"
+            let result = self.connection.query_single<Order>(sql, [id])
+                .map_error(|err| OrderError.OrderNotFound(id))
+            
+            return result
+        }
+        
+        function update_order_status(self, id: OrderId, status: OrderStatus) 
+            uses [Database] 
+            -> Result<Unit, OrderError> {
+            
+            let sql = "UPDATE orders SET status = ?, updated_at = ? WHERE id = ?"
+            let params = [status.to_string(), DateTime.now(), id]
+            
+            let result = self.connection.execute(sql, params)
+                .map_error(|err| OrderError.DatabaseError(err.message))
+            
+            return result.map(|_| Unit)
+        }
+    }
+    
+    // External services
+    module PaymentService {
+        dependencies {
+            http_client: HttpClient,
+            api_key: String from config
+        }
+        
+        function process_payment(request: PaymentRequest) 
+            uses [Network, Logging] 
+            -> Result<PaymentResponse, OrderError> {
+            
+            log_info("Processing payment for order ${request.order_id}")
+            
+            let payment_data = Json.object([
+                ("amount", Json.number(request.amount.value)),
+                ("currency", Json.string(request.currency)),
+                ("payment_method", serialize_payment_method(request.payment_method)),
+                ("customer_id", Json.string(request.customer_id.to_string())),
+                ("order_id", Json.string(request.order_id.to_string()))
+            ])
+            
+            let content = HttpContent.json(payment_data)
+            let response = await http_client.PostAsync("https://payment-api.com/process", content)
+                .map_error(|err| OrderError.NetworkError(err.message))?
+            
+            if response.status_code != 200 {
+                let error_body = await response.content.ReadAsStringAsync()
+                return Error(OrderError.PaymentFailed(error_body))
+            }
+            
+            let response_body = await response.content.ReadAsStringAsync()
+            let payment_response = Json.deserialize<PaymentResponse>(response_body)
+                .map_error(|err| OrderError.PaymentFailed(err.message))?
+            
+            log_info("Payment processed successfully: ${payment_response.payment_id}")
+            return Ok(payment_response)
+        }
+        
+        private function serialize_payment_method(method: PaymentMethod) -> Json {
+            match method {
+                PaymentMethod.CreditCard { number, expiry_month, expiry_year, cvv } => {
+                    Json.object([
+                        ("type", Json.string("credit_card")),
+                        ("number", Json.string(number)),
+                        ("expiry_month", Json.number(expiry_month)),
+                        ("expiry_year", Json.number(expiry_year)),
+                        ("cvv", Json.string(cvv))
+                    ])
+                },
+                PaymentMethod.PayPal { email } => {
+                    Json.object([
+                        ("type", Json.string("paypal")),
+                        ("email", Json.string(email.to_string()))
+                    ])
+                },
+                PaymentMethod.BankTransfer { account_number, routing_number } => {
+                    Json.object([
+                        ("type", Json.string("bank_transfer")),
+                        ("account_number", Json.string(account_number)),
+                        ("routing_number", Json.string(routing_number))
+                    ])
+                }
+            }
+        }
+    }
+    
+    module InventoryService {
+        dependencies {
+            http_client: HttpClient,
+            service_url: String from config
+        }
+        
+        function check_availability(product_id: ProductId, quantity: Int32) 
+            uses [Network] 
+            -> Result<Bool, OrderError> {
+            
+            let url = "${service_url}/products/${product_id}/availability?quantity=${quantity}"
+            let response = await http_client.GetAsync(url)
+                .map_error(|err| OrderError.NetworkError(err.message))?
+            
+            if response.status_code != 200 {
+                return Error(OrderError.InvalidProduct(product_id))
+            }
+            
+            let response_body = await response.content.ReadAsStringAsync()
+            let availability = Json.deserialize<Bool>(response_body)
+                .map_error(|err| OrderError.NetworkError(err.message))?
+            
+            return Ok(availability)
+        }
+        
+        function reserve_inventory(product_id: ProductId, quantity: Int32) 
+            uses [Network] 
+            -> Result<InventoryReservation, OrderError> {
+            
+            let request_data = Json.object([
+                ("product_id", Json.string(product_id.to_string())),
+                ("quantity", Json.number(quantity))
+            ])
+            
+            let content = HttpContent.json(request_data)
+            let response = await http_client.PostAsync("${service_url}/reservations", content)
+                .map_error(|err| OrderError.NetworkError(err.message))?
+            
+            if response.status_code != 200 {
+                let error_body = await response.content.ReadAsStringAsync()
+                return Error(OrderError.InsufficientInventory(product_id, quantity, 0))
+            }
+            
+            let response_body = await response.content.ReadAsStringAsync()
+            let reservation = Json.deserialize<InventoryReservation>(response_body)
+                .map_error(|err| OrderError.NetworkError(err.message))?
+            
+            return Ok(reservation)
+        }
+    }
+    
+    // Main business logic
+    function create_order(request: CreateOrderRequest) 
+        uses [Database, Network, Logging] 
+        -> Result<Order, OrderError> {
+        
+        log_info("Creating order for customer ${request.customer_id}")
+        
+        // Step 1: Validate customer
+        let customer_valid = validate_customer(request.customer_id)?
+        guard customer_valid else {
+            return Error(OrderError.InvalidCustomer(request.customer_id))
+        }
+        
+        // Step 2: Validate and price items
+        let order_items = List.empty<OrderItem>()
+        for item_request in request.items {
+            let item = validate_and_price_item(item_request)?
+            order_items.add(item)
+        }
+        
+        // Step 3: Calculate totals
+        let subtotal = order_items.fold(Money.zero(), |acc, item| acc + item.total_price)
+        let tax_amount = calculate_tax(subtotal)
+        let total_amount = subtotal + tax_amount
+        
+        // Step 4: Create order entity
+        let order = Order {
+            id: UUID.new(),
+            customer_id: request.customer_id,
+            items: order_items,
+            subtotal: subtotal,
+            tax_amount: tax_amount,
+            total_amount: total_amount,
+            status: OrderStatus.Pending,
+            created_at: DateTime.now(),
+            updated_at: DateTime.now()
+        }
+        
+        // Step 5: Save order to database
+        let db_context = OrderDbContext.new()
+        let order_id = db_context.save_order(order)?
+        
+        // Step 6: Process order asynchronously
+        spawn process_order_async(order_id)
+        
+        log_info("Order created successfully: ${order_id}")
+        return Ok(order)
+    }
+    
+    // Async order processing pipeline
+    async function process_order_async(order_id: OrderId) 
+        uses [Database, Network, Logging] 
+        -> Result<Unit, OrderError> {
+        
+        log_info("Starting async processing for order ${order_id}")
+        
+        // Pipeline with compensation
+        let result = pipeline {
+            step "check_inventory" {
+                action: check_and_reserve_inventory(order_id),
+                compensation: release_inventory_reservations(order_id)
+            },
+            
+            step "process_payment" {
+                action: process_order_payment(order_id),
+                compensation: refund_payment(order_id)
+            },
+            
+            step "update_status" {
+                action: update_order_status(order_id, OrderStatus.PaymentConfirmed),
+                compensation: update_order_status(order_id, OrderStatus.Cancelled)
+            }
+        }
+        
+        match result {
+            Ok(_) => {
+                log_info("Order processing completed successfully: ${order_id}")
+                return Ok(Unit)
+            },
+            Error(err) => {
+                log_error("Order processing failed: ${order_id}, error: ${err}")
+                return Error(err)
+            }
+        }
+    }
+    
+    function check_and_reserve_inventory(order_id: OrderId) 
+        uses [Database, Network] 
+        -> Result<Unit, OrderError> {
+        
+        let db_context = OrderDbContext.new()
+        let order = db_context.get_order_by_id(order_id)?
+        
+        // Check availability for all items
+        for item in order.items {
+            let available = InventoryService.check_availability(item.product_id, item.quantity)?
+            guard available else {
+                return Error(OrderError.InsufficientInventory(item.product_id, item.quantity, 0))
+            }
+        }
+        
+        // Reserve all items
+        for item in order.items {
+            let reservation = InventoryService.reserve_inventory(item.product_id, item.quantity)?
+            // Store reservation for compensation
+        }
+        
+        return Ok(Unit)
+    }
+    
+    function process_order_payment(order_id: OrderId) 
+        uses [Database, Network] 
+        -> Result<PaymentResponse, OrderError> {
+        
+        let db_context = OrderDbContext.new()
+        let order = db_context.get_order_by_id(order_id)?
+        
+        // Get payment method from order (would be stored during creation)
+        let payment_method = get_payment_method_for_order(order_id)?
+        
+        let payment_request = PaymentRequest {
+            amount: order.total_amount,
+            currency: "USD",
+            payment_method: payment_method,
+            customer_id: order.customer_id,
+            order_id: order_id
+        }
+        
+        let payment_response = PaymentService.process_payment(payment_request)?
+        
+        guard payment_response.status == PaymentStatus.Captured else {
+            return Error(OrderError.PaymentFailed(payment_response.message))
+        }
+        
+        return Ok(payment_response)
+    }
+    
+    function cancel_order(order_id: OrderId) 
+        uses [Database, Network, Logging] 
+        -> Result<Unit, OrderError> {
+        
+        log_info("Cancelling order ${order_id}")
+        
+        let db_context = OrderDbContext.new()
+        let order = db_context.get_order_by_id(order_id)?
+        
+        guard order.is_cancellable() else {
+            return Error(OrderError.OrderNotCancellable(order_id, order.status))
+        }
+        
+        // Update order status
+        db_context.update_order_status(order_id, OrderStatus.Cancelled)?
+        
+        // Trigger compensation actions
+        spawn compensate_cancelled_order(order_id)
+        
+        log_info("Order cancelled successfully: ${order_id}")
+        return Ok(Unit)
+    }
+    
+    function get_order(order_id: OrderId) 
+        uses [Database] 
+        -> Result<Order, OrderError> {
+        
+        let db_context = OrderDbContext.new()
+        return db_context.get_order_by_id(order_id)
+    }
+    
+    // Helper functions
+    private function validate_customer(customer_id: CustomerId) 
+        uses [Database] 
+        -> Result<Bool, OrderError> {
+        
+        // Implementation would check customer exists and is active
+        return Ok(true)
+    }
+    
+    private function validate_and_price_item(item_request: OrderItemRequest) 
+        uses [Database] 
+        -> Result<OrderItem, OrderError> {
+        
+        // Implementation would validate product exists and get current price
+        let unit_price = Money.from_decimal(29.99m)
+        let total_price = unit_price * Decimal.from_int32(item_request.quantity)
+        
+        return Ok(OrderItem {
+            product_id: item_request.product_id,
+            quantity: item_request.quantity,
+            unit_price: unit_price,
+            total_price: total_price
+        })
+    }
+    
+    private function calculate_tax(subtotal: Money) -> Money {
+        let tax_rate = 0.08m // 8% tax rate
+        return subtotal * tax_rate
+    }
+    
+    private function get_payment_method_for_order(order_id: OrderId) 
+        uses [Database] 
+        -> Result<PaymentMethod, OrderError> {
+        
+        // Implementation would retrieve stored payment method
+        return Ok(PaymentMethod.CreditCard {
+            number: "4111111111111111",
+            expiry_month: 12,
+            expiry_year: 2025,
+            cvv: "123"
+        })
+    }
+    
+    private async function compensate_cancelled_order(order_id: OrderId) 
+        uses [Database, Network, Logging] 
+        -> Result<Unit, OrderError> {
+        
+        log_info("Running compensation for cancelled order ${order_id}")
+        
+        // Release inventory reservations
+        let _ = release_inventory_reservations(order_id)
+        
+        // Refund payment if captured
+        let _ = refund_payment(order_id)
+        
+        return Ok(Unit)
+    }
+    
+    private function release_inventory_reservations(order_id: OrderId) 
+        uses [Network] 
+        -> Result<Unit, OrderError> {
+        
+        // Implementation would release all reservations for this order
+        return Ok(Unit)
+    }
+    
+    private function refund_payment(order_id: OrderId) 
+        uses [Network] 
+        -> Result<Unit, OrderError> {
+        
+        // Implementation would refund the payment
+        return Ok(Unit)
+    }
+    
+    // Public API
+    public {
+        // Types
+        type Order,
+        type OrderId,
+        type OrderError,
+        type CreateOrderRequest,
+        type OrderStatus,
+        
+        // Functions
+        function create_order(request: CreateOrderRequest) -> Result<Order, OrderError>,
+        function get_order(order_id: OrderId) -> Result<Order, OrderError>,
+        function cancel_order(order_id: OrderId) -> Result<Unit, OrderError>
+    }
+}
+
+// API endpoints for the order service
+module OrderApi {
+    import ECommerceOrderService.*
+    
+    api_config {
+        base_path: "/api/v1/orders",
+        version: "1.0",
+        cors_enabled: true
+    }
+    
+    // Create order endpoint
+    endpoint POST "/" {
+        body: CreateOrderRequest,
+        
+        returns {
+            201: CreatedResponse<Order>,
+            400: ValidationError,
+            409: ConflictError,
+            500: InternalServerError
+        }
+        
+        handler: create_order_handler
+    }
+    
+    // Get order endpoint
+    endpoint GET "/{id}" {
+        path_params {
+            id: OrderId
+        },
+        
+        returns {
+            200: Order,
+            404: NotFoundError,
+            500: InternalServerError
+        }
+        
+        handler: get_order_handler
+    }
+    
+    // Cancel order endpoint
+    endpoint DELETE "/{id}" {
+        path_params {
+            id: OrderId
+        },
+        
+        returns {
+            200: { message: String },
+            404: NotFoundError,
+            409: ConflictError,
+            500: InternalServerError
+        }
+        
+        handler: cancel_order_handler
+    }
+    
+    // Handler implementations
+    function create_order_handler(request: CreateOrderRequest) 
+        uses [Database, Network, Logging] 
+        -> Result<CreatedResponse<Order>, ApiError> {
+        
+        let order = ECommerceOrderService.create_order(request)
+            .map_error(|err| ApiError.from_order_error(err))?
+        
+        return Ok(CreatedResponse {
+            data: order,
+            location: "/api/v1/orders/${order.id}"
+        })
+    }
+    
+    function get_order_handler(request: GetOrderRequest) 
+        uses [Database] 
+        -> Result<Order, ApiError> {
+        
+        let order = ECommerceOrderService.get_order(request.id)
+            .map_error(|err| ApiError.from_order_error(err))?
+        
+        return Ok(order)
+    }
+    
+    function cancel_order_handler(request: CancelOrderRequest) 
+        uses [Database, Network, Logging] 
+        -> Result<CancelOrderResponse, ApiError> {
+        
+        ECommerceOrderService.cancel_order(request.id)
+            .map_error(|err| ApiError.from_order_error(err))?
+        
+        return Ok(CancelOrderResponse {
+            message: "Order cancelled successfully"
+        })
+    }
+}

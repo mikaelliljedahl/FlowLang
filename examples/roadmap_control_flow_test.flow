@@ -1,0 +1,44 @@
+// Test file that covers all roadmap requirements for control flow
+
+// Boolean expressions with logical operators
+function validate_user(name: string, age: int, email: string) -> bool {
+    return name != "" && age > 0 && age < 150 && email != ""
+}
+
+// Guard clauses for early returns
+function safe_divide(a: int, b: int) -> Result<int, string> {
+    guard a >= 0 else {
+        return Error("First number must be non-negative")
+    }
+    
+    guard b != 0 else {
+        return Error("Cannot divide by zero")
+    }
+    
+    return Ok(a / b)
+}
+
+// If/else statements with proper nesting
+function classify_age(age: int) -> Result<string, string> {
+    guard age >= 0 else {
+        return Error("Age cannot be negative")
+    }
+    
+    if age < 18 {
+        return Ok("Minor")
+    } else if age < 65 {
+        return Ok("Adult")
+    } else {
+        return Ok("Senior")
+    }
+}
+
+// Complex boolean expressions with parentheses
+function complex_condition(a: int, b: int, c: bool) -> bool {
+    return (a > 0 && b > 0) || (c && a != b)
+}
+
+// Logical NOT operator
+function is_not_empty(text: string) -> bool {
+    return !(text == "")
+}

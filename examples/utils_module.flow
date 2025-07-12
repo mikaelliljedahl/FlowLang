@@ -1,0 +1,16 @@
+// Utility functions module
+module Utils {
+    pure function double(x: int) -> int {
+        return x * 2
+    }
+    
+    pure function square(x: int) -> int {
+        return x * x
+    }
+    
+    function greet(name: string) -> string {
+        return $"Hello, {name}!"
+    }
+    
+    export { double, square, greet }
+}

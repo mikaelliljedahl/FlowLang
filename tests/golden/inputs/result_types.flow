@@ -1,0 +1,15 @@
+function divide(a: int, b: int) -> Result<int, string> {
+    if b == 0 {
+        return Error("Division by zero")
+    } else {
+        return Ok(a / b)
+    }
+}
+
+function safe_parse(input: string) -> Result<int, string> {
+    if input == "42" {
+        return Ok(42)
+    } else {
+        return Error("Invalid number")
+    }
+}

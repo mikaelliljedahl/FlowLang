@@ -1,0 +1,71 @@
+// Effect System Demonstration
+// This example shows all effect system features in FlowLang
+
+// Pure function - no side effects
+pure function calculate_tax(amount: int) -> int {
+    return amount * 8 / 100
+}
+
+// Function with single effect
+function log_message(message: string) uses [Logging] -> Result<string, string> {
+    // Would log the message in real implementation
+    return Ok(message)
+}
+
+// Function with multiple effects
+function save_user(user_id: int, name: string) 
+    uses [Database, Logging] 
+    -> Result<int, string> {
+    
+    let log_result = log_message("Saving user: " + name)?
+    // Would save user to database in real implementation
+    return Ok(user_id)
+}
+
+// Function with comprehensive effects
+function fetch_user_data(user_id: int) 
+    uses [Database, Network, Logging, FileSystem] 
+    -> Result<string, string> {
+    
+    let log_result = log_message("Fetching user data for ID: " + user_id)?
+    
+    // Database operation
+    let user_name = "User" + user_id
+    
+    // Network operation (simulated)
+    let profile_data = "Profile data from API"
+    
+    // File system operation (simulated)
+    let cached_data = "Cached user preferences"
+    
+    let final_result = user_name + " - " + profile_data + " - " + cached_data
+    return Ok(final_result)
+}
+
+// Function with Memory and IO effects
+function process_large_dataset(size: int) 
+    uses [Memory, IO] 
+    -> Result<string, string> {
+    
+    // Memory allocation simulation
+    let buffer_size = size * 1024
+    
+    // IO operation simulation
+    let processed_data = "Processed " + buffer_size + " bytes"
+    
+    return Ok(processed_data)
+}
+
+// Function demonstrating effect composition
+function complete_user_workflow(user_id: int, name: string) 
+    uses [Database, Network, Logging, FileSystem, Memory, IO] 
+    -> Result<string, string> {
+    
+    // Use multiple functions with different effects
+    let save_result = save_user(user_id, name)?
+    let fetch_result = fetch_user_data(user_id)?
+    let process_result = process_large_dataset(100)?
+    
+    let workflow_result = "Workflow completed for user: " + name
+    return Ok(workflow_result)
+}

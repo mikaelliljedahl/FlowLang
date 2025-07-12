@@ -1,0 +1,11 @@
+function divide(a: int, b: int) -> Result<int, string> {
+    if b == 0 {
+        return Error("Division by zero")
+    }
+    return Ok(a / b)
+}
+
+function calculate(x: int, y: int) -> Result<int, string> {
+    let result = divide(x, y)?
+    return Ok(result * 2)
+}

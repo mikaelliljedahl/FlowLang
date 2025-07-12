@@ -1,0 +1,11 @@
+pure function square(x: int) -> int {
+    return x * x
+}
+
+pure function max(a: int, b: int) -> int {
+    if a > b {
+        return a
+    } else {
+        return b
+    }
+}

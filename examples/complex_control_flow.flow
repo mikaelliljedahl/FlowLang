@@ -1,0 +1,19 @@
+function complex_boolean(a: int, b: int, flag: bool) -> bool {
+    return (a > 0 && b > 0) || (flag && a != b)
+}
+
+function test_not(value: bool) -> bool {
+    return !value
+}
+
+function nested_if(score: int) -> string {
+    if score >= 90 {
+        return "A"
+    } else if score >= 80 {
+        return "B"
+    } else if score >= 70 {
+        return "C"
+    } else {
+        return "F"
+    }
+}

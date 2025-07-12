@@ -1,0 +1,8 @@
+// Main module demonstrating selective imports
+import Math.{add, multiply}
+
+function main() -> int {
+    let result = add(5, 3)
+    let product = multiply(result, 2)
+    return product
+}

@@ -1,0 +1,23 @@
+// Simple test of all effect system features
+
+// Pure function
+pure function add(a: int, b: int) -> int {
+    return a + b
+}
+
+// Single effect
+function log_info(msg: string) uses [Logging] -> Result<string, string> {
+    return Ok("Logged: " + msg)
+}
+
+// Multiple effects
+function save_and_log(data: string) uses [Database, Logging] -> Result<string, string> {
+    let log_result = log_info("Saving: " + data)?
+    return Ok("Saved: " + data)
+}
+
+// All effect types
+function complex_operation(input: string) uses [Database, Network, Logging, FileSystem, Memory, IO] -> Result<string, string> {
+    let result = save_and_log(input)?
+    return Ok("Complex operation completed: " + input)
+}
