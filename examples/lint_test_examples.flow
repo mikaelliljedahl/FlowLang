@@ -1,0 +1,155 @@
+// FlowLang examples for testing static analysis and linting
+// This file contains intentional issues to demonstrate the linting system
+
+module LintTestExamples {
+    // Effect system issues
+    
+    // Issue: Pure function with effects (pure-function-validation)
+    pure function badPureFunction() uses [Database] -> int {
+        return 42
+    }
+    
+    // Issue: Missing effect declaration (effect-completeness)
+    function missingEffect() -> Result<string, string> {
+        let result = database_query("SELECT * FROM users")
+        return Ok("done")
+    }
+    
+    // Issue: Unused effects (effect-minimality)  
+    function unusedEffects() uses [Database, Network, Logging] -> int {
+        return 42  // No effects actually used
+    }
+    
+    // Result type issues
+    
+    // Issue: Unused result (unused-results)
+    function ignoredResult() -> int {
+        divide(10, 0)  // Result<int, string> ignored
+        return 42
+    }
+    
+    // Issue: Incomplete error handling (error-handling)
+    function incompleteErrorHandling() -> Result<int, string> {
+        return Ok(42)
+        // Missing error cases
+    }
+    
+    // Code quality issues
+    
+    // Issue: Unused function (dead-code)
+    function unusedHelper(x: int) -> int {
+        return x * 2
+    }
+    
+    // Issue: Unused variable (unused-variables)
+    function unusedVariable() -> int {
+        let unused = 42
+        return 100
+    }
+    
+    // Issue: Poor naming (naming-convention)
+    function Bad_Function_Name() -> int {
+        return 42
+    }
+    
+    // Issue: Function complexity (function-complexity)
+    function overly_complex_function(a: int, b: int, c: int, d: int, e: int, f: int) -> int {
+        if a > 0 {
+            if b > 0 {
+                if c > 0 {
+                    if d > 0 {
+                        if e > 0 {
+                            if f > 0 {
+                                return a + b + c + d + e + f
+                            } else {
+                                return a + b + c + d + e
+                            }
+                        } else {
+                            return a + b + c + d
+                        }
+                    } else {
+                        return a + b + c
+                    }
+                } else {
+                    return a + b
+                }
+            } else {
+                return a
+            }
+        } else {
+            return 0
+        }
+    }
+    
+    // Performance issues
+    
+    // Issue: String concatenation (string-concatenation)
+    function inefficientStringConcat() -> string {
+        let result = ""
+        result = result + "Hello "
+        result = result + "beautiful "
+        result = result + "world!"
+        result = result + " How "
+        result = result + "are "
+        result = result + "you?"
+        return result
+    }
+    
+    // Security issues
+    
+    // Issue: Hardcoded secret (secret-detection)
+    function hardcodedSecret() -> string {
+        let api_key = "sk-1234567890abcdef1234567890abcdef"
+        return api_key
+    }
+    
+    // Issue: No input validation (input-validation)
+    function noInputValidation(user_input: string) uses [Database] -> Result<string, string> {
+        let query = database_execute("SELECT * FROM users WHERE name = " + user_input)
+        return Ok("done")
+    }
+    
+    // Issue: Unsafe string interpolation (unsafe-string-interpolation)
+    function unsafeInterpolation(user_data: string) uses [Database] -> Result<string, string> {
+        let query = $"SELECT * FROM users WHERE id = '{user_data}'"
+        return database_execute(query)
+    }
+    
+    // Good examples (should not trigger issues)
+    
+    pure function goodPureFunction() -> int {
+        return 42
+    }
+    
+    function properEffectUsage() uses [Database] -> Result<string, string> {
+        let result = database_query("SELECT * FROM users")?
+        return Ok(result)
+    }
+    
+    function goodErrorHandling(x: int) -> Result<int, string> {
+        if x < 0 {
+            return Error("Negative value")
+        }
+        return Ok(x * 2)
+    }
+    
+    function properInputValidation(user_input: string) uses [Database] -> Result<string, string> {
+        guard user_input != "" else {
+            return Error("Empty input")
+        }
+        
+        guard is_safe_input(user_input) else {
+            return Error("Invalid input")
+        }
+        
+        let result = database_query_safe(user_input)?
+        return Ok(result)
+    }
+    
+    export { 
+        goodPureFunction, 
+        properEffectUsage, 
+        goodErrorHandling, 
+        properInputValidation 
+    }
+}

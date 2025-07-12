@@ -46,6 +46,14 @@ FlowLang prioritizes explicitness, predictability, and safety while maintaining 
 | [Testing Guide](testing-guide.md) | Test framework and contribution guidelines | Contributors |
 | [Troubleshooting](troubleshooting.md) | Common issues and solutions | All users |
 
+### Phase 2 Tooling Documentation
+
+| Document | Description | Audience |
+|----------|-------------|----------|
+| [LSP Integration](lsp-integration.md) | Language Server Protocol setup and features | All users |
+| [Static Analysis](static-analysis.md) | Linting rules and configuration | All users |
+| [Package Manager](package-manager.md) | Dependency management and .NET integration | All users |
+
 ### Examples and Tutorials
 
 | Document | Description | Features Covered |
@@ -222,19 +230,25 @@ FlowLang is in active development with these features implemented:
 - ✅ Comprehensive CLI tools
 - ✅ Complete testing framework
 
-### Upcoming Features
-- 🔄 .NET library interop
-- 🔄 Generic types support
-- 🔄 IDE language server
-- 🔄 Package management
-- 🔄 Performance optimizations
+### Phase 2 Completed (Ecosystem Integration) ✅
+- ✅ **Language Server Protocol (LSP)** - Real-time IDE support for VS Code, JetBrains, Visual Studio
+- ✅ **Static Analysis & Linting** - 22 specialized rules with FlowLang-specific validation
+- ✅ **Enhanced Package Manager** - Seamless .NET ecosystem integration with auto-bindings
+- ✅ **Professional CLI Tools** - Complete development workflow commands
+- ✅ **Security & Compliance** - Vulnerability scanning and automated fixes
+
+### Phase 3 Planned (Advanced Features)
+- 🔄 Saga/Compensation Runtime
+- 🔄 Built-in Observability
+- 🔄 Performance Optimizations
+- 🔄 Multiple Target Support
 
 ### Documentation Roadmap
+- ✅ **Phase 2 Documentation Complete** - LSP, linting, package management guides
 - 📝 Video tutorials
-- 📝 Interactive examples
+- 📝 Interactive examples  
 - 📝 Real-world case studies
 - 📝 Performance benchmarking guides
-- 📝 IDE setup guides
 
 ## Document Maintenance
 

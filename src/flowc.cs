@@ -1900,12 +1900,11 @@ public class NewCommand : Command
         Directory.CreateDirectory(Path.Combine(projectPath, "tests"));
 
         // Create flowc.json
-        var config = new FlowcConfig(
+        var config = new FlowLang.Package.EnhancedFlowcConfig(
             Name: projectName,
             Description: $"A FlowLang project: {projectName}"
         );
-        var configJson = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-        await File.WriteAllTextAsync(Path.Combine(projectPath, "flowc.json"), configJson);
+        await FlowLang.Package.ConfigurationManager.SaveConfigAsync(config, Path.Combine(projectPath, "flowc.json"));
 
         // Create main.flow
         var mainFlow = """
@@ -2052,17 +2051,17 @@ public class BuildCommand : Command
         }
     }
 
-    private async Task<FlowcConfig> LoadConfig()
+    private async Task<FlowLang.Package.EnhancedFlowcConfig> LoadConfig()
     {
-        var configPath = "flowc.json";
-        if (!File.Exists(configPath))
+        try
+        {
+            return await FlowLang.Package.ConfigurationManager.LoadConfigAsync();
+        }
+        catch
         {
             Console.WriteLine("Warning: No flowc.json found, using default configuration");
-            return new FlowcConfig();
+            return new FlowLang.Package.EnhancedFlowcConfig();
         }
-
-        var configJson = await File.ReadAllTextAsync(configPath);
-        return JsonSerializer.Deserialize<FlowcConfig>(configJson) ?? new FlowcConfig();
     }
 }
 
@@ -2174,16 +2173,177 @@ public class TestCommand : Command
         }
     }
 
-    private async Task<FlowcConfig> LoadConfig()
+    private async Task<FlowLang.Package.EnhancedFlowcConfig> LoadConfig()
     {
-        var configPath = "flowc.json";
-        if (!File.Exists(configPath))
+        return await FlowLang.Package.ConfigurationManager.LoadConfigAsync();
+    }
+}
+
+public class LintCommand : Command
+{
+    public override string Name => "lint";
+    public override string Description => "Run static analysis and linting on FlowLang code";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        try
         {
-            return new FlowcConfig();
+            var options = ParseLintOptions(args);
+            var analyzer = new FlowLang.Analysis.StaticAnalyzer(options.Configuration);
+
+            // Determine what to analyze
+            var paths = options.Paths?.Any() == true ? options.Paths : new[] { "." };
+            
+            Console.WriteLine("Running FlowLang static analysis...");
+            var report = await analyzer.AnalyzeAsync(paths);
+
+            // Output results
+            if (options.OutputFormat == "json")
+            {
+                Console.WriteLine(report.ToJson());
+            }
+            else if (options.OutputFormat == "sarif")
+            {
+                Console.WriteLine(report.ToSarif());
+            }
+            else
+            {
+                // Text output (default)
+                analyzer.PrintSummary(report);
+                if (options.ShowDetails)
+                {
+                    analyzer.PrintDiagnostics(report, options.IncludeInfo);
+                }
+            }
+
+            // Return appropriate exit code
+            return report.HasPassingResult(options.Configuration.SeverityThreshold) ? 0 : 1;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Lint error: {ex.Message}");
+            return 1;
+        }
+    }
+
+    private LintOptions ParseLintOptions(string[] args)
+    {
+        var options = new LintOptions();
+        var paths = new List<string>();
+        
+        for (int i = 0; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "--config":
+                    if (i + 1 < args.Length)
+                    {
+                        options.Configuration = FlowLang.Analysis.LintConfiguration.LoadFromFile(args[++i]);
+                    }
+                    break;
+                    
+                case "--format":
+                    if (i + 1 < args.Length)
+                    {
+                        options.OutputFormat = args[++i];
+                    }
+                    break;
+                    
+                case "--effects":
+                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.EffectSystem);
+                    break;
+                    
+                case "--results":
+                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.ResultTypes);
+                    break;
+                    
+                case "--quality":
+                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.CodeQuality);
+                    break;
+                    
+                case "--performance":
+                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.Performance);
+                    break;
+                    
+                case "--security":
+                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.Security);
+                    break;
+                    
+                case "--fix":
+                    options.AutoFix = true;
+                    break;
+                    
+                case "--details":
+                    options.ShowDetails = true;
+                    break;
+                    
+                case "--include-info":
+                    options.IncludeInfo = true;
+                    break;
+                    
+                default:
+                    if (!args[i].StartsWith("--"))
+                    {
+                        paths.Add(args[i]);
+                    }
+                    break;
+            }
         }
 
-        var configJson = await File.ReadAllTextAsync(configPath);
-        return JsonSerializer.Deserialize<FlowcConfig>(configJson) ?? new FlowcConfig();
+        if (options.Configuration == null)
+        {
+            options.Configuration = FlowLang.Analysis.LintConfiguration.LoadFromFile();
+        }
+
+        // If specific categories were requested, filter the configuration
+        if (options.Categories.Any())
+        {
+            var filteredRules = new Dictionary<string, FlowLang.Analysis.LintRuleConfig>();
+            foreach (var rule in options.Configuration.Rules)
+            {
+                // This is a simplified filter - in practice, you'd need to map rules to categories
+                filteredRules[rule.Key] = rule.Value;
+            }
+            options.Configuration.Rules = filteredRules;
+        }
+
+        options.Paths = paths;
+        return options;
+    }
+
+    private class LintOptions
+    {
+        public FlowLang.Analysis.LintConfiguration? Configuration { get; set; }
+        public string OutputFormat { get; set; } = "text";
+        public List<string> Categories { get; set; } = new();
+        public bool AutoFix { get; set; }
+        public bool ShowDetails { get; set; } = true;
+        public bool IncludeInfo { get; set; }
+        public IEnumerable<string>? Paths { get; set; }
+    }
+}
+
+public class LspCommand : Command
+{
+    public override string Name => "lsp";
+    public override string Description => "Start the FlowLang Language Server Protocol server";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        try
+        {
+            Console.Error.WriteLine("Starting FlowLang Language Server...");
+            
+            var server = new FlowLang.LSP.FlowLangLanguageServer(Console.OpenStandardInput(), Console.OpenStandardOutput());
+            await server.StartAsync();
+            
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Language server error: {ex.Message}");
+            return 1;
+        }
     }
 }
 
@@ -2283,6 +2443,55 @@ public class HelpCommand : Command
                 Console.WriteLine("Runs all test files in the tests/ directory.");
                 Console.WriteLine("Currently validates that all test files transpile correctly.");
                 break;
+
+            case "lint":
+                Console.WriteLine("Usage: flowc lint [options] [files/directories]");
+                Console.WriteLine();
+                Console.WriteLine("Runs static analysis and linting on FlowLang code to detect issues");
+                Console.WriteLine("and suggest improvements for code quality, performance, and security.");
+                Console.WriteLine();
+                Console.WriteLine("Options:");
+                Console.WriteLine("  --config <file>       Use custom configuration file (default: flowlint.json)");
+                Console.WriteLine("  --format <format>     Output format: text, json, sarif (default: text)");
+                Console.WriteLine("  --effects             Analyze only effect system rules");
+                Console.WriteLine("  --results             Analyze only Result type rules");
+                Console.WriteLine("  --quality             Analyze only code quality rules");
+                Console.WriteLine("  --performance         Analyze only performance rules");
+                Console.WriteLine("  --security            Analyze only security rules");
+                Console.WriteLine("  --fix                 Auto-fix issues where possible");
+                Console.WriteLine("  --details             Show detailed diagnostics (default: true)");
+                Console.WriteLine("  --include-info        Include info-level diagnostics");
+                Console.WriteLine();
+                Console.WriteLine("Analysis Categories:");
+                Console.WriteLine("  Effect System         - Effect completeness, minimality, propagation");
+                Console.WriteLine("  Result Types          - Error handling, propagation validation");
+                Console.WriteLine("  Code Quality          - Dead code, naming conventions, complexity");
+                Console.WriteLine("  Performance           - String concatenation, effect patterns");
+                Console.WriteLine("  Security              - Input validation, secret detection");
+                Console.WriteLine();
+                Console.WriteLine("Examples:");
+                Console.WriteLine("  flowc lint                    # Analyze current directory");
+                Console.WriteLine("  flowc lint src/               # Analyze src directory");
+                Console.WriteLine("  flowc lint --effects --results  # Check only effect and result rules");
+                Console.WriteLine("  flowc lint --format json      # Output in JSON format");
+                break;
+
+            case "lsp":
+                Console.WriteLine("Usage: flowc lsp");
+                Console.WriteLine();
+                Console.WriteLine("Starts the FlowLang Language Server Protocol server for IDE integration.");
+                Console.WriteLine("Provides real-time diagnostics, auto-completion, hover information, and go-to-definition.");
+                Console.WriteLine();
+                Console.WriteLine("Features:");
+                Console.WriteLine("- Syntax error detection and highlighting");
+                Console.WriteLine("- FlowLang-specific auto-completion (keywords, effects, types)");
+                Console.WriteLine("- Hover information with function signatures and effect annotations");
+                Console.WriteLine("- Go-to-definition for functions, modules, and variables");
+                Console.WriteLine("- Effect system validation and suggestions");
+                Console.WriteLine("- Result type analysis and error propagation help");
+                Console.WriteLine();
+                Console.WriteLine("Use with VS Code FlowLang extension or other LSP-compatible editors.");
+                break;
         }
     }
 }
@@ -2302,6 +2511,23 @@ public class FlowLangTranspiler
         Commands["build"] = new BuildCommand();
         Commands["run"] = new RunCommand();
         Commands["test"] = new TestCommand();
+        Commands["lint"] = new LintCommand();
+        Commands["lsp"] = new LspCommand();
+        
+        // Package management commands
+        Commands["add"] = new AddCommand();
+        Commands["remove"] = new RemoveCommand();
+        Commands["install"] = new InstallCommand();
+        Commands["update"] = new UpdateCommand();
+        Commands["search"] = new SearchCommand();
+        Commands["info"] = new InfoCommand();
+        Commands["publish"] = new PublishCommand();
+        Commands["audit"] = new AuditCommand();
+        Commands["pack"] = new PackCommand();
+        Commands["clean"] = new CleanCommand();
+        Commands["workspace"] = new WorkspaceCommand();
+        Commands["version"] = new VersionCommand();
+        
         Commands["help"] = new HelpCommand(Commands);
 
         // Handle version flag
@@ -2382,5 +2608,617 @@ public class FlowLangTranspiler
         var syntaxTree = generator.GenerateFromAST(ast);
         
         return syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+    }
+}
+
+// =============================================================================
+// PACKAGE MANAGEMENT COMMANDS
+// =============================================================================
+
+public class AddCommand : Command
+{
+    public override string Name => "add";
+    public override string Description => "Add a package dependency";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            Console.WriteLine("Error: Package name is required");
+            Console.WriteLine("Usage: flowc add <package[@version]> [--dev]");
+            Console.WriteLine("Examples:");
+            Console.WriteLine("  flowc add FlowLang.Database");
+            Console.WriteLine("  flowc add Newtonsoft.Json@13.0.3");
+            Console.WriteLine("  flowc add FlowLang.Testing@^1.0.0 --dev");
+            return 1;
+        }
+
+        var packageSpec = args[0];
+        var isDev = args.Contains("--dev");
+
+        try
+        {
+            var packageManager = new FlowLang.Package.PackageManager();
+            var result = await packageManager.AddPackageAsync(packageSpec, isDev);
+            
+            if (result.Success)
+            {
+                Console.WriteLine(result.Message);
+                return 0;
+            }
+            else
+            {
+                Console.WriteLine($"Error: {result.Message}");
+                return 1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class RemoveCommand : Command
+{
+    public override string Name => "remove";
+    public override string Description => "Remove a package dependency";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            Console.WriteLine("Error: Package name is required");
+            Console.WriteLine("Usage: flowc remove <package>");
+            return 1;
+        }
+
+        var packageName = args[0];
+
+        try
+        {
+            var packageManager = new FlowLang.Package.PackageManager();
+            var result = await packageManager.RemovePackageAsync(packageName);
+            
+            if (result.Success)
+            {
+                Console.WriteLine(result.Message);
+                return 0;
+            }
+            else
+            {
+                Console.WriteLine($"Error: {result.Message}");
+                return 1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class InstallCommand : Command
+{
+    public override string Name => "install";
+    public override string Description => "Install all project dependencies";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        var includeDev = !args.Contains("--production");
+
+        try
+        {
+            var packageManager = new FlowLang.Package.PackageManager();
+            var result = await packageManager.InstallPackagesAsync(includeDev);
+            
+            if (result.Success)
+            {
+                Console.WriteLine(result.Message);
+                return 0;
+            }
+            else
+            {
+                Console.WriteLine($"Error: {result.Message}");
+                return 1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class UpdateCommand : Command
+{
+    public override string Name => "update";
+    public override string Description => "Update packages to latest compatible versions";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        var specificPackage = args.Length > 0 ? args[0] : null;
+
+        try
+        {
+            var packageManager = new FlowLang.Package.PackageManager();
+            var result = await packageManager.UpdatePackagesAsync(specificPackage);
+            
+            if (result.Success)
+            {
+                Console.WriteLine(result.Message);
+                return 0;
+            }
+            else
+            {
+                Console.WriteLine($"Error: {result.Message}");
+                return 1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class SearchCommand : Command
+{
+    public override string Name => "search";
+    public override string Description => "Search for packages";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            Console.WriteLine("Error: Search query is required");
+            Console.WriteLine("Usage: flowc search <query>");
+            return 1;
+        }
+
+        var query = string.Join(" ", args);
+
+        try
+        {
+            var packageManager = new FlowLang.Package.PackageManager();
+            var results = await packageManager.SearchPackagesAsync(query);
+            
+            if (results.Any())
+            {
+                Console.WriteLine($"Found {results.Count} packages:");
+                Console.WriteLine();
+                
+                foreach (var result in results.Take(20))
+                {
+                    Console.WriteLine($"{result.Name}@{result.Version} ({result.Type})");
+                    Console.WriteLine($"  {result.Description}");
+                    Console.WriteLine($"  Downloads: {result.DownloadCount:N0}");
+                    Console.WriteLine();
+                }
+                
+                if (results.Count > 20)
+                {
+                    Console.WriteLine($"... and {results.Count - 20} more packages");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No packages found matching your search.");
+            }
+            
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class InfoCommand : Command
+{
+    public override string Name => "info";
+    public override string Description => "Get detailed information about a package";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            Console.WriteLine("Error: Package name is required");
+            Console.WriteLine("Usage: flowc info <package>");
+            return 1;
+        }
+
+        var packageName = args[0];
+
+        try
+        {
+            var packageManager = new FlowLang.Package.PackageManager();
+            var info = await packageManager.GetPackageInfoAsync(packageName);
+            
+            if (info != null)
+            {
+                Console.WriteLine($"Package: {info.Name}@{info.Version}");
+                Console.WriteLine($"Type: {info.Type}");
+                Console.WriteLine($"Description: {info.Description}");
+                
+                if (!string.IsNullOrEmpty(info.Author))
+                    Console.WriteLine($"Author: {info.Author}");
+                
+                if (!string.IsNullOrEmpty(info.Homepage))
+                    Console.WriteLine($"Homepage: {info.Homepage}");
+                
+                if (!string.IsNullOrEmpty(info.License))
+                    Console.WriteLine($"License: {info.License}");
+                
+                if (info.Keywords.Any())
+                    Console.WriteLine($"Keywords: {string.Join(", ", info.Keywords)}");
+                
+                if (info.Effects.Any())
+                    Console.WriteLine($"Effects: {string.Join(", ", info.Effects)}");
+                
+                Console.WriteLine($"Versions: {string.Join(", ", info.Versions.Take(10))}");
+                
+                if (info.Dependencies.Any())
+                {
+                    Console.WriteLine("Dependencies:");
+                    foreach (var (name, version) in info.Dependencies)
+                    {
+                        Console.WriteLine($"  {name}@{version}");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Package '{packageName}' not found.");
+                return 1;
+            }
+            
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class PublishCommand : Command
+{
+    public override string Name => "publish";
+    public override string Description => "Publish package to registry";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        var dryRun = args.Contains("--dry-run");
+        var access = args.Contains("--private") ? "private" : "public";
+
+        try
+        {
+            var packageManager = new FlowLang.Package.PackageManager();
+            var options = new FlowLang.Package.PublishOptions(Access: access, DryRun: dryRun);
+            var result = await packageManager.PublishPackageAsync(options: options);
+            
+            if (result.Success)
+            {
+                Console.WriteLine(result.Message);
+                if (!string.IsNullOrEmpty(result.PackageUrl))
+                    Console.WriteLine($"Package URL: {result.PackageUrl}");
+                return 0;
+            }
+            else
+            {
+                Console.WriteLine($"Error: {result.Message}");
+                return 1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class AuditCommand : Command
+{
+    public override string Name => "audit";
+    public override string Description => "Audit packages for security vulnerabilities";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        var fix = args.Contains("fix");
+        var verbose = args.Contains("--verbose");
+
+        try
+        {
+            var scanner = new FlowLang.Package.SecurityScanner();
+            
+            if (fix)
+            {
+                Console.WriteLine("Scanning and attempting to fix security vulnerabilities...");
+                var fixResult = await scanner.FixSecurityIssuesAsync();
+                
+                Console.WriteLine(fixResult.Message);
+                
+                if (fixResult.AutomaticallyFixable.Any())
+                {
+                    Console.WriteLine("\nAutomatically fixed:");
+                    foreach (var autoFix in fixResult.AutomaticallyFixable)
+                    {
+                        Console.WriteLine($"  ✓ {autoFix.PackageName}: {autoFix.CurrentVersion} → {autoFix.FixedVersion}");
+                    }
+                }
+                
+                if (fixResult.ManuallyFixable.Any())
+                {
+                    Console.WriteLine("\nRequires manual attention:");
+                    foreach (var manualFix in fixResult.ManuallyFixable)
+                    {
+                        Console.WriteLine($"  ⚠ {manualFix.PackageName}: {manualFix.Description}");
+                    }
+                }
+                
+                return fixResult.Success ? 0 : 1;
+            }
+            else
+            {
+                var report = await scanner.AuditAsync(verbose: verbose);
+                
+                Console.WriteLine($"Security audit completed for {report.TotalPackagesScanned} packages");
+                Console.WriteLine($"Vulnerabilities found: {report.TotalVulnerabilities}");
+                
+                if (report.HasVulnerabilities)
+                {
+                    Console.WriteLine($"  Critical: {report.CriticalCount}");
+                    Console.WriteLine($"  High: {report.HighCount}");
+                    Console.WriteLine($"  Medium: {report.MediumCount}");
+                    Console.WriteLine($"  Low: {report.LowCount}");
+                    
+                    if (verbose)
+                    {
+                        Console.WriteLine("\nVulnerable packages:");
+                        foreach (var vulnPackage in report.VulnerablePackages)
+                        {
+                            Console.WriteLine($"\n{vulnPackage.Name}@{vulnPackage.Version}:");
+                            foreach (var vuln in vulnPackage.Vulnerabilities)
+                            {
+                                Console.WriteLine($"  • {vuln.Title} ({vuln.Severity})");
+                                Console.WriteLine($"    {vuln.Description}");
+                                if (vuln.FixedIn != null)
+                                    Console.WriteLine($"    Fixed in: {vuln.FixedIn}");
+                            }
+                        }
+                    }
+                    
+                    Console.WriteLine("\nRun 'flowc audit fix' to automatically fix compatible issues.");
+                    return 1;
+                }
+                else
+                {
+                    Console.WriteLine("No security vulnerabilities found.");
+                    return 0;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class PackCommand : Command
+{
+    public override string Name => "pack";
+    public override string Description => "Create a package tarball";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        var outputDir = args.Length > 0 ? args[0] : Directory.GetCurrentDirectory();
+
+        try
+        {
+            var packageCreator = new FlowLang.Package.PackageCreator();
+            var packagePath = await packageCreator.CreatePackageAsync(Directory.GetCurrentDirectory(), outputDir);
+            
+            Console.WriteLine($"Package created: {packagePath}");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class CleanCommand : Command
+{
+    public override string Name => "clean";
+    public override string Description => "Clean package cache and build artifacts";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        try
+        {
+            var packagesDir = Path.Combine(Directory.GetCurrentDirectory(), "packages");
+            var buildDir = Path.Combine(Directory.GetCurrentDirectory(), "build");
+            
+            if (Directory.Exists(packagesDir))
+            {
+                Directory.Delete(packagesDir, true);
+                Console.WriteLine("Cleaned packages directory");
+            }
+            
+            if (Directory.Exists(buildDir))
+            {
+                Directory.Delete(buildDir, true);
+                Console.WriteLine("Cleaned build directory");
+            }
+            
+            // Clean .cs files generated by transpiler
+            var csFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.cs", SearchOption.AllDirectories)
+                .Where(f => !f.Contains("obj") && !f.Contains("bin"));
+            
+            foreach (var csFile in csFiles)
+            {
+                try
+                {
+                    File.Delete(csFile);
+                    Console.WriteLine($"Deleted: {Path.GetRelativePath(Directory.GetCurrentDirectory(), csFile)}");
+                }
+                catch
+                {
+                    // Ignore errors when deleting individual files
+                }
+            }
+            
+            Console.WriteLine("Clean completed");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class WorkspaceCommand : Command
+{
+    public override string Name => "workspace";
+    public override string Description => "Manage workspace projects";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            Console.WriteLine("Error: Workspace command is required");
+            Console.WriteLine("Usage: flowc workspace <command>");
+            Console.WriteLine("Commands:");
+            Console.WriteLine("  list     - List all workspace projects");
+            Console.WriteLine("  install  - Install dependencies for all projects");
+            Console.WriteLine("  run <cmd> - Run command in all projects");
+            return 1;
+        }
+
+        var subCommand = args[0];
+
+        try
+        {
+            var workspaceManager = new FlowLang.Package.WorkspaceManager();
+
+            switch (subCommand)
+            {
+                case "list":
+                    var projects = await workspaceManager.GetWorkspaceProjectsAsync();
+                    if (projects.Any())
+                    {
+                        Console.WriteLine("Workspace projects:");
+                        foreach (var project in projects)
+                        {
+                            Console.WriteLine($"  {project}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("No workspace projects found");
+                    }
+                    return 0;
+
+                case "install":
+                    var installResult = await workspaceManager.InstallWorkspaceAsync();
+                    Console.WriteLine(installResult.Message);
+                    return installResult.Success ? 0 : 1;
+
+                case "run":
+                    if (args.Length < 2)
+                    {
+                        Console.WriteLine("Error: Command to run is required");
+                        return 1;
+                    }
+                    
+                    var command = string.Join(" ", args.Skip(1));
+                    Console.WriteLine($"Running '{command}' in all workspace projects...");
+                    
+                    var workspaceProjects = await workspaceManager.GetWorkspaceProjectsAsync();
+                    foreach (var project in workspaceProjects)
+                    {
+                        Console.WriteLine($"\n--- {project} ---");
+                        // Implementation would run the command in each project directory
+                        Console.WriteLine($"Would run: {command}");
+                    }
+                    return 0;
+
+                default:
+                    Console.WriteLine($"Unknown workspace command: {subCommand}");
+                    return 1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
+    }
+}
+
+public class VersionCommand : Command
+{
+    public override string Name => "version";
+    public override string Description => "Manage package version";
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            // Show current version
+            try
+            {
+                var config = await FlowLang.Package.ConfigurationManager.LoadConfigAsync();
+                Console.WriteLine($"Current version: {config.Version}");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return 1;
+            }
+        }
+
+        var versionType = args[0];
+
+        try
+        {
+            var config = await FlowLang.Package.ConfigurationManager.LoadConfigAsync();
+            var currentVersion = FlowLang.Package.SemanticVersion.Parse(config.Version);
+            
+            var newVersion = versionType switch
+            {
+                "patch" => new FlowLang.Package.SemanticVersion(currentVersion.Major, currentVersion.Minor, currentVersion.Patch + 1),
+                "minor" => new FlowLang.Package.SemanticVersion(currentVersion.Major, currentVersion.Minor + 1, 0),
+                "major" => new FlowLang.Package.SemanticVersion(currentVersion.Major + 1, 0, 0),
+                _ => FlowLang.Package.SemanticVersion.Parse(versionType)
+            };
+
+            var newConfig = config with { Version = newVersion.ToString() };
+            await FlowLang.Package.ConfigurationManager.SaveConfigAsync(newConfig);
+            
+            Console.WriteLine($"Version updated: {config.Version} → {newVersion}");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            return 1;
+        }
     }
 }

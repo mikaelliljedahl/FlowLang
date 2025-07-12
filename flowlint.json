@@ -1,0 +1,69 @@
+{
+  "rules": {
+    // Effect System Rules
+    "effect-completeness": "error",
+    "effect-minimality": "warning", 
+    "effect-propagation": "error",
+    "pure-function-validation": "error",
+    "effect-consistency": "warning",
+    
+    // Result Type Rules
+    "unused-results": "error",
+    "error-handling": "error",
+    "error-propagation-validation": "error",
+    "dead-error-paths": "warning",
+    "result-type-consistency": "warning",
+    
+    // Code Quality Rules
+    "dead-code": "warning",
+    "unreachable-code": "warning",
+    "unused-variables": "warning",
+    "unused-imports": "info",
+    "naming-convention": "info",
+    "function-complexity": {
+      "level": "warning",
+      "enabled": true,
+      "parameters": {
+        "maxLines": 50,
+        "maxParams": 5
+      }
+    },
+    "duplicate-code": "info",
+    
+    // Performance Rules
+    "string-concatenation": "info",
+    "inefficient-effect-patterns": "warning",
+    "module-import-optimization": "info",
+    "unnecessary-error-propagation": "info",
+    
+    // Security Rules
+    "input-validation": "warning",
+    "effect-leakage": "error",
+    "secret-detection": "error",
+    "unsafe-string-interpolation": "warning",
+    
+    // Style Rules
+    "consistent-spacing": "info",
+    "line-length": {
+      "level": "info",
+      "enabled": true,
+      "parameters": {
+        "maxLength": 120
+      }
+    },
+    "prefer-expression-body": "info",
+    "consistent-bracing": "info"
+  },
+  
+  "exclude": [
+    "generated/",
+    "*.test.flow",
+    "temp_*",
+    "build/",
+    "node_modules/"
+  ],
+  
+  "severityThreshold": "warning",
+  "autoFix": false,
+  "outputFormat": "text"
+}

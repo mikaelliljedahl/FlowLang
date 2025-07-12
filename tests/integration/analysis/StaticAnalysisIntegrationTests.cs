@@ -1,0 +1,322 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using FlowLang.Analysis;
+using Xunit;
+
+namespace FlowLang.Tests.Integration.Analysis;
+
+public class StaticAnalysisIntegrationTests
+{
+    [Fact]
+    public async Task StaticAnalyzer_ShouldAnalyzeCompleteFlowProgram()
+    {
+        // Arrange
+        var sourceCode = @"
+// Complete FlowLang program with various issues
+module TestModule {
+    // Missing effect declaration (should trigger effect-completeness)
+    function process_user_data(user_id: string) -> Result<string, string> {
+        let log_result = log_message(""Processing user: "" + user_id)
+        let db_result = database_query(""SELECT * FROM users WHERE id = "" + user_id)
+        return Ok(""processed"")
+    }
+    
+    // Pure function calling effect function (should trigger effect-propagation)
+    pure function calculate_score(data: string) -> int {
+        log_debug(""Calculating score"")
+        return 100
+    }
+    
+    // Unused function (should trigger dead-code)
+    function unused_helper(x: int) -> int {
+        return x * 2
+    }
+    
+    // Function with unused effects (should trigger effect-minimality)
+    function simple_math(a: int, b: int) uses [Database, Network] -> int {
+        return a + b
+    }
+    
+    // Result not handled (should trigger unused-results)
+    function main() -> int {
+        process_user_data(""123"")
+        return 42
+    }
+    
+    export { process_user_data, calculate_score, main }
+}";
+
+        var analyzer = new StaticAnalyzer();
+
+        // Act
+        var report = analyzer.AnalyzeFile("test.flow", sourceCode);
+
+        // Assert
+        Assert.True(report.Diagnostics.Count > 0, "Should find multiple issues in the test code");
+        
+        // Check for specific rule violations
+        var ruleIds = report.Diagnostics.Select(d => d.RuleId).ToHashSet();
+        
+        // Should detect various categories of issues
+        Assert.True(ruleIds.Count >= 3, $"Should detect issues from multiple rules. Found: {string.Join(", ", ruleIds)}");
+        
+        // Verify metrics are collected
+        Assert.True(report.Metrics.TotalFunctions > 0);
+        Assert.Equal(1, report.Metrics.ModuleCount);
+        
+        // Should have both pure and effect functions
+        Assert.True(report.Metrics.PureFunctions > 0);
+        Assert.True(report.Metrics.FunctionsWithEffects > 0);
+    }
+
+    [Fact]
+    public async Task StaticAnalyzer_ShouldRespectConfiguration()
+    {
+        // Arrange
+        var sourceCode = @"
+function test_func() -> int {
+    let unused_var = 42
+    return 100
+}";
+
+        var strictConfig = new LintConfiguration
+        {
+            SeverityThreshold = DiagnosticSeverity.Info,
+            Rules = new Dictionary<string, LintRuleConfig>
+            {
+                ["unused-variables"] = new(DiagnosticSeverity.Error, true),
+                ["effect-completeness"] = new(DiagnosticSeverity.Error, false) // Disabled
+            }
+        };
+
+        var lenientConfig = new LintConfiguration
+        {
+            SeverityThreshold = DiagnosticSeverity.Error,
+            Rules = new Dictionary<string, LintRuleConfig>
+            {
+                ["unused-variables"] = new(DiagnosticSeverity.Warning, true) // Should be filtered out
+            }
+        };
+
+        var strictAnalyzer = new StaticAnalyzer(strictConfig);
+        var lenientAnalyzer = new StaticAnalyzer(lenientConfig);
+
+        // Act
+        var strictReport = strictAnalyzer.AnalyzeFile("test.flow", sourceCode);
+        var lenientReport = lenientAnalyzer.AnalyzeFile("test.flow", sourceCode);
+
+        // Assert
+        Assert.True(strictReport.Diagnostics.Count >= lenientReport.Diagnostics.Count,
+            "Strict configuration should find more or equal issues than lenient");
+    }
+
+    [Fact]
+    public async Task StaticAnalyzer_ShouldGenerateJsonOutput()
+    {
+        // Arrange
+        var sourceCode = @"
+function bad_function() -> Result<int, string> {
+    return Error(""test error"")
+}";
+
+        var analyzer = new StaticAnalyzer();
+
+        // Act
+        var report = analyzer.AnalyzeFile("test.flow", sourceCode);
+        var json = report.ToJson();
+
+        // Assert
+        Assert.NotEmpty(json);
+        Assert.Contains("\"diagnostics\"", json);
+        Assert.Contains("\"metrics\"", json);
+        Assert.Contains("\"ruleCounts\"", json);
+        
+        // Should be valid JSON
+        Assert.DoesNotThrow(() => System.Text.Json.JsonDocument.Parse(json));
+    }
+
+    [Fact]
+    public async Task StaticAnalyzer_ShouldGenerateSarifOutput()
+    {
+        // Arrange
+        var sourceCode = @"
+function security_issue() -> string {
+    let api_key = ""sk-1234567890abcdef1234567890abcdef""
+    return api_key
+}";
+
+        var analyzer = new StaticAnalyzer();
+
+        // Act
+        var report = analyzer.AnalyzeFile("test.flow", sourceCode);
+        var sarif = report.ToSarif();
+
+        // Assert
+        Assert.NotEmpty(sarif);
+        Assert.Contains("\"version\": \"2.1.0\"", sarif);
+        Assert.Contains("\"runs\"", sarif);
+        Assert.Contains("\"results\"", sarif);
+        
+        // Should be valid JSON
+        Assert.DoesNotThrow(() => System.Text.Json.JsonDocument.Parse(sarif));
+    }
+
+    [Fact]
+    public async Task StaticAnalyzer_ShouldAnalyzeRealWorldExample()
+    {
+        // Arrange - A more realistic FlowLang program
+        var sourceCode = @"
+module UserService {
+    function authenticate_user(username: string, password: string) 
+        uses [Database, Logging] 
+        -> Result<User, AuthError> {
+        
+        guard username != """" else {
+            return Error(""Empty username"")
+        }
+        
+        let log_result = log_info(""Authenticating user: "" + username)?
+        let user_record = database_query(""SELECT * FROM users WHERE username = ?"", username)?
+        
+        if verify_password(password, user_record.password_hash) {
+            return Ok(user_record)
+        } else {
+            return Error(""Invalid credentials"")
+        }
+    }
+    
+    function get_user_profile(user_id: string) 
+        uses [Database, Network] 
+        -> Result<UserProfile, string> {
+        
+        let user = database_get_user(user_id)?
+        let profile_data = api_fetch_profile(user.external_id)?
+        
+        return Ok(create_profile(user, profile_data))
+    }
+    
+    pure function create_profile(user: User, data: ProfileData) -> UserProfile {
+        return UserProfile {
+            id: user.id,
+            name: user.name,
+            data: data
+        }
+    }
+    
+    export { authenticate_user, get_user_profile }
+}";
+
+        var analyzer = new StaticAnalyzer();
+
+        // Act
+        var report = analyzer.AnalyzeFile("user_service.flow", sourceCode);
+
+        // Assert
+        Assert.Equal(1, report.FilesAnalyzed);
+        
+        // Should have found the module and functions
+        Assert.Equal(1, report.Metrics.ModuleCount);
+        Assert.Equal(3, report.Metrics.TotalFunctions);
+        Assert.Equal(1, report.Metrics.PureFunctions);
+        Assert.Equal(2, report.Metrics.FunctionsWithEffects);
+        
+        // Should track effect usage
+        Assert.True(report.Metrics.EffectUsage.ContainsKey("Database"));
+        Assert.True(report.Metrics.EffectUsage.ContainsKey("Logging"));
+        Assert.True(report.Metrics.EffectUsage.ContainsKey("Network"));
+        
+        // Should have proper Result type usage
+        Assert.True(report.Metrics.ResultTypeUsage > 0);
+        
+        // Should detect error propagation
+        Assert.True(report.Metrics.ErrorPropagationCount > 0);
+    }
+
+    [Fact]
+    public async Task StaticAnalyzer_ShouldHandleParseErrors()
+    {
+        // Arrange - Invalid FlowLang syntax
+        var invalidSourceCode = @"
+function invalid syntax here {
+    this is not valid FlowLang
+    missing return type and other issues
+";
+
+        var analyzer = new StaticAnalyzer();
+
+        // Act
+        var report = analyzer.AnalyzeFile("invalid.flow", invalidSourceCode);
+
+        // Assert
+        Assert.Equal(1, report.FilesAnalyzed);
+        Assert.True(report.Diagnostics.Count > 0);
+        
+        // Should have a parse error
+        var parseErrors = report.Diagnostics.Where(d => d.RuleId == "parse-error").ToList();
+        Assert.NotEmpty(parseErrors);
+        Assert.All(parseErrors, error => Assert.Equal(DiagnosticSeverity.Error, error.Severity));
+    }
+
+    [Fact]
+    public async Task StaticAnalyzer_ShouldDetectSecurityIssues()
+    {
+        // Arrange - Code with potential security issues
+        var sourceCode = @"
+function risky_operation(user_input: string) uses [Database] -> Result<string, string> {
+    // Hardcoded secret (should trigger secret-detection)
+    let api_key = ""sk-1234567890abcdef1234567890abcdef""
+    
+    // SQL injection risk (should trigger unsafe-string-interpolation)
+    let query = $""SELECT * FROM users WHERE name = '{user_input}'""
+    
+    // No input validation (should trigger input-validation)
+    let result = database_execute(query)
+    
+    return Ok(""completed"")
+}";
+
+        var analyzer = new StaticAnalyzer();
+
+        // Act
+        var report = analyzer.AnalyzeFile("risky.flow", sourceCode);
+
+        // Assert
+        var securityIssues = report.GetDiagnosticsByCategory(AnalysisCategories.Security).ToList();
+        Assert.NotEmpty(securityIssues);
+        
+        // Should detect multiple security issues
+        var ruleIds = securityIssues.Select(d => d.RuleId).ToHashSet();
+        Assert.True(ruleIds.Count > 0, "Should detect security-related issues");
+    }
+
+    [Fact]
+    public async Task StaticAnalyzer_ShouldProvideFixSuggestions()
+    {
+        // Arrange
+        var sourceCode = @"
+function example() -> Result<string, string> {
+    let unused_variable = ""test""
+    let result = some_result_function()
+    return Ok(""done"")
+}";
+
+        var analyzer = new StaticAnalyzer();
+
+        // Act
+        var report = analyzer.AnalyzeFile("example.flow", sourceCode);
+
+        // Assert
+        var diagnosticsWithFixes = report.Diagnostics.Where(d => !string.IsNullOrEmpty(d.FixSuggestion)).ToList();
+        Assert.NotEmpty(diagnosticsWithFixes);
+        
+        // Fix suggestions should be helpful
+        Assert.All(diagnosticsWithFixes, d => 
+        {
+            Assert.NotEmpty(d.FixSuggestion);
+            Assert.True(d.FixSuggestion!.Length > 10, "Fix suggestions should be descriptive");
+        });
+    }
+}

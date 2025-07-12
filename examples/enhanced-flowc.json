@@ -1,0 +1,62 @@
+{
+  "name": "flowlang-package-demo",
+  "version": "1.0.0",
+  "description": "Demonstration of FlowLang enhanced package management",
+  "dependencies": {
+    "FlowLang.Core": "^2.1.0",
+    "FlowLang.Database": "~1.5.2",
+    "Newtonsoft.Json": "13.0.3",
+    "System.Net.Http": "^4.3.4"
+  },
+  "devDependencies": {
+    "FlowLang.Testing": "^1.0.0",
+    "FlowLang.Benchmarks": "^0.5.0"
+  },
+  "nugetSources": [
+    "https://api.nuget.org/v3/index.json",
+    "https://nuget.internal.company.com/v3/index.json"
+  ],
+  "flowlangRegistry": "https://packages.flowlang.org",
+  "effectMappings": {
+    "System.Data.SqlClient": ["Database"],
+    "System.Net.Http": ["Network"],
+    "Microsoft.Extensions.Logging": ["Logging"],
+    "Azure.Storage.Blobs": ["Network", "FileSystem"],
+    "StackExchange.Redis": ["Network", "Memory"],
+    "Npgsql": ["Database"],
+    "MongoDB.Driver": ["Database", "Network"],
+    "Elasticsearch.Net": ["Network"],
+    "RabbitMQ.Client": ["Network"],
+    "Microsoft.Extensions.Caching": ["Memory"]
+  },
+  "workspace": {
+    "projects": [
+      "./services/*",
+      "./libs/*"
+    ],
+    "exclude": [
+      "./services/legacy",
+      "./examples"
+    ]
+  },
+  "publishConfig": {
+    "registry": "https://packages.flowlang.org",
+    "access": "public",
+    "metadata": {
+      "homepage": "https://github.com/mycompany/flowlang-package-demo",
+      "repository": "https://github.com/mycompany/flowlang-package-demo.git",
+      "license": "MIT"
+    }
+  },
+  "scripts": [
+    "build",
+    "test",
+    "lint",
+    "audit"
+  ],
+  "build": {
+    "source": "src/",
+    "output": "build/",
+    "target": "csharp"
+  }
+}

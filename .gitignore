@@ -87,3 +87,4 @@ node_modules/
 /AlpcotImporter/cert/addeqt-export.p12
 
 .fake
+/.claude/settings.local.json
