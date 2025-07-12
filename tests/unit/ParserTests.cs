@@ -461,5 +461,274 @@ namespace FlowLang.Tests.Unit
             // Act & Assert
             Assert.Throws<Exception>(() => parser.Parse());
         }
+
+        [Test]
+        public void Parser_ShouldParseNestedIfStatements()
+        {
+            // Arrange
+            var source = @"function nested() -> int {
+                if x > 0 {
+                    if y > 0 {
+                        return 1
+                    } else {
+                        return 2
+                    }
+                } else {
+                    return 3
+                }
+            }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var func = (FunctionDeclaration)program.Statements[0];
+            Assert.That(func.Body.Count, Is.EqualTo(1));
+            var outerIf = (IfStatement)func.Body[0];
+            Assert.That(outerIf.ThenBody.Count, Is.EqualTo(1));
+            Assert.That(outerIf.ThenBody[0], Is.InstanceOf<IfStatement>());
+        }
+
+        [Test]
+        public void Parser_ShouldParseMultipleParameterTypes()
+        {
+            // Arrange
+            var source = "function test(a: int, b: string, c: bool) -> int { return 42 }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var func = (FunctionDeclaration)program.Statements[0];
+            Assert.That(func.Parameters.Count, Is.EqualTo(3));
+            Assert.That(func.Parameters[0].Type, Is.EqualTo("int"));
+            Assert.That(func.Parameters[1].Type, Is.EqualTo("string"));
+            Assert.That(func.Parameters[2].Type, Is.EqualTo("bool"));
+        }
+
+        [Test]
+        public void Parser_ShouldParseComplexResultType()
+        {
+            // Arrange
+            var source = "function complex() -> Result<Result<int, string>, bool> { return Ok(Ok(42)) }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var func = (FunctionDeclaration)program.Statements[0];
+            Assert.That(func.ReturnType, Is.EqualTo("Result<Result<int, string>, bool>"));
+        }
+
+        [Test]
+        public void Parser_ShouldParseMultipleEffects()
+        {
+            // Arrange
+            var source = "function process() uses [Database, Network, Logging, FileSystem] -> int { return 42 }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var func = (FunctionDeclaration)program.Statements[0];
+            Assert.That(func.Effects.Effects.Count, Is.EqualTo(4));
+            Assert.That(func.Effects.Effects, Contains.Item("Database"));
+            Assert.That(func.Effects.Effects, Contains.Item("Network"));
+            Assert.That(func.Effects.Effects, Contains.Item("Logging"));
+            Assert.That(func.Effects.Effects, Contains.Item("FileSystem"));
+        }
+
+        [Test]
+        public void Parser_ShouldParseChainedErrorPropagation()
+        {
+            // Arrange
+            var source = "function chain() -> Result<int, string> { let x = getValue()?.process()? return Ok(x) }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var func = (FunctionDeclaration)program.Statements[0];
+            var letStmt = (LetStatement)func.Body[0];
+            Assert.That(letStmt.Expression, Is.InstanceOf<ErrorPropagationExpression>());
+        }
+
+        [Test]
+        public void Parser_ShouldParseComplexStringInterpolation()
+        {
+            // Arrange
+            var source = @"function greet() -> string { return $""Hello {user.name}, you have {getCount()} messages!"" }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var func = (FunctionDeclaration)program.Statements[0];
+            var returnStmt = (ReturnStatement)func.Body[0];
+            Assert.That(returnStmt.Expression, Is.InstanceOf<StringInterpolation>());
+            var interp = (StringInterpolation)returnStmt.Expression;
+            Assert.That(interp.Parts.Count, Is.GreaterThan(2));
+        }
+
+        [Test]
+        public void Parser_ShouldParseNestedModuleImports()
+        {
+            // Arrange
+            var source = "import Utils.Math.{add, multiply}";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var import = (ImportStatement)program.Statements[0];
+            Assert.That(import.ModuleName, Is.EqualTo("Utils.Math"));
+            Assert.That(import.SpecificImports.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Parser_ShouldParseEmptyModule()
+        {
+            // Arrange
+            var source = "module Empty { }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var module = (ModuleDeclaration)program.Statements[0];
+            Assert.That(module.Name, Is.EqualTo("Empty"));
+            Assert.That(module.Body.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Parser_ShouldParseModuleWithExports()
+        {
+            // Arrange
+            var source = @"module Test {
+                function helper() -> int { return 42 }
+                function main() -> int { return helper() }
+                export {main}
+            }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var module = (ModuleDeclaration)program.Statements[0];
+            Assert.That(module.Body.Count, Is.EqualTo(3)); // 2 functions + 1 export
+            Assert.That(module.Body[2], Is.InstanceOf<ExportStatement>());
+        }
+
+        [Test]
+        public void Parser_ShouldHandleComplexBooleanExpressions()
+        {
+            // Arrange
+            var source = "function complex() -> bool { return (a && b) || (c && !d) || (e > f && g <= h) }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var func = (FunctionDeclaration)program.Statements[0];
+            var returnStmt = (ReturnStatement)func.Body[0];
+            Assert.That(returnStmt.Expression, Is.InstanceOf<BinaryExpression>());
+        }
+
+        [Test]
+        public void Parser_ShouldParseMultipleLetStatements()
+        {
+            // Arrange
+            var source = @"function calc() -> int {
+                let a = 10
+                let b = 20
+                let c = a + b
+                return c
+            }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var func = (FunctionDeclaration)program.Statements[0];
+            Assert.That(func.Body.Count, Is.EqualTo(4)); // 3 let statements + 1 return
+            Assert.That(func.Body[0], Is.InstanceOf<LetStatement>());
+            Assert.That(func.Body[1], Is.InstanceOf<LetStatement>());
+            Assert.That(func.Body[2], Is.InstanceOf<LetStatement>());
+        }
+
+        [Test]
+        public void Parser_ShouldThrowOnMismatchedBraces()
+        {
+            // Arrange
+            var source = "function test() -> int { return 42";
+            var parser = CreateParser(source);
+
+            // Act & Assert
+            Assert.Throws<Exception>(() => parser.Parse());
+        }
+
+        [Test]
+        public void Parser_ShouldThrowOnMismatchedParentheses()
+        {
+            // Arrange
+            var source = "function test( -> int { return 42 }";
+            var parser = CreateParser(source);
+
+            // Act & Assert
+            Assert.Throws<Exception>(() => parser.Parse());
+        }
+
+        [Test]
+        public void Parser_ShouldThrowOnInvalidResultType()
+        {
+            // Arrange
+            var source = "function test() -> Result<int> { return Ok(42) }";
+            var parser = CreateParser(source);
+
+            // Act & Assert
+            Assert.Throws<Exception>(() => parser.Parse());
+        }
+
+        [Test]
+        public void Parser_ShouldThrowOnPureFunctionWithEffects()
+        {
+            // Arrange
+            var source = "pure function test() uses [Database] -> int { return 42 }";
+            var parser = CreateParser(source);
+
+            // Act & Assert
+            Assert.Throws<Exception>(() => parser.Parse());
+        }
+
+        [Test]
+        public void Parser_ShouldParseAllEffectTypes()
+        {
+            // Arrange
+            var source = "function allEffects() uses [Database, Network, Logging, FileSystem, Memory, IO] -> int { return 42 }";
+            var parser = CreateParser(source);
+
+            // Act
+            var program = parser.Parse();
+
+            // Assert
+            var func = (FunctionDeclaration)program.Statements[0];
+            Assert.That(func.Effects.Effects.Count, Is.EqualTo(6));
+            var expectedEffects = new[] { "Database", "Network", "Logging", "FileSystem", "Memory", "IO" };
+            foreach (var effect in expectedEffects)
+            {
+                Assert.That(func.Effects.Effects, Contains.Item(effect));
+            }
+        }
     }
 }

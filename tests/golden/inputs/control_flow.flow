@@ -1,16 +1,27 @@
-function classify_number(n: int) -> string {
-    if n > 0 {
-        return "positive"
-    } else if n < 0 {
-        return "negative"
+function testIfElse(x: int) -> string {
+    if x > 10 {
+        return "large"
+    } else if x > 5 {
+        return "medium"
     } else {
-        return "zero"
+        return "small"
     }
 }
 
-function validate_input(x: int) -> int {
+function testGuard(x: int) -> int {
     guard x > 0 else {
-        return -1
+        return 0
     }
     return x * 2
+}
+
+function testNestedControl(x: int, y: int) -> string {
+    if x > 0 {
+        guard y > 0 else {
+            return "x positive, y not positive"
+        }
+        return "both positive"
+    } else {
+        return "x not positive"
+    }
 }

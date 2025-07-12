@@ -25,6 +25,12 @@
   <ItemGroup>
     <None Include="golden/inputs/**/*" CopyToOutputDirectory="PreserveNewest" />
     <None Include="golden/expected/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="regression/data/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="golden/expected/**/*" />
   </ItemGroup>
 
 </Project>

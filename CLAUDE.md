@@ -11,7 +11,7 @@ FlowLang is a backend programming language designed specifically for LLM-assiste
 
 ## Development Strategy
 
-### Phase 1: Transpiler MVP (Months 1-3)
+### Phase 1: Transpiler MVP 
 **Goal**: Working transpiler that converts FlowLang to C#
 
 **Key Components:**
@@ -48,7 +48,7 @@ FlowLang is a backend programming language designed specifically for LLM-assiste
 - Improved tooling
 - Real-world example applications
 
-### Phase 3: Advanced Features (Months 7-12)
+### Phase 3: Advanced Features
 **Goal**: Unique FlowLang features and optimizations
 
 **Key Components:**

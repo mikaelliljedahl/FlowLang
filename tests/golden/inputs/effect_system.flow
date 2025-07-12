@@ -1,0 +1,17 @@
+function saveUser(name: string, email: string) uses [Database, Logging] -> Result<int, string> {
+    let userId = generateId()?
+    return Ok(userId)
+}
+
+function fetchData(url: string) uses [Network, Logging] -> Result<string, string> {
+    return Ok("data")
+}
+
+function processFile(path: string) uses [FileSystem, Logging] -> Result<string, string> {
+    let content = readFile(path)?
+    return Ok(content)
+}
+
+pure function calculate(x: int, y: int) -> int {
+    return x + y * 2
+}

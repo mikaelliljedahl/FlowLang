@@ -3,9 +3,20 @@ module Math {
         return a + b
     }
     
-    function subtract(a: int, b: int) -> int {
-        return a - b
+    function multiply(a: int, b: int) -> int {
+        return a * b
     }
     
-    export {add, subtract}
+    pure function square(x: int) -> int {
+        return x * x
+    }
+    
+    export {add, multiply, square}
+}
+
+import Math.{add, square}
+
+function calculate(x: int, y: int) -> int {
+    let sum = Math.add(x, y)
+    return Math.square(sum)
 }

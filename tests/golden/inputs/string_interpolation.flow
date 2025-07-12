@@ -1,0 +1,11 @@
+function greet(name: string, age: int) -> string {
+    return $"Hello {name}, you are {age} years old!"
+}
+
+function formatMessage(user: string, count: int, status: string) -> string {
+    return $"User {user} has {count} messages and status is {status}"
+}
+
+pure function createPath(dir: string, file: string, ext: string) -> string {
+    return $"{dir}/{file}.{ext}"
+}

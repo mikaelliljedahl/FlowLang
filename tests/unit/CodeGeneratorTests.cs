@@ -502,5 +502,290 @@ namespace FlowLang.Tests.Unit
             Assert.That(errors.Count, Is.EqualTo(0), 
                 $"Generated code has compilation errors: {string.Join(", ", errors.Select(e => e.GetMessage()))}");
         }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateComplexNestedStructures()
+        {
+            // Arrange
+            var nestedIf = new IfStatement(
+                new BinaryExpression(new Identifier("y"), ">", new NumberLiteral(0)),
+                new List<ASTNode> { new ReturnStatement(new StringLiteral("positive")) },
+                new List<ASTNode> { new ReturnStatement(new StringLiteral("negative")) }
+            );
+            var outerIf = new IfStatement(
+                new BinaryExpression(new Identifier("x"), ">", new NumberLiteral(0)),
+                new List<ASTNode> { nestedIf },
+                new List<ASTNode> { new ReturnStatement(new StringLiteral("zero or negative")) }
+            );
+            var func = new FunctionDeclaration(
+                "complexNested",
+                new List<Parameter> { new("x", "int"), new("y", "int") },
+                "string",
+                new List<ASTNode> { outerIf }
+            );
+            var program = new Program(new List<ASTNode> { func });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("if (x > 0)"));
+            Assert.That(code, Contains.Substring("if (y > 0)"));
+            Assert.That(code, Contains.Substring("return \"positive\";"));
+            Assert.That(code, Contains.Substring("return \"negative\";"));
+            Assert.That(code, Contains.Substring("return \"zero or negative\";"));
+        }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateModuleWithMultipleFunctions()
+        {
+            // Arrange
+            var func1 = new FunctionDeclaration(
+                "add",
+                new List<Parameter> { new("a", "int"), new("b", "int") },
+                "int",
+                new List<ASTNode> { new ReturnStatement(new BinaryExpression(new Identifier("a"), "+", new Identifier("b"))) }
+            );
+            var func2 = new FunctionDeclaration(
+                "multiply",
+                new List<Parameter> { new("a", "int"), new("b", "int") },
+                "int",
+                new List<ASTNode> { new ReturnStatement(new BinaryExpression(new Identifier("a"), "*", new Identifier("b"))) }
+            );
+            var export = new ExportStatement(new List<string> { "add", "multiply" });
+            var module = new ModuleDeclaration(
+                "Math",
+                new List<ASTNode> { func1, func2, export }
+            );
+            var program = new Program(new List<ASTNode> { module });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("namespace Math"));
+            Assert.That(code, Contains.Substring("public static class MathModule"));
+            Assert.That(code, Contains.Substring("public static int add(int a, int b)"));
+            Assert.That(code, Contains.Substring("public static int multiply(int a, int b)"));
+        }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateLogicalOperators()
+        {
+            // Arrange
+            var expr = new BinaryExpression(
+                new BinaryExpression(
+                    new Identifier("a"),
+                    "&&",
+                    new Identifier("b")
+                ),
+                "||",
+                new UnaryExpression("!", new Identifier("c"))
+            );
+            var func = new FunctionDeclaration(
+                "testLogical",
+                new List<Parameter> { new("a", "bool"), new("b", "bool"), new("c", "bool") },
+                "bool",
+                new List<ASTNode> { new ReturnStatement(expr) }
+            );
+            var program = new Program(new List<ASTNode> { func });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("return a && b || !c;"));
+        }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateComplexStringInterpolation()
+        {
+            // Arrange
+            var interp = new StringInterpolation(new List<ASTNode>
+            {
+                new StringLiteral("User "),
+                new Identifier("name"),
+                new StringLiteral(" has "),
+                new FunctionCall("getCount", new List<ASTNode>()),
+                new StringLiteral(" messages")
+            });
+            var func = new FunctionDeclaration(
+                "getMessage",
+                new List<Parameter> { new("name", "string") },
+                "string",
+                new List<ASTNode> { new ReturnStatement(interp) }
+            );
+            var program = new Program(new List<ASTNode> { func });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("string.Format"));
+            Assert.That(code, Contains.Substring("\"User {0} has {1} messages\""));
+            Assert.That(code, Contains.Substring("name, getCount()"));
+        }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateMultipleLetStatements()
+        {
+            // Arrange
+            var let1 = new LetStatement("x", new NumberLiteral(10));
+            var let2 = new LetStatement("y", new NumberLiteral(20));
+            var let3 = new LetStatement("sum", new BinaryExpression(new Identifier("x"), "+", new Identifier("y")));
+            var returnStmt = new ReturnStatement(new Identifier("sum"));
+            
+            var func = new FunctionDeclaration(
+                "calculate",
+                new List<Parameter>(),
+                "int",
+                new List<ASTNode> { let1, let2, let3, returnStmt }
+            );
+            var program = new Program(new List<ASTNode> { func });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("var x = 10;"));
+            Assert.That(code, Contains.Substring("var y = 20;"));
+            Assert.That(code, Contains.Substring("var sum = x + y;"));
+            Assert.That(code, Contains.Substring("return sum;"));
+        }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateNestedFunctionCalls()
+        {
+            // Arrange
+            var innerCall = new FunctionCall("getValue", new List<ASTNode> { new NumberLiteral(42) });
+            var outerCall = new FunctionCall("processValue", new List<ASTNode> { innerCall });
+            var func = new FunctionDeclaration(
+                "nested",
+                new List<Parameter>(),
+                "int",
+                new List<ASTNode> { new ReturnStatement(outerCall) }
+            );
+            var program = new Program(new List<ASTNode> { func });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("return processValue(getValue(42));"));
+        }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateComparisonOperators()
+        {
+            // Arrange
+            var expr = new BinaryExpression(
+                new BinaryExpression(new Identifier("a"), ">", new Identifier("b")),
+                "&&",
+                new BinaryExpression(new Identifier("c"), "<=", new Identifier("d"))
+            );
+            var func = new FunctionDeclaration(
+                "compare",
+                new List<Parameter> { new("a", "int"), new("b", "int"), new("c", "int"), new("d", "int") },
+                "bool",
+                new List<ASTNode> { new ReturnStatement(expr) }
+            );
+            var program = new Program(new List<ASTNode> { func });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("return a > b && c <= d;"));
+        }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateImportStatements()
+        {
+            // Arrange
+            var import1 = new ImportStatement("Math", null, true); // wildcard
+            var import2 = new ImportStatement("Utils", new List<string> { "helper1", "helper2" }, false); // specific
+            var func = new FunctionDeclaration(
+                "test",
+                new List<Parameter>(),
+                "int",
+                new List<ASTNode> { new ReturnStatement(new NumberLiteral(42)) }
+            );
+            var program = new Program(new List<ASTNode> { import1, import2, func });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("using Math;"));
+            Assert.That(code, Contains.Substring("using Utils;"));
+        }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateComplexResultTypes()
+        {
+            // Arrange
+            var nestedOk = new OkExpression(new OkExpression(new NumberLiteral(42)));
+            var func = new FunctionDeclaration(
+                "complexResult",
+                new List<Parameter>(),
+                "Result<Result<int, string>, bool>",
+                new List<ASTNode> { new ReturnStatement(nestedOk) }
+            );
+            var program = new Program(new List<ASTNode> { func });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("Result<Result<int, string>, bool>"));
+            Assert.That(code, Contains.Substring("Result.Ok(Result.Ok(42))"));
+        }
+
+        [Test]
+        public void CodeGenerator_ShouldGenerateAllMathOperators()
+        {
+            // Arrange
+            var addExpr = new BinaryExpression(new Identifier("a"), "+", new Identifier("b"));
+            var subExpr = new BinaryExpression(new Identifier("c"), "-", new Identifier("d"));
+            var mulExpr = new BinaryExpression(new Identifier("e"), "*", new Identifier("f"));
+            var divExpr = new BinaryExpression(new Identifier("g"), "/", new Identifier("h"));
+            
+            var complexExpr = new BinaryExpression(
+                new BinaryExpression(addExpr, "+", subExpr),
+                "+",
+                new BinaryExpression(mulExpr, "+", divExpr)
+            );
+            
+            var func = new FunctionDeclaration(
+                "mathOps",
+                new List<Parameter> 
+                { 
+                    new("a", "int"), new("b", "int"), new("c", "int"), new("d", "int"),
+                    new("e", "int"), new("f", "int"), new("g", "int"), new("h", "int")
+                },
+                "int",
+                new List<ASTNode> { new ReturnStatement(complexExpr) }
+            );
+            var program = new Program(new List<ASTNode> { func });
+
+            // Act
+            var syntaxTree = _generator.GenerateFromAST(program);
+            var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+
+            // Assert
+            Assert.That(code, Contains.Substring("a + b"));
+            Assert.That(code, Contains.Substring("c - d"));
+            Assert.That(code, Contains.Substring("e * f"));
+            Assert.That(code, Contains.Substring("g / h"));
+        }
     }
 }

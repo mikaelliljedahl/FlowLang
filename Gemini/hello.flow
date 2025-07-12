@@ -1,0 +1,23 @@
+
+module GeminiExample {
+    // This is a pure function, it has no side effects.
+    // It takes a name and returns a greeting string.
+    pure function createGreeting(name: String) -> String {
+        return "Hello, " + name + " from a pure function!"
+    }
+
+    // This is an effectful function. It uses the Console to print a message.
+    // The 'uses [Console]' annotation declares the side effect.
+    effectful function printGreeting(message: String) uses [Console] -> Unit {
+        Console.WriteLine(message)
+        return Unit
+    }
+
+    // The main entry point of the program.
+    // It's an effectful function because it calls 'printGreeting'.
+    effectful function main() uses [Console] -> Unit {
+        let greeting = createGreeting("Gemini")
+        printGreeting(greeting)
+        return Unit
+    }
+}

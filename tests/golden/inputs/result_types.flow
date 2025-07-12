@@ -6,10 +6,13 @@ function divide(a: int, b: int) -> Result<int, string> {
     }
 }
 
-function safe_parse(input: string) -> Result<int, string> {
-    if input == "42" {
-        return Ok(42)
-    } else {
-        return Error("Invalid number")
-    }
+function processData(input: string) -> Result<int, string> {
+    let result = parseNumber(input)?
+    return Ok(result * 2)
+}
+
+function chainResults(x: int) -> Result<string, string> {
+    let doubled = doubleValue(x)?
+    let processed = processValue(doubled)?
+    return Ok(processed)
 }

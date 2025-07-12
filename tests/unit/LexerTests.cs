@@ -297,5 +297,213 @@ namespace FlowLang.Tests.Unit
             Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Identifier));
             Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Question));
         }
+
+        [Test]
+        public void Lexer_ShouldTokenizeGuardKeyword()
+        {
+            // Arrange
+            var source = "guard condition else { return 0 }";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Guard));
+            Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Identifier));
+            Assert.That(tokens[1].Value, Is.EqualTo("condition"));
+            Assert.That(tokens[2].Type, Is.EqualTo(TokenType.Else));
+        }
+
+        [Test]
+        public void Lexer_ShouldTokenizeLetKeyword()
+        {
+            // Arrange
+            var source = "let x = 42";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Let));
+            Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Identifier));
+            Assert.That(tokens[1].Value, Is.EqualTo("x"));
+            Assert.That(tokens[2].Type, Is.EqualTo(TokenType.Assign));
+            Assert.That(tokens[3].Type, Is.EqualTo(TokenType.Number));
+            Assert.That(tokens[3].Value, Is.EqualTo("42"));
+        }
+
+        [Test]
+        public void Lexer_ShouldTokenizeMultilineInput()
+        {
+            // Arrange
+            var source = @"function test() -> int {
+    let x = 42
+    return x
+}";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            var nonNewlineTokens = tokens.Where(t => t.Type != TokenType.Newline && t.Type != TokenType.EOF).ToList();
+            Assert.That(nonNewlineTokens.Count, Is.EqualTo(12)); // function, test, (, ), ->, int, {, let, x, =, 42, return, x, }
+            Assert.That(nonNewlineTokens[0].Type, Is.EqualTo(TokenType.Function));
+            Assert.That(nonNewlineTokens[7].Type, Is.EqualTo(TokenType.Let));
+            Assert.That(nonNewlineTokens[11].Type, Is.EqualTo(TokenType.RightBrace));
+        }
+
+        [Test]
+        public void Lexer_ShouldHandleWhitespaceCorrectly()
+        {
+            // Arrange
+            var source = "  function   test  (  )  ->  int  ";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            Assert.That(tokens.Count, Is.EqualTo(7)); // function, test, (, ), ->, int, EOF
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Function));
+            Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Identifier));
+            Assert.That(tokens[1].Value, Is.EqualTo("test"));
+        }
+
+        [Test]
+        public void Lexer_ShouldTokenizeNestedBraces()
+        {
+            // Arrange
+            var source = "{ { } }";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            Assert.That(tokens.Count, Is.EqualTo(5)); // {, {, }, }, EOF
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.LeftBrace));
+            Assert.That(tokens[1].Type, Is.EqualTo(TokenType.LeftBrace));
+            Assert.That(tokens[2].Type, Is.EqualTo(TokenType.RightBrace));
+            Assert.That(tokens[3].Type, Is.EqualTo(TokenType.RightBrace));
+        }
+
+        [Test]
+        public void Lexer_ShouldTokenizeAllBinaryOperators()
+        {
+            // Arrange
+            var source = "+ - * / > < >= <= == != && ||";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            var expectedTypes = new[] 
+            {
+                TokenType.Plus, TokenType.Minus, TokenType.Multiply, TokenType.Divide,
+                TokenType.Greater, TokenType.Less, TokenType.GreaterEqual, TokenType.LessEqual,
+                TokenType.Equal, TokenType.NotEqual, TokenType.And, TokenType.Or
+            };
+            
+            for (int i = 0; i < expectedTypes.Length; i++)
+            {
+                Assert.That(tokens[i].Type, Is.EqualTo(expectedTypes[i]), $"Token at index {i} should be {expectedTypes[i]}");
+            }
+        }
+
+        [Test]
+        public void Lexer_ShouldTokenizeComplexStringInterpolation()
+        {
+            // Arrange
+            var source = "$\"Name: {user.name}, Age: {user.age}, Status: {getStatus()}\"";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            Assert.That(tokens.Count, Is.EqualTo(2)); // string interpolation, EOF
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.StringInterpolation));
+            Assert.That(tokens[0].Value, Is.EqualTo("Name: {user.name}, Age: {user.age}, Status: {getStatus()}"));
+        }
+
+        [Test]
+        public void Lexer_ShouldTokenizeAllResultKeywords()
+        {
+            // Arrange
+            var source = "Result Ok Error";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Result));
+            Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Ok));
+            Assert.That(tokens[2].Type, Is.EqualTo(TokenType.Error));
+        }
+
+        [Test]
+        public void Lexer_ShouldPreserveSourceLocationAccurately()
+        {
+            // Arrange
+            var source = "function\ntest\n()";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            Assert.That(tokens[0].Line, Is.EqualTo(1));
+            Assert.That(tokens[0].Column, Is.EqualTo(1));
+            Assert.That(tokens[2].Line, Is.EqualTo(2));
+            Assert.That(tokens[2].Column, Is.EqualTo(1));
+            Assert.That(tokens[4].Line, Is.EqualTo(3));
+            Assert.That(tokens[4].Column, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Lexer_ShouldHandleLargeNumbers()
+        {
+            // Arrange
+            var source = "1234567890";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Number));
+            Assert.That(tokens[0].Value, Is.EqualTo("1234567890"));
+        }
+
+        [Test]
+        public void Lexer_ShouldThrowOnUnterminatedStringInterpolation()
+        {
+            // Arrange
+            var source = "$\"unterminated {name";
+            _lexer = new FlowLangLexer(source);
+
+            // Act & Assert
+            Assert.Throws<Exception>(() => _lexer.Tokenize());
+        }
+
+        [Test]
+        public void Lexer_ShouldThrowOnInvalidEscapeSequence()
+        {
+            // Arrange
+            var source = "\"invalid\\q escape\"";
+            _lexer = new FlowLangLexer(source);
+
+            // Act
+            var tokens = _lexer.Tokenize();
+
+            // Assert - Invalid escape sequences are treated as literal characters
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.String));
+            Assert.That(tokens[0].Value, Is.EqualTo("invalidq escape"));
+        }
     }
 }
