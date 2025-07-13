@@ -1,0 +1,7 @@
+function hello() -> string {
+    return "Hello World"
+}
+
+pure function add(x: int, y: int) -> int {
+    return x + y
+}

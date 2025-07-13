@@ -130,9 +130,8 @@ public class StaticAnalyzer
             CollectMetrics(ast, combinedMetrics);
             combinedMetrics.LinesOfCode += sourceText.Split('\n').Length;
         }
-        report.Metrics = combinedMetrics;
 
-        return report;
+        return report with { Metrics = combinedMetrics };
     }
 
     private async Task ProcessFile(string filePath, List<(string, string, Program)> files)

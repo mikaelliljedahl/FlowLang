@@ -15,6 +15,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using FlowLang.Package;
+using FlowLang.Analysis;
+using FlowLang.LSP;
 
 // =============================================================================
 // TOKEN DEFINITIONS
@@ -1905,11 +1908,11 @@ public class NewCommand : Command
         Directory.CreateDirectory(Path.Combine(projectPath, "tests"));
 
         // Create flowc.json
-        var config = new FlowLang.Package.EnhancedFlowcConfig(
+        var config = new EnhancedFlowcConfig(
             Name: projectName,
             Description: $"A FlowLang project: {projectName}"
         );
-        await FlowLang.Package.ConfigurationManager.SaveConfigAsync(config, Path.Combine(projectPath, "flowc.json"));
+        await ConfigurationManager.SaveConfigAsync(config, Path.Combine(projectPath, "flowc.json"));
 
         // Create main.flow
         var mainFlow = """
@@ -2005,7 +2008,8 @@ public class BuildCommand : Command
     {
         try
         {
-            var config = await LoadConfig();
+            var projectRoot = Directory.GetCurrentDirectory();
+            var config = await ConfigurationManager.LoadConfigAsync(Path.Combine(projectRoot, "flowc.json"));
             var transpiler = new FlowLangTranspiler();
 
             // Create output directory
@@ -2054,13 +2058,6 @@ public class BuildCommand : Command
             Console.WriteLine($"Build failed: {ex.Message}");
             return 1;
         }
-    }
-
-    private async Task<object> LoadConfig()
-    {
-        await Task.CompletedTask;
-        Console.WriteLine("Warning: Advanced package management disabled for core compilation");
-        return new object();
     }
 }
 
@@ -2123,7 +2120,6 @@ public class TestCommand : Command
     {
         try
         {
-            var config = await LoadConfig();
             var testsDir = "tests";
 
             if (!Directory.Exists(testsDir))
@@ -2171,13 +2167,6 @@ public class TestCommand : Command
             return 1;
         }
     }
-
-    private async Task<object> LoadConfig()
-    {
-        await Task.CompletedTask;
-        Console.WriteLine("Warning: Advanced package management disabled for core compilation");
-        return new object();
-    }
 }
 
 public class LintCommand : Command
@@ -2190,7 +2179,7 @@ public class LintCommand : Command
         try
         {
             var options = ParseLintOptions(args);
-            var analyzer = new FlowLang.Analysis.StaticAnalyzer(options.Configuration);
+            var analyzer = new StaticAnalyzer(options.Configuration);
 
             // Determine what to analyze
             var paths = options.Paths?.Any() == true ? options.Paths : new[] { "." };
@@ -2239,7 +2228,7 @@ public class LintCommand : Command
                 case "--config":
                     if (i + 1 < args.Length)
                     {
-                        options.Configuration = FlowLang.Analysis.LintConfiguration.LoadFromFile(args[++i]);
+                        options.Configuration = LintConfiguration.LoadFromFile(args[++i]);
                     }
                     break;
                     
@@ -2251,23 +2240,23 @@ public class LintCommand : Command
                     break;
                     
                 case "--effects":
-                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.EffectSystem);
+                    options.Categories.Add(AnalysisCategories.EffectSystem);
                     break;
                     
                 case "--results":
-                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.ResultTypes);
+                    options.Categories.Add(AnalysisCategories.ResultTypes);
                     break;
                     
                 case "--quality":
-                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.CodeQuality);
+                    options.Categories.Add(AnalysisCategories.CodeQuality);
                     break;
                     
                 case "--performance":
-                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.Performance);
+                    options.Categories.Add(AnalysisCategories.Performance);
                     break;
                     
                 case "--security":
-                    options.Categories.Add(FlowLang.Analysis.AnalysisCategories.Security);
+                    options.Categories.Add(AnalysisCategories.Security);
                     break;
                     
                 case "--fix":
@@ -2293,13 +2282,13 @@ public class LintCommand : Command
 
         if (options.Configuration == null)
         {
-            options.Configuration = FlowLang.Analysis.LintConfiguration.LoadFromFile();
+            options.Configuration = LintConfiguration.LoadFromFile();
         }
 
         // If specific categories were requested, filter the configuration
         if (options.Categories.Any())
         {
-            var filteredRules = new Dictionary<string, FlowLang.Analysis.LintRuleConfig>();
+            var filteredRules = new Dictionary<string, LintRuleConfig>();
             foreach (var rule in options.Configuration.Rules)
             {
                 // This is a simplified filter - in practice, you'd need to map rules to categories
@@ -2314,7 +2303,7 @@ public class LintCommand : Command
 
     private class LintOptions
     {
-        public object? Configuration { get; set; }
+        public LintConfiguration? Configuration { get; set; }
         public string OutputFormat { get; set; } = "text";
         public List<string> Categories { get; set; } = new();
         public bool AutoFix { get; set; }
@@ -2335,7 +2324,7 @@ public class LspCommand : Command
         {
             Console.Error.WriteLine("Starting FlowLang Language Server...");
             
-            var server = new FlowLang.LSP.FlowLangLanguageServer(Console.OpenStandardInput(), Console.OpenStandardOutput());
+            var server = new FlowLangLanguageServer(Console.OpenStandardInput(), Console.OpenStandardOutput());
             await server.StartAsync();
             
             return 0;

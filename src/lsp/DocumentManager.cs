@@ -71,6 +71,20 @@ namespace FlowLang.LSP
             // If offset is beyond document end, return last position
             return new Position(lines.Length - 1, lines.Length > 0 ? lines[^1].Length : 0);
         }
+
+        /// <summary>
+        /// Find the token at a specific position
+        /// </summary>
+        public Token? GetTokenAtPosition(Position position)
+        {
+            var line = position.Line + 1; // Tokens use 1-based line numbers
+            var column = position.Character + 1; // Tokens use 1-based column numbers
+
+            return Tokens.FirstOrDefault(token =>
+                token.Line == line &&
+                column >= token.Column &&
+                column < token.Column + token.Value.Length);
+        }
     }
 
     /// <summary>
@@ -204,19 +218,7 @@ namespace FlowLang.LSP
             }
         }
 
-        /// <summary>
-        /// Find the token at a specific position
-        /// </summary>
-        public Token? GetTokenAtPosition(ManagedDocument document, Position position)
-        {
-            var line = position.Line + 1; // Tokens use 1-based line numbers
-            var column = position.Character + 1; // Tokens use 1-based column numbers
-
-            return document.Tokens.FirstOrDefault(token =>
-                token.Line == line &&
-                column >= token.Column &&
-                column < token.Column + token.Value.Length);
-        }
+        
 
         /// <summary>
         /// Find all tokens in a specific line
@@ -236,7 +238,7 @@ namespace FlowLang.LSP
 
             // This is a simplified implementation
             // In a full implementation, we'd need to track position information in AST nodes
-            var token = GetTokenAtPosition(document, position);
+            var token = document.GetTokenAtPosition(position);
             if (token == null) return null;
 
             // For now, return the AST root - this should be enhanced to find the exact node

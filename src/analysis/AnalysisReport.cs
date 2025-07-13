@@ -56,7 +56,7 @@ public static class AnalysisCategories
 /// <summary>
 /// Comprehensive analysis report containing all diagnostics and metrics
 /// </summary>
-public class AnalysisReport
+public record AnalysisReport
 {
     public List<AnalysisDiagnostic> Diagnostics { get; init; } = new();
     public AnalysisMetrics Metrics { get; init; } = new();

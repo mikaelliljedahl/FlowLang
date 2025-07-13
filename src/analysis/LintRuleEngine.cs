@@ -19,7 +19,7 @@ public record LintRuleConfig(
 /// <summary>
 /// Configuration for the entire linting system
 /// </summary>
-public class LintConfiguration
+public record LintConfiguration
 {
     public Dictionary<string, LintRuleConfig> Rules { get; init; } = new();
     public List<string> Exclude { get; init; } = new();
