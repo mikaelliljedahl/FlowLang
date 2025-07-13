@@ -1,3 +1,13 @@
+/*spec
+intent: "Safely divide two integers with explicit error handling"
+rules:
+  - "Division by zero must be prevented and return descriptive error"
+  - "Both operands must be integers"
+  - "Result must be exact integer division (no floating point)"
+postconditions:
+  - "Returns quotient wrapped in Ok on successful division"
+  - "Returns descriptive error message wrapped in Error for division by zero"
+spec*/
 function divide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")
@@ -5,6 +15,16 @@ function divide(a: int, b: int) -> Result<int, string> {
     return Ok(a / b)
 }
 
+/*spec
+intent: "Calculate double the result of a division operation with error propagation"
+rules:
+  - "Must use the divide function for the division operation"
+  - "Error from division should be automatically propagated using ? operator"
+  - "Result should be doubled only if division succeeds"
+postconditions:
+  - "Returns doubled division result wrapped in Ok on success"
+  - "Returns original division error if division fails"
+spec*/
 function calculate(x: int, y: int) -> Result<int, string> {
     let result = divide(x, y)?
     return Ok(result * 2)

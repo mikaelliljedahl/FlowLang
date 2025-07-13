@@ -41,6 +41,25 @@ flowc run hello.flow
 
 ## 🔥 Core Features
 
+### Specification Blocks - Intent Preserved with Code
+```flowlang
+/*spec
+intent: "Validate user data and calculate applicable tax rate"
+rules:
+  - "Age must be between 0 and 150"
+  - "Tax rate varies by age group and location"
+postconditions:
+  - "Returns appropriate tax rate for demographics"
+  - "Fails gracefully with descriptive error messages"
+spec*/
+function calculateTax(age: int, location: string) -> Result<float, string> {
+    guard age >= 0 && age <= 150 else {
+        return Error("Invalid age range")
+    }
+    // Implementation follows specification above
+}
+```
+
 ### Result Types - No More Exceptions
 ```flowlang
 function safeDivide(a: int, b: int) -> Result<int, string> {
@@ -130,6 +149,7 @@ flowc help <command>
 - ✅ **Explicit effects** - `uses [Database, Network]` declares side effects
 - ✅ **Safe error handling** - Result types prevent crashes
 - ✅ **Self-documenting** - code structure serves as documentation
+- ✅ **Specification preservation** - intent and code are atomically linked
 
 ## 📚 Learning Resources
 
@@ -221,7 +241,7 @@ We welcome contributions! See [Contributing Guide](docs/contributing.md) for:
 
 - ✅ **Phase 1 (MVP):** Core language, transpilation, CLI tools
 - ✅ **Phase 2 (Ecosystem):** LSP, static analysis, package management
-- 🔄 **Phase 3 (Advanced):** Saga patterns, observability, optimizations
+- 🔄 **Phase 3 (Advanced):** Specification blocks, saga patterns, observability
 - 🔄 **Phase 4 (Frontend):** WebAssembly, JavaScript targets
 
 ## 🆘 Need Help?

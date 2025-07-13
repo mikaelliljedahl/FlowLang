@@ -15,10 +15,11 @@ This document provides a complete reference for the FlowLang programming languag
 9. [Effect System](#effect-system)
 10. [Module System](#module-system)
 11. [String Features](#string-features)
-12. [Comments](#comments)
-13. [Keywords](#keywords)
-14. [Operators](#operators)
-15. [Grammar](#grammar)
+12. [Specification Blocks](#specification-blocks)
+13. [Comments](#comments)
+14. [Keywords](#keywords)
+15. [Operators](#operators)
+16. [Grammar](#grammar)
 
 ## Language Overview
 
@@ -30,6 +31,7 @@ FlowLang is a statically-typed, functional programming language that transpiles 
 - **Strong type safety** with null safety by default
 - **Module system** for code organization
 - **String interpolation** for readable text formatting
+- **Specification preservation** with embedded specification blocks for atomic intent-code linking
 
 ## Lexical Elements
 
@@ -687,6 +689,216 @@ function buildErrorMessage(operation: string, code: int) -> string {
     let base = "Error in operation: " + operation
     return $"{base}\nError Code: {code}\nPlease contact support"
 }
+```
+
+## Specification Blocks
+
+### Overview
+
+Specification blocks allow you to embed intent, business rules, and formal specifications directly with your code. This creates an atomic link between the "why" (specification) and the "how" (implementation), preventing context loss that commonly occurs in software development.
+
+### Syntax
+
+Specification blocks use the `/*spec ... spec*/` syntax and are placed directly before the function or module they describe:
+
+```flowlang
+/*spec
+intent: "Brief description of what this function does and why"
+rules:
+  - "Business rule or constraint 1"
+  - "Business rule or constraint 2"
+postconditions:
+  - "Expected outcome 1"
+  - "Expected outcome 2"
+source_doc: "optional-reference-to-external-documentation.md"
+spec*/
+function functionName(params) -> ReturnType {
+    // Implementation
+}
+```
+
+### Specification Fields
+
+#### intent (Required)
+A natural language description of the function's purpose and business context:
+
+```flowlang
+/*spec
+intent: "Transfer funds between two accounts atomically, ensuring sufficient balance"
+spec*/
+```
+
+#### rules (Optional)
+A list of business rules, constraints, or validation requirements:
+
+```flowlang
+/*spec
+intent: "Process user registration with validation"
+rules:
+  - "Email must be valid format"
+  - "Password must be at least 8 characters"
+  - "Username must be unique in system"
+  - "User must be 13 or older"
+spec*/
+```
+
+#### postconditions (Optional)
+Expected outcomes or state changes after successful execution:
+
+```flowlang
+/*spec
+intent: "Create new user account"
+postconditions:
+  - "User record exists in database"
+  - "Welcome email is sent"
+  - "User can log in with provided credentials"
+  - "User has default permissions assigned"
+spec*/
+```
+
+#### source_doc (Optional)
+Reference to external documentation or requirements:
+
+```flowlang
+/*spec
+intent: "Calculate tax based on jurisdiction rules"
+source_doc: "requirements/tax-calculation-v2.3.md"
+spec*/
+```
+
+### Function-Level Specifications
+
+Place specification blocks directly before function declarations:
+
+```flowlang
+/*spec
+intent: "Safely divide two numbers with explicit error handling"
+rules:
+  - "Divisor cannot be zero"
+  - "Both numbers must be integers"
+postconditions:
+  - "Returns quotient on success"
+  - "Returns descriptive error on division by zero"
+spec*/
+function safeDivide(a: int, b: int) -> Result<int, string> {
+    guard b != 0 else {
+        return Error("Division by zero not allowed")
+    }
+    return Ok(a / b)
+}
+```
+
+### Module-Level Specifications
+
+Specify the purpose and scope of entire modules:
+
+```flowlang
+/*spec
+intent: "User authentication and authorization utilities"
+rules:
+  - "All operations must be logged for security audit"
+  - "Password handling must follow security best practices"
+  - "Session management follows OAuth 2.0 standards"
+postconditions:
+  - "Secure user authentication"
+  - "Proper session lifecycle management"
+source_doc: "security/auth-requirements.md"
+spec*/
+module AuthService {
+    // Module implementation
+}
+```
+
+### Complex Example
+
+```flowlang
+/*spec
+intent: "Process e-commerce order with inventory management and payment"
+rules:
+  - "Must verify product availability before payment"
+  - "Payment processing must be atomic (all-or-nothing)"
+  - "Inventory must be reserved during payment processing"
+  - "Failed payments must release reserved inventory"
+  - "Successful orders must update inventory and create shipping record"
+postconditions:
+  - "Payment is processed successfully"
+  - "Inventory is decremented by ordered quantities"
+  - "Shipping record is created with tracking information"
+  - "Customer receives order confirmation email"
+  - "Order is logged for business analytics"
+source_doc: "business/order-processing-workflow.md"
+spec*/
+function processOrder(order: Order) 
+    uses [Database, Network, Logging] -> Result<OrderConfirmation, OrderError> {
+    
+    // Verify inventory availability
+    let availability = checkInventory(order.items)?
+    guard availability.allAvailable else {
+        return Error(OrderError.InsufficientInventory)
+    }
+    
+    // Reserve inventory during payment
+    let reservation = reserveInventory(order.items)?
+    
+    // Process payment
+    let payment = processPayment(order.payment, order.total)?
+    
+    // Update inventory and create shipping
+    let inventory = updateInventory(order.items)?
+    let shipping = createShipping(order)?
+    
+    // Send confirmation
+    let confirmation = sendConfirmation(order, shipping.tracking)?
+    
+    return Ok(OrderConfirmation.new(payment.id, shipping.tracking))
+}
+```
+
+### Benefits for LLM Development
+
+1. **Context Preservation**: LLMs have complete understanding of both intent and implementation
+2. **Consistency Checking**: Specifications can be validated against implementation
+3. **Change Reasoning**: When modifying code, LLMs can ensure changes align with specifications
+4. **Test Generation**: Specifications provide clear criteria for automated test generation
+5. **Documentation**: Self-documenting code eliminates separate specification files
+
+### Best Practices
+
+1. **Be Specific**: Use concrete, actionable language in rules and postconditions
+2. **Focus on Business Logic**: Capture the "why" not just the "what"
+3. **Keep Current**: Update specifications when implementation changes
+4. **Use Examples**: Include concrete examples in intent descriptions
+5. **Reference External Docs**: Link to detailed requirements when appropriate
+
+### Generated Code Impact
+
+Specification blocks are preserved in generated C# code as comprehensive XML documentation:
+
+**FlowLang Input:**
+```flowlang
+/*spec
+intent: "Calculate user discount based on loyalty tier"
+rules:
+  - "Platinum users get 15% discount"
+  - "Gold users get 10% discount"
+  - "Silver users get 5% discount"
+spec*/
+function calculateDiscount(user: User) -> float
+```
+
+**Generated C# Output:**
+```csharp
+/// <summary>
+/// Calculate user discount based on loyalty tier
+/// 
+/// Business Rules:
+/// - Platinum users get 15% discount
+/// - Gold users get 10% discount  
+/// - Silver users get 5% discount
+/// </summary>
+/// <param name="user">Parameter of type User</param>
+/// <returns>Returns float</returns>
+public static float calculateDiscount(User user)
 ```
 
 ## Comments

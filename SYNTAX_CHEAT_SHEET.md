@@ -167,6 +167,74 @@ function orchestrate(id: string) uses [Database, Network, Logging] -> Result<str
 }
 ```
 
+## 📋 Specification Blocks
+
+### Embedded Specifications
+```flowlang
+/*spec
+intent: "Brief description of what this function does and why"
+rules:
+  - "Business rule or constraint 1"
+  - "Business rule or constraint 2"
+postconditions:
+  - "Expected outcome 1"
+  - "Expected outcome 2"
+source_doc: "optional-reference-to-external-docs.md"
+spec*/
+function functionName(param: type) -> returnType {
+    // Implementation follows specification above
+}
+```
+
+### Function-Level Example
+```flowlang
+/*spec
+intent: "Transfer funds between accounts with validation"
+rules:
+  - "Source account must have sufficient balance"
+  - "Transfer amount must be positive"
+  - "Both accounts must exist and be active"
+postconditions:
+  - "Source account balance is reduced by amount"
+  - "Destination account balance is increased by amount"
+  - "Transaction is logged for audit trail"
+spec*/
+function transferFunds(from: Account, to: Account, amount: Money) 
+    uses [Database, Logging] -> Result<Transaction, TransferError> {
+    
+    guard amount > 0 else {
+        return Error(TransferError.InvalidAmount)
+    }
+    
+    guard from.balance >= amount else {
+        return Error(TransferError.InsufficientFunds)
+    }
+    
+    // Transfer implementation
+    let transaction = executeTransfer(from, to, amount)?
+    let logged = logTransaction(transaction)?
+    
+    return Ok(transaction)
+}
+```
+
+### Module-Level Example
+```flowlang
+/*spec
+intent: "Authentication and authorization utilities"
+rules:
+  - "All password operations must be cryptographically secure"
+  - "Session management follows OAuth 2.0 standards"
+  - "All operations are logged for security audit"
+postconditions:
+  - "Secure user authentication and session management"
+  - "Comprehensive security audit trail"
+spec*/
+module AuthService {
+    // Module implementation
+}
+```
+
 ## 📦 Module System
 
 ### Defining Modules

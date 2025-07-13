@@ -8,6 +8,7 @@ FlowLang is a backend programming language designed specifically for LLM-assiste
 - **One way to do things**: Minimize choices to reduce LLM confusion and increase code consistency
 - **Safety by default**: Null safety, effect tracking, and comprehensive error handling built-in
 - **Self-documenting**: Code structure serves as documentation
+- **Specification preservation**: Intent and reasoning are atomically linked with implementation to prevent context loss
 
 ## Current Status - Phase 2 Ecosystem Integration ✅ COMPLETED (2024)
 
@@ -85,6 +86,7 @@ FlowLang is a backend programming language designed specifically for LLM-assiste
 **Goal**: Unique FlowLang features and optimizations
 
 **Key Components:**
+- **Specification Integration**: Embedded specification blocks for atomic intent-code linking
 - **Saga/Compensation Runtime**: Built-in distributed transaction support
 - **Built-in Observability**: Automatic metrics, tracing, and logging
 - **Advanced Pipeline Optimizations**: Async/await patterns, parallel processing
@@ -92,6 +94,7 @@ FlowLang is a backend programming language designed specifically for LLM-assiste
 - **Performance Optimizations**: Advanced static analysis and code generation
 
 **Deliverables:**
+- Specification block syntax and tooling integration
 - Saga runtime with compensation patterns
 - Observability framework integration
 - Performance optimization engine
@@ -167,7 +170,17 @@ pure function calculate_tax(amount: int) -> int {
     return amount * 8 / 100
 }
 
-// Function with explicit effects
+// Function with explicit effects and embedded specification
+/*spec
+intent: "Save user data to database with comprehensive logging"
+rules:
+  - "User must have valid name and email"
+  - "Database operation must be transactional"
+  - "All operations must be logged for audit trail"
+postconditions:
+  - "User is persisted in database on success"
+  - "Comprehensive logs are written for debugging"
+spec*/
 function save_user(user: User) uses [Database, Logging] -> Result<UserId, DatabaseError> {
     log_info("Saving user: " + user.name)
     let result = database.save(user)
@@ -241,6 +254,7 @@ function calculate() -> Result<int, string> {
 - ✅ **Professional CLI Tools** with comprehensive development workflow
 
 ### 🎯 Phase 3 Tools (PLANNED)
+- **Specification-Aware Tooling**: LSP integration with spec blocks, consistency validation
 - **Advanced IDE Integration** (JetBrains IDEA, Visual Studio)
 - **Integrated Debugger** with FlowLang source maps
 - **Performance Profiler** with effect tracking
@@ -249,6 +263,7 @@ function calculate() -> Result<int, string> {
   - OpenAPI specifications → FlowLang interfaces  
   - GraphQL schemas → FlowLang clients
 - **Interactive REPL** for development and testing
+- **Spec-First Development Workflow** with automated consistency checking
 
 ### 🌐 Phase 4 Tools (FRONTEND)
 - **Frontend Project Templates** with modern frameworks

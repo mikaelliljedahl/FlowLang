@@ -235,6 +235,50 @@ function processUser(name: string, age: int) -> Result<string, string> {
 }
 ```
 
+### Specification Blocks - Preserving Intent
+
+FlowLang allows you to embed specifications directly with your code, creating an atomic link between intent and implementation:
+
+```flowlang
+/*spec
+intent: "Process user registration with comprehensive validation"
+rules:
+  - "Name must not be empty"
+  - "Age must be non-negative"
+  - "Email must be valid format"
+postconditions:
+  - "User record is created on success"
+  - "Validation errors are clearly reported"
+spec*/
+function registerUser(name: string, age: int, email: string) 
+    uses [Database, Logging] -> Result<int, string> {
+    
+    guard name != "" else {
+        return Error("Name cannot be empty")
+    }
+    
+    guard age >= 0 else {
+        return Error("Age must be positive")
+    }
+    
+    guard email != "" else {
+        return Error("Email cannot be empty")
+    }
+    
+    // Create user record
+    let userId = createUserRecord(name, age, email)?
+    let logged = logUserCreation(userId)?
+    
+    return Ok(userId)
+}
+```
+
+**Benefits of Specification Blocks:**
+- **Context Preservation**: LLMs can understand both what and why
+- **Self-Documenting**: Specifications live with implementation
+- **Consistency**: No drift between docs and code
+- **Automatic Documentation**: Generates rich C# XML docs
+
 ## Creating a Project
 
 ### Using the CLI

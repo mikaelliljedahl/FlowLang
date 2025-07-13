@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# FlowLang Tools Wrapper
+# Uses working transpiler to compile and run FlowLang-based tools
+
+CORE_DIR="core"
+TOOLS_DIR="tools"
+TEMP_DIR="/tmp/flowc-tools"
+
+# Ensure core compiler is built
+build_core_if_needed() {
+    if [ ! -f "$CORE_DIR/bin/Debug/net8.0/flowc-core.dll" ]; then
+        echo "Building FlowLang core compiler..."
+        cd $CORE_DIR && dotnet build flowc-core.csproj >/dev/null
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to build core compiler"
+            exit 1
+        fi
+        cd ..
+    fi
+}
+
+# Compile and run a FlowLang tool
+run_flowlang_tool() {
+    local tool_name=$1
+    shift
+    local tool_args="$@"
+    
+    local tool_file="$TOOLS_DIR/$tool_name.flow"
+    local compiled_tool="$TEMP_DIR/$tool_name.cs"
+    local compiled_exe="$TEMP_DIR/$tool_name.dll"
+    
+    if [ ! -f "$tool_file" ]; then
+        echo "Error: Tool '$tool_name' not found at $tool_file"
+        exit 1
+    fi
+    
+    # Create temp directory
+    mkdir -p $TEMP_DIR
+    
+    echo "Compiling FlowLang tool: $tool_name..."
+    
+    # Compile FlowLang tool to C#
+    cd $CORE_DIR
+    dotnet run -- "../$tool_file" "../$compiled_tool" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to compile $tool_name"
+        exit 1
+    fi
+    cd ..
+    
+    # TODO: Compile C# to executable and run
+    # For now, just show that the tool was compiled
+    echo "✅ FlowLang tool '$tool_name' compiled successfully"
+    echo "📝 Generated C# code at: $compiled_tool"
+    echo ""
+    echo "🚧 Note: C# execution not implemented yet"
+    echo "    The FlowLang tool has been transpiled to C#"
+    echo "    Next step: compile C# and execute with args: $tool_args"
+    
+    return 0
+}
+
+# Show usage
+show_usage() {
+    echo "FlowLang Tools - Self-Hosted Development Tools"
+    echo ""
+    echo "Usage:"
+    echo "  $0 dev [--port 8080] [--verbose]     # Development server"
+    echo "  $0 lint [files...] [--auto-fix]      # Static analysis"
+    echo "  $0 lsp                               # Language server"
+    echo "  $0 pkg <command>                     # Package manager"
+    echo ""
+    echo "Available tools:"
+    echo "  dev-server    - Hot-reload development server"
+    echo "  linter        - Static analysis and code quality"
+    echo "  lsp-server    - Language Server Protocol implementation"
+    echo "  package-mgr   - Package management (future)"
+    echo ""
+    echo "Examples:"
+    echo "  $0 dev --port 3000 --verbose"
+    echo "  $0 lint src/ --auto-fix"
+    echo ""
+    echo "Note: These tools are implemented in FlowLang itself!"
+}
+
+# Main script
+build_core_if_needed
+
+case "$1" in
+    "dev")
+        shift
+        run_flowlang_tool "dev-server" "$@"
+        ;;
+    "lint")
+        shift
+        run_flowlang_tool "linter" "$@"
+        ;;
+    "lsp")
+        shift
+        run_flowlang_tool "lsp-server" "$@"
+        ;;
+    "pkg")
+        shift
+        run_flowlang_tool "package-mgr" "$@"
+        ;;
+    "--help" | "-h" | "")
+        show_usage
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Use '$0 --help' for usage information"
+        exit 1
+        ;;
+esac
