@@ -742,6 +742,15 @@ rules:
 spec*/
 ```
 
+### Working Example
+
+For a comprehensive example with multiple functions using specification blocks, see **`examples/specification_example.flow`**. This example demonstrates:
+
+- **Loyalty discount calculation** with business rules for different membership tiers
+- **Payment processing** with security and fraud detection requirements
+- **User input validation** with data sanitization requirements
+- **Activity reporting** with privacy protection and compliance rules
+
 #### postconditions (Optional)
 Expected outcomes or state changes after successful execution:
 

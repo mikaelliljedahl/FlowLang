@@ -122,6 +122,9 @@ flowc build
 # Run single file (shows generated C#)
 flowc run examples/simple.flow
 
+# See specification blocks in action
+flowc run examples/specification_example.flow
+
 # Run tests
 flowc test
 
@@ -165,7 +168,7 @@ flowc help <command>
 ### 📖 Comprehensive Guides
 1. **[Getting Started Guide](docs/getting-started.md)** - Detailed installation and first steps
 2. **[Language Reference](docs/language-reference.md)** - Complete language documentation
-3. **[Examples](docs/examples/)** - [Basic Syntax](docs/examples/basic-syntax.md) | [Result Types](docs/examples/result-types.md) | [Effect System](docs/examples/effect-system.md)
+3. **[Examples](docs/examples/)** - [Basic Syntax](docs/examples/basic-syntax.md) | [Result Types](docs/examples/result-types.md) | [Effect System](docs/examples/effect-system.md) | [Specification Blocks](examples/specification_example.flow)
 4. **[Tools](docs/)** - [CLI Reference](docs/cli-reference.md) | [LSP Integration](docs/lsp-integration.md) | [Package Manager](docs/package-manager.md)
 
 ## 🔧 IDE Integration

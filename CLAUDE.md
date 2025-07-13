@@ -294,6 +294,9 @@ tests/
 
 ## Implementation Status
 
+### Known Issues and TODOs
+⚠️ **Critical Issue**: Guard statements are not currently supported by the core transpiler parser. See [core/TODO.md](core/TODO.md) for detailed information about this and other pending implementation items.
+
 ### Current File Structure *(Actual)*
 ```
 flowlang/

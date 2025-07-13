@@ -112,6 +112,10 @@ public enum TokenType
     // Modulus operator
     Modulo,   // %
     
+    // Specification block tokens
+    SpecStart,  // /*spec
+    SpecEnd,    // spec*/
+    
     EOF
 }
 
@@ -126,9 +130,17 @@ public abstract record ASTNode;
 public record Program(List<ASTNode> Statements) : ASTNode;
 
 // Module system AST nodes
-public record ModuleDeclaration(string Name, List<ASTNode> Body, List<string>? Exports = null) : ASTNode;
+public record ModuleDeclaration(string Name, List<ASTNode> Body, List<string>? Exports = null, SpecificationBlock? Specification = null) : ASTNode;
 public record ImportStatement(string ModuleName, List<string>? SpecificImports = null, bool IsWildcard = false) : ASTNode;
 public record ExportStatement(List<string> ExportedNames) : ASTNode;
+
+// Specification block AST node
+public record SpecificationBlock(
+    string Intent,
+    List<string>? Rules = null,
+    List<string>? Postconditions = null,
+    string? SourceDoc = null
+) : ASTNode;
 
 // Function AST nodes
 public record FunctionDeclaration(
@@ -138,7 +150,8 @@ public record FunctionDeclaration(
     List<ASTNode> Body, 
     bool IsPure = false,
     List<string>? Effects = null,
-    bool IsExported = false
+    bool IsExported = false,
+    SpecificationBlock? Specification = null
 ) : ASTNode;
 
 public record Parameter(string Name, string Type);
@@ -333,6 +346,11 @@ public class FlowLangLexer
                     // Line comment
                     while (Peek() != '\n' && !IsAtEnd()) Advance();
                 }
+                else if (Match('*'))
+                {
+                    // Check for specification block comment
+                    ScanSpecificationOrComment();
+                }
                 else
                 {
                     AddToken(TokenType.Divide);
@@ -467,6 +485,98 @@ public class FlowLangLexer
     private char Peek() => IsAtEnd() ? '\0' : _source[_current];
 
     private char PeekNext() => (_current + 1 >= _source.Length) ? '\0' : _source[_current + 1];
+
+    private bool MatchSequence(string sequence)
+    {
+        if (_current + sequence.Length > _source.Length) return false;
+        
+        for (int i = 0; i < sequence.Length; i++)
+        {
+            if (_source[_current + i] != sequence[i]) return false;
+        }
+        
+        // Consume the sequence
+        _current += sequence.Length;
+        _column += sequence.Length;
+        return true;
+    }
+
+    private void ScanSpecificationOrComment()
+    {
+        // We're already past /*
+        // Check if this is a specification block
+        if (MatchSequence("spec"))
+        {
+            // Scan the specification content
+            var specContent = new System.Text.StringBuilder();
+            
+            // Scan until we find spec*/
+            while (!IsAtEnd())
+            {
+                if (Peek() == 's')
+                {
+                    // Check if this is the end marker
+                    var saved_current = _current;
+                    var saved_column = _column;
+                    
+                    if (MatchSequence("spec*/"))
+                    {
+                        // Found the end - create a token with the content
+                        AddToken(TokenType.SpecStart, specContent.ToString().Trim());
+                        return;
+                    }
+                    
+                    // Not the end marker, restore position and continue
+                    _current = saved_current;
+                    _column = saved_column;
+                }
+                
+                if (Peek() == '\n')
+                {
+                    _line++;
+                    _column = 1;
+                    specContent.AppendLine();
+                }
+                else
+                {
+                    _column++;
+                    specContent.Append(Peek());
+                }
+                Advance();
+            }
+            
+            throw new Exception($"Unterminated specification block starting at line {_line}");
+        }
+        else
+        {
+            // Regular block comment - skip it
+            SkipBlockComment();
+        }
+    }
+
+    private void SkipBlockComment()
+    {
+        // We're already past /*
+        while (!IsAtEnd())
+        {
+            if (Peek() == '*' && PeekNext() == '/')
+            {
+                Advance(); // consume '*'
+                Advance(); // consume '/'
+                break;
+            }
+            if (Peek() == '\n')
+            {
+                _line++;
+                _column = 1;
+            }
+            else
+            {
+                _column++;
+            }
+            Advance();
+        }
+    }
 
     private void AddToken(TokenType type, object? literal = null)
     {
@@ -647,8 +757,11 @@ public class FlowLangParser
 
     private ASTNode? ParseStatement()
     {
+        // Check for specification block first
+        var specification = ParseSpecificationBlock();
+        
         if (Match(TokenType.Module))
-            return ParseModuleDeclaration();
+            return ParseModuleDeclaration(specification);
         if (Match(TokenType.Import))
             return ParseImportStatement();
         if (Match(TokenType.Export))
@@ -660,7 +773,7 @@ public class FlowLangParser
         if (Match(TokenType.ApiClient))
             return ParseApiClientDeclaration();
         if (Match(TokenType.Function) || Match(TokenType.Pure))
-            return ParseFunctionDeclaration();
+            return ParseFunctionDeclaration(specification);
         if (Match(TokenType.Return))
             return ParseReturnStatement();
         if (Match(TokenType.If))
@@ -670,13 +783,19 @@ public class FlowLangParser
         if (Match(TokenType.Guard))
             return ParseGuardStatement();
 
+        // If we have a specification but no matching declaration, that's an error
+        if (specification != null)
+        {
+            throw new Exception($"Specification block found but no function or module declaration follows at line {Peek().Line}");
+        }
+
         // Expression statement
         var expr = ParseExpression();
         if (Match(TokenType.Semicolon)) {} // Optional semicolon
         return expr;
     }
 
-    private ModuleDeclaration ParseModuleDeclaration()
+    private ModuleDeclaration ParseModuleDeclaration(SpecificationBlock? specification = null)
     {
         var name = Consume(TokenType.Identifier, "Expected module name").Lexeme;
         Consume(TokenType.LeftBrace, "Expected '{' after module name");
@@ -701,7 +820,7 @@ public class FlowLangParser
         
         Consume(TokenType.RightBrace, "Expected '}' after module body");
         
-        return new ModuleDeclaration(name, body, exports.Any() ? exports : null);
+        return new ModuleDeclaration(name, body, exports.Any() ? exports : null, specification);
     }
 
     private ImportStatement ParseImportStatement()
@@ -747,7 +866,7 @@ public class FlowLangParser
         {
             // This is an export function declaration - mark it as exported
             Previous(); // Go back
-            var func = ParseFunctionDeclaration();
+            var func = ParseFunctionDeclaration(null);
             if (func is FunctionDeclaration fd)
             {
                 exports.Add(fd.Name);
@@ -1212,7 +1331,7 @@ public class FlowLangParser
         return new ApiClientDeclaration(name, baseUrl, methods);
     }
 
-    private FunctionDeclaration ParseFunctionDeclaration()
+    private FunctionDeclaration ParseFunctionDeclaration(SpecificationBlock? specification = null)
     {
         bool isPure = Previous().Type == TokenType.Pure;
         if (isPure && !Match(TokenType.Function))
@@ -1254,7 +1373,7 @@ public class FlowLangParser
         var body = ParseStatements();
         Consume(TokenType.RightBrace, "Expected '}' after function body");
         
-        return new FunctionDeclaration(name, parameters, returnType, body, isPure, effects);
+        return new FunctionDeclaration(name, parameters, returnType, body, isPure, effects, false, specification);
     }
 
     private List<string> ParseEffectsList()
@@ -1265,8 +1384,20 @@ public class FlowLangParser
         
         do
         {
-            var effect = Consume(TokenType.Identifier, "Expected effect name").Lexeme;
-            effects.Add(effect);
+            // Effect names can be specific token types or identifiers
+            var token = Advance();
+            string effectName = token.Type switch
+            {
+                TokenType.Database => "Database",
+                TokenType.Network => "Network", 
+                TokenType.Logging => "Logging",
+                TokenType.FileSystem => "FileSystem",
+                TokenType.Memory => "Memory",
+                TokenType.IO => "IO",
+                TokenType.Identifier => token.Lexeme,
+                _ => throw new Exception($"Expected effect name. Got '{token.Lexeme}' at line {token.Line}")
+            };
+            effects.Add(effectName);
         } while (Match(TokenType.Comma));
         
         Consume(TokenType.RightBracket, "Expected ']' after effects list");
@@ -1639,6 +1770,72 @@ public class FlowLangParser
         return false;
     }
 
+    private SpecificationBlock? ParseSpecificationBlock()
+    {
+        if (!Check(TokenType.SpecStart)) return null;
+        
+        var specToken = Advance(); // Consume SpecStart token
+        var content = specToken.Literal?.ToString() ?? "";
+        
+        // Parse the YAML-like content
+        var intent = "";
+        var rules = new List<string>();
+        var postconditions = new List<string>();
+        string? sourceDoc = null;
+        
+        var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        string? currentSection = null;
+        
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+            if (string.IsNullOrEmpty(trimmed)) continue;
+            
+            if (trimmed.StartsWith("intent:"))
+            {
+                intent = trimmed.Substring(7).Trim().Trim('"');
+                currentSection = "intent";
+            }
+            else if (trimmed.StartsWith("rules:"))
+            {
+                currentSection = "rules";
+            }
+            else if (trimmed.StartsWith("postconditions:"))
+            {
+                currentSection = "postconditions";
+            }
+            else if (trimmed.StartsWith("source_doc:"))
+            {
+                sourceDoc = trimmed.Substring(11).Trim().Trim('"');
+                currentSection = "source_doc";
+            }
+            else if (trimmed.StartsWith("- "))
+            {
+                var item = trimmed.Substring(2).Trim().Trim('"');
+                if (currentSection == "rules")
+                {
+                    rules.Add(item);
+                }
+                else if (currentSection == "postconditions")
+                {
+                    postconditions.Add(item);
+                }
+            }
+        }
+        
+        if (string.IsNullOrEmpty(intent))
+        {
+            throw new Exception($"Specification block missing required 'intent' field at line {specToken.Line}");
+        }
+        
+        return new SpecificationBlock(
+            intent,
+            rules.Count > 0 ? rules : null,
+            postconditions.Count > 0 ? postconditions : null,
+            sourceDoc
+        );
+    }
+
     private bool Check(TokenType type) => !IsAtEnd() && Peek().Type == type;
 
     private Token Advance() => IsAtEnd() ? Previous() : _tokens[_current++];
@@ -1784,12 +1981,11 @@ public class CSharpGenerator
             );
         }
         
-        // Add XML documentation for effects
-        if (func.Effects?.Any() == true)
+        // Generate XML documentation from specification block or effects
+        var xmlDocumentation = GenerateXmlDocumentation(func);
+        if (xmlDocumentation.Any())
         {
-            var effectsComment = $"Effects: {string.Join(", ", func.Effects)}";
-            method = method.WithLeadingTrivia(
-                Comment($"/// <summary>{effectsComment}</summary>"));
+            method = method.WithLeadingTrivia(xmlDocumentation);
         }
         
         // Generate method body
@@ -2018,6 +2214,97 @@ public class CSharpGenerator
         return result;
     }
     
+    private List<SyntaxTrivia> GenerateXmlDocumentation(FunctionDeclaration func)
+    {
+        var trivia = new List<SyntaxTrivia>();
+        
+        if (func.Specification != null)
+        {
+            // Generate rich XML documentation from specification block
+            trivia.Add(Comment("/// <summary>"));
+            trivia.Add(EndOfLine("\n"));
+            
+            // Add intent
+            trivia.Add(Comment($"/// {func.Specification.Intent}"));
+            trivia.Add(EndOfLine("\n"));
+            
+            // Add business rules if present
+            if (func.Specification.Rules?.Any() == true)
+            {
+                trivia.Add(Comment("/// "));
+                trivia.Add(EndOfLine("\n"));
+                trivia.Add(Comment("/// Business Rules:"));
+                trivia.Add(EndOfLine("\n"));
+                foreach (var rule in func.Specification.Rules)
+                {
+                    trivia.Add(Comment($"/// - {rule}"));
+                    trivia.Add(EndOfLine("\n"));
+                }
+            }
+            
+            // Add postconditions if present
+            if (func.Specification.Postconditions?.Any() == true)
+            {
+                trivia.Add(Comment("/// "));
+                trivia.Add(EndOfLine("\n"));
+                trivia.Add(Comment("/// Expected Outcomes:"));
+                trivia.Add(EndOfLine("\n"));
+                foreach (var postcondition in func.Specification.Postconditions)
+                {
+                    trivia.Add(Comment($"/// - {postcondition}"));
+                    trivia.Add(EndOfLine("\n"));
+                }
+            }
+            
+            // Add source document reference if present
+            if (!string.IsNullOrEmpty(func.Specification.SourceDoc))
+            {
+                trivia.Add(Comment("/// "));
+                trivia.Add(EndOfLine("\n"));
+                trivia.Add(Comment($"/// Source: {func.Specification.SourceDoc}"));
+                trivia.Add(EndOfLine("\n"));
+            }
+            
+            trivia.Add(Comment("/// </summary>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        else if (func.Effects?.Any() == true)
+        {
+            // Fallback to basic effects documentation
+            trivia.Add(Comment("/// <summary>"));
+            trivia.Add(EndOfLine("\n"));
+            
+            if (func.IsPure)
+            {
+                trivia.Add(Comment("/// Pure function - no side effects"));
+            }
+            else
+            {
+                trivia.Add(Comment($"/// Effects: {string.Join(", ", func.Effects)}"));
+            }
+            
+            trivia.Add(EndOfLine("\n"));
+            trivia.Add(Comment("/// </summary>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        
+        // Add parameter documentation
+        foreach (var param in func.Parameters)
+        {
+            trivia.Add(Comment($"/// <param name=\"{param.Name}\">Parameter of type {param.Type}</param>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        
+        // Add return documentation
+        if (!string.IsNullOrEmpty(func.ReturnType))
+        {
+            trivia.Add(Comment($"/// <returns>Returns {func.ReturnType}</returns>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        
+        return trivia;
+    }
+
     private ConditionalExpressionSyntax GenerateTernaryExpression(TernaryExpression ternary)
     {
         return ConditionalExpression(

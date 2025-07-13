@@ -489,7 +489,7 @@ module UserService {
 
 Now that you have FlowLang up and running:
 
-1. **Explore the Examples**: Check out the `examples/` directory for more complex examples
+1. **Explore the Examples**: Check out the `examples/` directory, especially `specification_example.flow` to see how specification blocks preserve intent with code
 2. **Read the Language Reference**: See `docs/language-reference.md` for complete syntax documentation
 3. **Try the CLI**: Experiment with `flowc new`, `build`, `run`, and `test` commands
 4. **Learn About Effects**: Understand FlowLang's effect system in `docs/examples/effect-system.md`

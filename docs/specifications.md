@@ -514,6 +514,17 @@ function scheduleAppointment(
 }
 ```
 
+## Working Example
+
+For a complete working example with multiple specification blocks demonstrating real-world usage, see:
+- **`examples/specification_example.flow`** - Shows loyalty discount calculation, payment processing, user validation, and reporting functions with comprehensive specification blocks
+
+This example demonstrates:
+- **Business Logic Preservation**: Loyalty program rules with tier-based discounts
+- **Security Requirements**: Payment processing with fraud detection requirements
+- **Compliance Documentation**: User data validation with privacy protection rules
+- **Audit Trail Requirements**: Activity reporting with proper anonymization
+
 ## Benefits for LLM Development
 
 ### 1. Enhanced Context Understanding
