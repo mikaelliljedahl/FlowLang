@@ -1,0 +1,13 @@
+// Simple Weather API Example
+struct WeatherData {
+    temperature: int,
+    description: string
+}
+
+pure function get_weather() -> WeatherData {
+    return WeatherData { temperature: 22, description: "Sunny" }
+}
+
+function main() -> WeatherData {
+    return get_weather()
+}

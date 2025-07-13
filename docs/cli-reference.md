@@ -74,6 +74,12 @@ flowc help new
 | [`build`](#build-command) | Build the current project | Transpile all source files |
 | [`run`](#run-command) | Transpile and display a single file | Development and testing |
 | [`test`](#test-command) | Run all tests in the project | Testing and validation |
+| [`lsp`](#lsp-command) | Start the Language Server Protocol server | IDE integration |
+| [`lint`](#lint-command) | Run static analysis and linting | Code quality analysis |
+| [`add`](#add-command) | Add a package dependency | Package management |
+| [`install`](#install-command) | Install project dependencies | Package management |
+| [`audit`](#audit-command) | Security audit of dependencies | Security validation |
+| [`workspace`](#workspace-command) | Manage multi-project workspaces | Workspace operations |
 | [`help`](#help-command) | Show help information | Documentation |
 
 ## Command Reference
@@ -429,6 +435,293 @@ Each command provides detailed help including:
 - **Examples**
 - **Generated file structures** (for `new`)
 - **Configuration options** (for `build`)
+
+### `lsp` Command
+
+Starts the FlowLang Language Server Protocol server for IDE integration.
+
+#### Syntax
+
+```bash
+flowc lsp [options]
+```
+
+#### Parameters
+
+- `--verbose` (optional): Enable verbose logging
+- `--port <number>` (optional): TCP port for server (default: stdin/stdout)
+
+#### Description
+
+The `lsp` command starts a Language Server Protocol server that provides:
+
+- Real-time syntax and semantic error detection
+- Auto-completion for FlowLang keywords, types, and functions
+- Hover information with type details and effect annotations
+- Go-to-definition navigation
+- Document symbols and workspace symbols
+
+#### Examples
+
+```bash
+# Start LSP server (stdin/stdout mode for editors)
+flowc lsp
+
+# Start with verbose logging
+flowc lsp --verbose
+
+# Start on specific TCP port
+flowc lsp --port 8080
+```
+
+#### IDE Integration
+
+See [LSP Integration Guide](lsp-integration.md) for setup instructions with:
+- VS Code
+- JetBrains IDEs
+- Neovim
+- Emacs
+
+### `lint` Command
+
+Runs static analysis and linting on FlowLang source code.
+
+#### Syntax
+
+```bash
+flowc lint [paths...] [options]
+```
+
+#### Parameters
+
+- `[paths...]` (optional): Files or directories to analyze (default: current directory)
+- `--config <file>` (optional): Custom configuration file (default: flowlint.json)
+- `--format <format>` (optional): Output format (text|json|sarif, default: text)
+- `--fix` (optional): Auto-fix issues where possible
+- `--effects` (optional): Run only effect system rules
+- `--results` (optional): Run only result type rules
+- `--security` (optional): Run only security rules
+
+#### Description
+
+The `lint` command provides comprehensive static analysis including:
+
+- Effect system validation (completeness, minimality, propagation)
+- Result type usage analysis
+- Security vulnerability detection
+- Code quality checks
+- Performance optimization suggestions
+
+#### Examples
+
+```bash
+# Lint current directory
+flowc lint
+
+# Lint specific files/directories
+flowc lint src/ examples/
+
+# Use custom configuration
+flowc lint --config my-rules.json
+
+# JSON output for CI/CD
+flowc lint --format json
+
+# Auto-fix issues
+flowc lint --fix
+
+# Run only effect system rules
+flowc lint --effects
+```
+
+#### Configuration
+
+Create `flowlint.json` to customize rules:
+
+```json
+{
+  "rules": {
+    "effect-completeness": "error",
+    "unused-results": "error",
+    "dead-code": "warning"
+  },
+  "exclude": ["generated/", "*.test.flow"]
+}
+```
+
+See [Static Analysis Guide](static-analysis.md) for complete configuration reference.
+
+### `add` Command
+
+Adds a package dependency to the current project.
+
+#### Syntax
+
+```bash
+flowc add <package> [version] [options]
+```
+
+#### Parameters
+
+- `<package>` (required): Package name to add
+- `[version]` (optional): Specific version constraint (default: latest)
+- `--dev` (optional): Add as development dependency
+- `--registry <url>` (optional): Use specific package registry
+
+#### Description
+
+The `add` command:
+
+1. Resolves the package from FlowLang or NuGet registries
+2. Updates `flowc.json` with the new dependency
+3. Downloads and installs the package
+4. Automatically infers effects for .NET libraries
+5. Updates the lock file
+
+#### Examples
+
+```bash
+# Add latest version
+flowc add FlowLang.Database
+
+# Add specific version
+flowc add Newtonsoft.Json@13.0.3
+
+# Add with version constraint
+flowc add FlowLang.Testing@^1.0.0 --dev
+
+# Add from NuGet
+flowc add Microsoft.Extensions.Logging
+```
+
+### `install` Command
+
+Installs all project dependencies.
+
+#### Syntax
+
+```bash
+flowc install [options]
+```
+
+#### Parameters
+
+- `--production` (optional): Install only production dependencies
+- `--force` (optional): Force reinstall all packages
+- `--verbose` (optional): Show detailed installation progress
+
+#### Description
+
+The `install` command:
+
+1. Reads dependencies from `flowc.json`
+2. Resolves version constraints and conflicts
+3. Downloads packages from configured registries
+4. Updates the lock file
+5. Generates effect mappings for .NET libraries
+
+#### Examples
+
+```bash
+# Install all dependencies
+flowc install
+
+# Production-only install
+flowc install --production
+
+# Force reinstall
+flowc install --force
+```
+
+### `audit` Command
+
+Performs security audit of project dependencies.
+
+#### Syntax
+
+```bash
+flowc audit [options]
+```
+
+#### Parameters
+
+- `--fix` (optional): Automatically fix vulnerabilities where possible
+- `--format <format>` (optional): Output format (text|json|sarif, default: text)
+- `--severity <level>` (optional): Minimum severity to report (low|medium|high|critical)
+
+#### Description
+
+The `audit` command:
+
+1. Scans all dependencies for known vulnerabilities
+2. Checks against GitHub Advisory Database and OSV
+3. Reports security issues with severity levels
+4. Suggests fixes and updates
+5. Can automatically apply compatible fixes
+
+#### Examples
+
+```bash
+# Run security audit
+flowc audit
+
+# Auto-fix vulnerabilities
+flowc audit --fix
+
+# JSON output for CI/CD
+flowc audit --format json
+
+# Only critical and high severity
+flowc audit --severity high
+```
+
+### `workspace` Command
+
+Manages multi-project workspaces.
+
+#### Syntax
+
+```bash
+flowc workspace <subcommand> [options]
+```
+
+#### Subcommands
+
+- `list`: List all projects in workspace
+- `install`: Install dependencies for all projects
+- `run <command>`: Run command across all projects
+
+#### Examples
+
+```bash
+# List workspace projects
+flowc workspace list
+
+# Install dependencies for all projects
+flowc workspace install
+
+# Run build across workspace
+flowc workspace run build
+
+# Run tests across workspace
+flowc workspace run test
+```
+
+#### Workspace Configuration
+
+Configure in root `flowc.json`:
+
+```json
+{
+  "name": "my-workspace",
+  "workspace": {
+    "projects": ["./apps/*", "./libs/*"],
+    "exclude": ["./examples"]
+  }
+}
+```
+
+See [Package Manager Guide](package-manager.md) for complete workspace documentation.
 
 ## Configuration
 

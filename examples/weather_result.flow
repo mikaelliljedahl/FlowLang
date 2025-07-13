@@ -1,0 +1,30 @@
+pure function celsius_to_fahrenheit(celsius: int) -> int {
+    return celsius * 9 / 5 + 32
+}
+
+function get_weather_forecast(days: int) -> Result<int, string> {
+    if days < 1 {
+        return Error("Days must be positive")
+    }
+    if days > 10 {
+        return Error("Cannot forecast more than 10 days")
+    }
+    
+    let base_temp = 20
+    let temp_celsius = base_temp + days
+    return Ok(temp_celsius)
+}
+
+function weather_api(endpoint: string, days: int) -> Result<string, string> {
+    if endpoint == "forecast" {
+        let temp_result = get_weather_forecast(days)?
+        let temp_fahrenheit = celsius_to_fahrenheit(temp_result)
+        return Ok("Temperature: " + temp_result + "C (" + temp_fahrenheit + "F)")
+    }
+    return Error("Unknown endpoint")
+}
+
+function main() -> Result<string, string> {
+    let result = weather_api("forecast", 5)?
+    return Ok(result)
+}

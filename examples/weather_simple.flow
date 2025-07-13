@@ -1,0 +1,11 @@
+pure function get_temperature() -> int {
+    return 22
+}
+
+pure function get_description() -> string {
+    return "Sunny"
+}
+
+function main() -> int {
+    return get_temperature()
+}

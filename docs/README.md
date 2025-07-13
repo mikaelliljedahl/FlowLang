@@ -2,6 +2,8 @@
 
 Welcome to the comprehensive documentation for FlowLang - a backend programming language designed specifically for LLM-assisted development. This documentation covers everything from getting started to advanced topics and contribution guidelines.
 
+> 🚀 **Want to get started quickly?** Check out the main [README.md](../README.md) or [QUICKSTART.md](../QUICKSTART.md) for immediate copy-paste examples!
+
 ## Why FlowLang? The Problem with LLMs and Modern Code
 
 If you've used an LLM to code, you've seen the symptoms: it generates code that uses the wrong error handling pattern, introduces subtle side effects, or misses dependencies. This isn't the LLM's fault; it's a language problem.

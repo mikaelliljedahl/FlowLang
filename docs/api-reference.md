@@ -15,7 +15,8 @@ This document provides a comprehensive reference for the FlowLang transpiler's i
 9. [CLI Framework](#cli-framework)
 10. [Configuration System](#configuration-system)
 11. [Testing Infrastructure](#testing-infrastructure)
-12. [Extension Points](#extension-points)
+12. [Phase 2 Components](#phase-2-components)
+13. [Extension Points](#extension-points)
 
 ## Architecture Overview
 
@@ -840,6 +841,313 @@ public class LexerTests : FlowLangTestBase
         Assert.That(tokens.Count, Is.EqualTo(2)); // Number + EOF
         Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Number));
         Assert.That(tokens[0].Value, Is.EqualTo("42"));
+    }
+}
+```
+
+## Phase 2 Components
+
+### Language Server Protocol (LSP)
+
+The LSP implementation provides real-time IDE integration with comprehensive language services.
+
+#### FlowLangLanguageServer Class
+
+```csharp
+public class FlowLangLanguageServer
+{
+    private readonly DocumentManager _documentManager;
+    private readonly DiagnosticsProvider _diagnosticsProvider;
+    private readonly CompletionProvider _completionProvider;
+    private readonly HoverProvider _hoverProvider;
+    private readonly DefinitionProvider _definitionProvider;
+
+    public async Task StartAsync()
+    {
+        // Initialize JSON-RPC communication
+        // Register LSP capabilities
+        // Start message processing loop
+    }
+    
+    public Task<CompletionList> GetCompletionsAsync(CompletionParams parameters)
+    public Task<Hover> GetHoverAsync(HoverParams parameters)
+    public Task<Location[]> GetDefinitionAsync(DefinitionParams parameters)
+}
+```
+
+#### Document Management
+
+```csharp
+public class DocumentManager
+{
+    private readonly Dictionary<string, FlowLangDocument> _documents;
+    
+    public void OpenDocument(string uri, string text)
+    public void UpdateDocument(string uri, TextDocumentContentChangeEvent[] changes)
+    public void CloseDocument(string uri)
+    public FlowLangDocument GetDocument(string uri)
+}
+
+public class FlowLangDocument
+{
+    public string Uri { get; }
+    public string Text { get; }
+    public List<Token> Tokens { get; }
+    public ASTNode AST { get; }
+    public List<Diagnostic> Diagnostics { get; }
+}
+```
+
+#### Diagnostics Provider
+
+```csharp
+public class DiagnosticsProvider
+{
+    public List<Diagnostic> GetDiagnostics(FlowLangDocument document)
+    {
+        var diagnostics = new List<Diagnostic>();
+        
+        // Syntax error detection
+        diagnostics.AddRange(GetSyntaxDiagnostics(document));
+        
+        // Effect system validation
+        diagnostics.AddRange(GetEffectDiagnostics(document));
+        
+        // Result type validation
+        diagnostics.AddRange(GetResultDiagnostics(document));
+        
+        return diagnostics;
+    }
+}
+```
+
+### Static Analysis Engine
+
+The static analysis system provides comprehensive code quality and security analysis.
+
+#### StaticAnalyzer Class
+
+```csharp
+public class StaticAnalyzer
+{
+    private readonly LintRuleEngine _ruleEngine;
+    private readonly EffectAnalyzer _effectAnalyzer;
+    private readonly ResultTypeAnalyzer _resultAnalyzer;
+    private readonly SecurityAnalyzer _securityAnalyzer;
+    private readonly PerformanceAnalyzer _performanceAnalyzer;
+
+    public AnalysisReport AnalyzeProject(string projectPath, LintConfiguration config)
+    {
+        var report = new AnalysisReport();
+        var sourceFiles = FindFlowLangFiles(projectPath);
+        
+        foreach (var file in sourceFiles)
+        {
+            var fileAnalysis = AnalyzeFile(file, config);
+            report.FileReports.Add(fileAnalysis);
+        }
+        
+        return report;
+    }
+}
+```
+
+#### Lint Rules System
+
+```csharp
+public abstract class LintRule
+{
+    public abstract string RuleId { get; }
+    public abstract string Description { get; }
+    public abstract LintSeverity DefaultSeverity { get; }
+    
+    public abstract List<LintDiagnostic> Analyze(ASTNode node, AnalysisContext context);
+}
+
+public class EffectCompletenessRule : LintRule
+{
+    public override string RuleId => "effect-completeness";
+    public override string Description => "Functions must declare all effects they use";
+    public override LintSeverity DefaultSeverity => LintSeverity.Error;
+    
+    public override List<LintDiagnostic> Analyze(ASTNode node, AnalysisContext context)
+    {
+        // Implementation for effect completeness checking
+    }
+}
+```
+
+#### Analysis Reports
+
+```csharp
+public class AnalysisReport
+{
+    public List<FileAnalysisReport> FileReports { get; set; } = new();
+    public AnalysisMetrics Metrics { get; set; } = new();
+    public TimeSpan AnalysisTime { get; set; }
+    
+    public int TotalIssues => FileReports.Sum(f => f.Issues.Count);
+    public int ErrorCount => FileReports.Sum(f => f.Issues.Count(i => i.Severity == LintSeverity.Error));
+}
+
+public class LintDiagnostic
+{
+    public string RuleId { get; set; }
+    public string Message { get; set; }
+    public LintSeverity Severity { get; set; }
+    public SourceLocation Location { get; set; }
+    public string Category { get; set; }
+    public string FixSuggestion { get; set; }
+}
+```
+
+### Package Management System
+
+The package management system provides .NET ecosystem integration with automatic effect inference.
+
+#### PackageManager Class
+
+```csharp
+public class PackageManager
+{
+    private readonly DependencyResolver _resolver;
+    private readonly NuGetIntegration _nugetClient;
+    private readonly SecurityScanner _securityScanner;
+    private readonly FlowLangRegistry _registry;
+
+    public async Task AddPackageAsync(string packageName, string version = "latest", bool isDev = false)
+    {
+        var package = await _registry.ResolvePackageAsync(packageName, version);
+        var resolved = await _resolver.ResolveWithDependenciesAsync(package);
+        
+        await InstallPackagesAsync(resolved);
+        UpdateProjectConfiguration(package, isDev);
+        await GenerateEffectMappingsAsync(resolved);
+    }
+    
+    public async Task<SecurityAuditReport> AuditSecurityAsync()
+    {
+        var installedPackages = GetInstalledPackages();
+        return await _securityScanner.ScanPackagesAsync(installedPackages);
+    }
+}
+```
+
+#### Dependency Resolution
+
+```csharp
+public class DependencyResolver
+{
+    public async Task<List<ResolvedPackage>> ResolveWithDependenciesAsync(PackageReference package)
+    {
+        var resolved = new List<ResolvedPackage>();
+        var visited = new HashSet<string>();
+        
+        await ResolveRecursiveAsync(package, resolved, visited);
+        DetectCircularDependencies(resolved);
+        ResolveVersionConflicts(resolved);
+        
+        return resolved;
+    }
+    
+    private void ResolveVersionConflicts(List<ResolvedPackage> packages)
+    {
+        // Semantic version conflict resolution
+        // Highest compatible version wins
+    }
+}
+```
+
+#### NuGet Integration
+
+```csharp
+public class NuGetIntegration
+{
+    public async Task<List<NuGetPackage>> SearchPackagesAsync(string query)
+    {
+        // Search NuGet.org and configured feeds
+    }
+    
+    public async Task<FlowLangBinding> GenerateBindingAsync(NuGetPackage package)
+    {
+        var assembly = await LoadAssemblyAsync(package);
+        var types = ExtractPublicTypes(assembly);
+        var effects = InferEffectsFromTypes(types);
+        
+        return new FlowLangBinding
+        {
+            Package = package,
+            GeneratedModule = GenerateFlowLangModule(types),
+            EffectMappings = effects
+        };
+    }
+}
+```
+
+#### Security Scanning
+
+```csharp
+public class SecurityScanner
+{
+    private readonly GitHubAdvisoryDatabase _githubDb;
+    private readonly OSVDatabase _osvDb;
+    
+    public async Task<SecurityAuditReport> ScanPackagesAsync(List<InstalledPackage> packages)
+    {
+        var vulnerabilities = new List<SecurityVulnerability>();
+        
+        foreach (var package in packages)
+        {
+            var githubVulns = await _githubDb.CheckVulnerabilitiesAsync(package);
+            var osvVulns = await _osvDb.CheckVulnerabilitiesAsync(package);
+            
+            vulnerabilities.AddRange(githubVulns);
+            vulnerabilities.AddRange(osvVulns);
+        }
+        
+        return new SecurityAuditReport
+        {
+            ScannedPackages = packages,
+            Vulnerabilities = vulnerabilities,
+            Recommendations = GenerateRecommendations(vulnerabilities)
+        };
+    }
+}
+```
+
+### Workspace Management
+
+```csharp
+public class WorkspaceManager
+{
+    public async Task<List<FlowLangProject>> DiscoverProjectsAsync(string workspaceRoot)
+    {
+        var config = await LoadWorkspaceConfigAsync(workspaceRoot);
+        var projects = new List<FlowLangProject>();
+        
+        foreach (var pattern in config.Projects)
+        {
+            var matchingDirs = Glob.Expand(pattern);
+            foreach (var dir in matchingDirs.Where(d => !config.Exclude.Any(e => Glob.IsMatch(d, e))))
+            {
+                if (File.Exists(Path.Combine(dir, "flowc.json")))
+                {
+                    projects.Add(await LoadProjectAsync(dir));
+                }
+            }
+        }
+        
+        return projects;
+    }
+    
+    public async Task ExecuteWorkspaceCommandAsync(string command, string[] args)
+    {
+        var projects = await DiscoverProjectsAsync(".");
+        
+        await Parallel.ForEachAsync(projects, async (project, ct) =>
+        {
+            await ExecuteProjectCommandAsync(project, command, args);
+        });
     }
 }
 ```

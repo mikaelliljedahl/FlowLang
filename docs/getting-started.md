@@ -15,61 +15,117 @@ FlowLang transpiles to C#, giving you immediate access to the entire .NET ecosys
 
 ## Installation
 
-### Prerequisites
+### ⚡ Quick Setup (Recommended)
 
-1. **.NET 8.0 SDK or later**
-   - Download from [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
-   - Verify installation: `dotnet --version`
-
-2. **Git** (optional, for cloning the repository)
-   - Download from [https://git-scm.com/](https://git-scm.com/)
-
-### Installing FlowLang
-
-1. **Clone the FlowLang repository**:
+1. **Install .NET 8.0+**: [Download here](https://dotnet.microsoft.com/download)
+2. **Clone and setup**:
    ```bash
-   git clone https://github.com/your-org/flowlang.git
-   cd flowlang
+   git clone https://github.com/mikaelliljedahl/FlowLang.git
+   cd FlowLang
+   bash setup.sh  # Automated setup script
+   ```
+3. **Add alias** (makes life easier):
+   ```bash
+   # For bash
+   echo 'alias flowc="$HOME/.flowc"' >> ~/.bashrc && source ~/.bashrc
+   
+   # For zsh  
+   echo 'alias flowc="$HOME/.flowc"' >> ~/.zshrc && source ~/.zshrc
    ```
 
-2. **Build the transpiler**:
+### Manual Setup
+
+If you prefer manual setup:
+
+1. **Prerequisites**: .NET 8.0+ SDK ([download](https://dotnet.microsoft.com/download))
+2. **Clone and build**:
    ```bash
-   cd src
+   git clone https://github.com/mikaelliljedahl/FlowLang.git
+   cd FlowLang/src
    dotnet build
    ```
-
-3. **Verify installation**:
+3. **Test installation**:
    ```bash
-   dotnet run --project src/flowc.csproj -- --version
+   dotnet run --project flowc.csproj -- --version
    ```
 
-You should see: `FlowLang Transpiler (flowc) v1.0.0`
+### ✅ Verify Installation
+```bash
+# Test with a simple file
+echo 'function main() -> string { return "Hello!" }' > test.flow
+flowc run test.flow  # Should show generated C# code
+```
 
 ## Your First Program
 
-Let's create your first FlowLang program!
+### 🚀 Copy-Paste Examples
 
-### 1. Create a Hello World Program
+**Example 1: Hello World**
+```bash
+# Create the file
+cat > hello.flow << 'EOF'
+function main() -> string {
+    return "Hello, FlowLang!"
+}
+EOF
 
-Create a file called `hello.flow`:
+# Run it
+flowc run hello.flow
+```
 
-```flowlang
-pure function greet(name: string) -> string {
-    return "Hello, " + name + "!"
+**Example 2: String Interpolation**
+```bash
+# Create the file
+cat > greet.flow << 'EOF'
+pure function greet(name: string, age: int) -> string {
+    return $"Hello {name}! You are {age} years old."
 }
 
 function main() -> string {
-    return greet("World")
+    return greet("Alice", 25)
 }
+EOF
+
+# Run it
+flowc run greet.flow
 ```
 
-### 2. Transpile and Run
+**Example 3: Result Types (Error Handling)**
+```bash
+# Create the file
+cat > math.flow << 'EOF'
+function safeDivide(a: int, b: int) -> Result<int, string> {
+    if b == 0 {
+        return Error("Cannot divide by zero")
+    }
+    return Ok(a / b)
+}
+
+function main() -> string {
+    let result = safeDivide(10, 2)
+    if result.IsOk {
+        return $"Result: {result.Value}"
+    } else {
+        return $"Error: {result.Error}"
+    }
+}
+EOF
+
+# Run it
+flowc run math.flow
+```
+
+### 🎯 Quick Commands to Remember
 
 ```bash
-# Transpile to C#
-dotnet run --project src/flowc.csproj -- run hello.flow
+# Run any FlowLang file
+flowc run myfile.flow
 
-# This will show you the generated C# code
+# Create a new project
+flowc new my-project
+
+# Get help
+flowc --help
 ```
 
 ### Generated C# Output
