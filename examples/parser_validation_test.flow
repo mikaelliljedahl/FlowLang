@@ -1,0 +1,117 @@
+// Parser Validation Test - verifies advanced parsing features work correctly
+// This file tests the parser without requiring full compilation
+
+// Basic conditional rendering test
+component ConditionalTest(show_content: bool) -> Component {
+    render {
+        div {
+            if show_content {
+                p { "Content is visible" }
+            } else {
+                p { "Content is hidden" }
+            }
+        }
+    }
+}
+
+// Basic loop rendering test  
+component LoopTest(items: List<string>) -> Component {
+    render {
+        div {
+            ul {
+                for item in items {
+                    li { item }
+                }
+            }
+        }
+    }
+}
+
+// Loop with where clause test
+component FilteredLoopTest(items: List<Item>) -> Component {
+    render {
+        div {
+            for item in items where item.is_visible {
+                div(class: "item") {
+                    span { item.name }
+                }
+            }
+        }
+    }
+}
+
+// Complex expression test
+component ExpressionTest(count: int, user: User?) -> Component {
+    render {
+        div {
+            h1 { $"Items: {count}" }
+            
+            p(
+                class: count > 0 ? "has-items" : "empty",
+                style: $"color: {count > 10 ? "red" : "green"}"
+            ) {
+                $"You have {count} item{count == 1 ? "" : "s"}"
+            }
+            
+            if user != null {
+                span { $"Welcome, {user.name}!" }
+            }
+        }
+    }
+}
+
+// Nested conditionals and loops test
+component NestedTest(categories: List<Category>) -> Component {
+    render {
+        div {
+            for category in categories where category.items.length > 0 {
+                section(class: "category") {
+                    h2 { category.name }
+                    
+                    if category.is_featured {
+                        badge(text: "Featured")
+                    }
+                    
+                    div(class: "items") {
+                        for item in category.items where item.is_active {
+                            div(class: "item") {
+                                h3 { item.title }
+                                
+                                if item.has_discount {
+                                    span(class: "discount") {
+                                        $"{item.discount_percent}% OFF"
+                                    }
+                                } else {
+                                    span(class: "price") {
+                                        $"${item.price / 100}.{item.price % 100:00}"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Types for testing
+type Item = {
+    name: string,
+    is_visible: bool,
+    is_active: bool,
+    title: string,
+    price: int,
+    has_discount: bool,
+    discount_percent: int
+}
+
+type Category = {
+    name: string,
+    is_featured: bool,
+    items: List<Item>
+}
+
+type User = {
+    name: string
+}

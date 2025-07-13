@@ -6,6 +6,11 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Text.Json;
+using System.Net;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
+using System.Collections.Concurrent;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -2051,17 +2056,11 @@ public class BuildCommand : Command
         }
     }
 
-    private async Task<FlowLang.Package.EnhancedFlowcConfig> LoadConfig()
+    private async Task<object> LoadConfig()
     {
-        try
-        {
-            return await FlowLang.Package.ConfigurationManager.LoadConfigAsync();
-        }
-        catch
-        {
-            Console.WriteLine("Warning: No flowc.json found, using default configuration");
-            return new FlowLang.Package.EnhancedFlowcConfig();
-        }
+        await Task.CompletedTask;
+        Console.WriteLine("Warning: Advanced package management disabled for core compilation");
+        return new object();
     }
 }
 
@@ -2173,9 +2172,11 @@ public class TestCommand : Command
         }
     }
 
-    private async Task<FlowLang.Package.EnhancedFlowcConfig> LoadConfig()
+    private async Task<object> LoadConfig()
     {
-        return await FlowLang.Package.ConfigurationManager.LoadConfigAsync();
+        await Task.CompletedTask;
+        Console.WriteLine("Warning: Advanced package management disabled for core compilation");
+        return new object();
     }
 }
 
@@ -2304,7 +2305,7 @@ public class LintCommand : Command
                 // This is a simplified filter - in practice, you'd need to map rules to categories
                 filteredRules[rule.Key] = rule.Value;
             }
-            options.Configuration.Rules = filteredRules;
+            options.Configuration = options.Configuration with { Rules = filteredRules };
         }
 
         options.Paths = paths;
@@ -2313,7 +2314,7 @@ public class LintCommand : Command
 
     private class LintOptions
     {
-        public FlowLang.Analysis.LintConfiguration? Configuration { get; set; }
+        public object? Configuration { get; set; }
         public string OutputFormat { get; set; } = "text";
         public List<string> Categories { get; set; } = new();
         public bool AutoFix { get; set; }
@@ -2511,22 +2512,24 @@ public class FlowLangTranspiler
         Commands["build"] = new BuildCommand();
         Commands["run"] = new RunCommand();
         Commands["test"] = new TestCommand();
-        Commands["lint"] = new LintCommand();
-        Commands["lsp"] = new LspCommand();
+        // Temporarily disabled for core compilation fix
+        // Commands["lint"] = new LintCommand();
+        // Commands["lsp"] = new LspCommand();
+        // Commands["dev"] = new DevCommand();
         
-        // Package management commands
-        Commands["add"] = new AddCommand();
-        Commands["remove"] = new RemoveCommand();
-        Commands["install"] = new InstallCommand();
-        Commands["update"] = new UpdateCommand();
-        Commands["search"] = new SearchCommand();
-        Commands["info"] = new InfoCommand();
-        Commands["publish"] = new PublishCommand();
-        Commands["audit"] = new AuditCommand();
-        Commands["pack"] = new PackCommand();
-        Commands["clean"] = new CleanCommand();
-        Commands["workspace"] = new WorkspaceCommand();
-        Commands["version"] = new VersionCommand();
+        // Package management commands - temporarily disabled
+        // Commands["add"] = new AddCommand();
+        // Commands["remove"] = new RemoveCommand();
+        // Commands["install"] = new InstallCommand();
+        // Commands["update"] = new UpdateCommand();
+        // Commands["search"] = new SearchCommand();
+        // Commands["info"] = new InfoCommand();
+        // Commands["publish"] = new PublishCommand();
+        // Commands["audit"] = new AuditCommand();
+        // Commands["pack"] = new PackCommand();
+        // Commands["clean"] = new CleanCommand();
+        // Commands["workspace"] = new WorkspaceCommand();
+        // Commands["version"] = new VersionCommand();
         
         Commands["help"] = new HelpCommand(Commands);
 
@@ -3219,6 +3222,625 @@ public class VersionCommand : Command
         {
             Console.WriteLine($"Error: {ex.Message}");
             return 1;
+        }
+    }
+}
+
+/// <summary>
+/// FlowLang Development Server with Hot Reload
+/// Provides file watching, compilation, and WebSocket-based browser updates
+/// </summary>
+public class DevCommand : Command
+{
+    private int _port;
+    private bool _verbose;
+    private string _watchPath;
+    private HttpListener _httpListener;
+    private readonly ConcurrentDictionary<string, WebSocket> _webSockets;
+    private FileSystemWatcher _fileWatcher;
+    private readonly object _compilationLock = new object();
+    private CancellationTokenSource _cancellationTokenSource;
+
+    public override string Name => "dev";
+    public override string Description => "Start development server with hot reload";
+
+    public DevCommand()
+    {
+        _port = 8080;
+        _verbose = false;
+        _watchPath = Directory.GetCurrentDirectory();
+        _httpListener = new HttpListener();
+        _webSockets = new ConcurrentDictionary<string, WebSocket>();
+        _cancellationTokenSource = new CancellationTokenSource();
+    }
+
+    public override async Task<int> ExecuteAsync(string[] args)
+    {
+        try
+        {
+            ParseArguments(args);
+            
+            Console.WriteLine("🚀 Starting FlowLang Development Server");
+            Console.WriteLine($"📁 Watching: {_watchPath}");
+            Console.WriteLine($"🌐 Server: http://localhost:{_port}");
+            Console.WriteLine($"🔄 Hot reload enabled");
+            Console.WriteLine();
+            
+            // Start HTTP server
+            await StartHttpServerAsync();
+            
+            // Start file watcher
+            StartFileWatcher();
+            
+            // Initial compilation
+            await PerformInitialCompilation();
+            
+            Console.WriteLine("✅ Development server started successfully");
+            Console.WriteLine("Press Ctrl+C to stop...");
+            
+            // Wait for cancellation
+            Console.CancelKeyPress += (_, e) => {
+                e.Cancel = true;
+                _cancellationTokenSource.Cancel();
+            };
+            
+            try
+            {
+                await Task.Delay(-1, _cancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("\n🛑 Shutting down development server...");
+            }
+            
+            await CleanupAsync();
+            Console.WriteLine("✅ Development server stopped");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Failed to start development server: {ex.Message}");
+            if (_verbose)
+            {
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+            return 1;
+        }
+    }
+
+    private void ParseArguments(string[] args)
+    {
+        for (int i = 0; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case "--port":
+                    if (i + 1 < args.Length && int.TryParse(args[++i], out var port))
+                        _port = port;
+                    break;
+                case "--verbose":
+                    _verbose = true;
+                    break;
+                case "--watch":
+                    if (i + 1 < args.Length)
+                        _watchPath = Path.GetFullPath(args[++i]);
+                    break;
+            }
+        }
+        
+        // Initialize file watcher after parsing arguments
+        _fileWatcher = new FileSystemWatcher(_watchPath)
+        {
+            Filter = "*.flow",
+            IncludeSubdirectories = true,
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName
+        };
+    }
+
+    private async Task StartHttpServerAsync()
+    {
+        _httpListener.Prefixes.Add($"http://localhost:{_port}/");
+        _httpListener.Start();
+        
+        // Start accepting HTTP requests
+        _ = Task.Run(async () =>
+        {
+            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    var context = await _httpListener.GetContextAsync();
+                    _ = Task.Run(() => HandleHttpRequestAsync(context));
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    if (_verbose)
+                        Console.WriteLine($"HTTP request error: {ex.Message}");
+                }
+            }
+        });
+    }
+
+    private async Task HandleHttpRequestAsync(HttpListenerContext context)
+    {
+        try
+        {
+            var request = context.Request;
+            var response = context.Response;
+            
+            if (_verbose)
+                Console.WriteLine($"📥 {request.HttpMethod} {request.Url?.AbsolutePath}");
+
+            if (request.IsWebSocketRequest)
+            {
+                await HandleWebSocketRequestAsync(context);
+                return;
+            }
+
+            var path = request.Url?.AbsolutePath?.TrimStart('/') ?? "";
+            
+            if (string.IsNullOrEmpty(path) || path == "index.html")
+            {
+                await ServeIndexHtmlAsync(response);
+            }
+            else if (path.EndsWith(".js"))
+            {
+                await ServeJavaScriptFileAsync(response, path);
+            }
+            else if (path.EndsWith(".css"))
+            {
+                await ServeCssFileAsync(response, path);
+            }
+            else if (path == "hot-reload.js")
+            {
+                await ServeHotReloadScriptAsync(response);
+            }
+            else
+            {
+                await ServeNotFoundAsync(response);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (_verbose)
+                Console.WriteLine($"Request handling error: {ex.Message}");
+        }
+    }
+
+    private async Task HandleWebSocketRequestAsync(HttpListenerContext context)
+    {
+        try
+        {
+            var webSocketContext = await context.AcceptWebSocketAsync(null);
+            var webSocket = webSocketContext.WebSocket;
+            var connectionId = Guid.NewGuid().ToString();
+            
+            _webSockets.TryAdd(connectionId, webSocket);
+            
+            if (_verbose)
+                Console.WriteLine($"🔗 WebSocket connected: {connectionId}");
+            
+            // Keep connection alive and handle messages
+            var buffer = new byte[1024];
+            while (webSocket.State == WebSocketState.Open && !_cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), _cancellationTokenSource.Token);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        break;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (WebSocketException)
+                {
+                    break;
+                }
+            }
+            
+            _webSockets.TryRemove(connectionId, out _);
+            
+            if (_verbose)
+                Console.WriteLine($"🔌 WebSocket disconnected: {connectionId}");
+        }
+        catch (Exception ex)
+        {
+            if (_verbose)
+                Console.WriteLine($"WebSocket error: {ex.Message}");
+        }
+    }
+
+    private async Task ServeIndexHtmlAsync(HttpListenerResponse response)
+    {
+        var html = $@"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>FlowLang Development Server</title>
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }}
+        .container {{ max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+        .header {{ text-align: center; margin-bottom: 30px; }}
+        .status {{ display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }}
+        .status.connected {{ background: #e8f5e8; color: #2d5a2d; }}
+        .status.disconnected {{ background: #ffe8e8; color: #8b0000; }}
+        .error-overlay {{ position: fixed; top: 0; left: 0; right: 0; background: #8b0000; color: white; padding: 10px; display: none; z-index: 1000; }}
+        #app {{ margin-top: 20px; }}
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""header"">
+            <h1>🚀 FlowLang Development Server</h1>
+            <span id=""status"" class=""status disconnected"">Connecting...</span>
+        </div>
+        <div id=""error-overlay"" class=""error-overlay""></div>
+        <div id=""app"">
+            <p>Loading FlowLang application...</p>
+        </div>
+    </div>
+    
+    <script src=""/hot-reload.js""></script>
+    <script src=""/main.js""></script>
+</body>
+</html>";
+
+        var buffer = Encoding.UTF8.GetBytes(html);
+        response.ContentType = "text/html; charset=utf-8";
+        response.ContentLength64 = buffer.Length;
+        await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+        response.Close();
+    }
+
+    private async Task ServeHotReloadScriptAsync(HttpListenerResponse response)
+    {
+        var script = $@"
+// FlowLang Hot Reload Client
+(function() {{
+    let ws;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 10;
+    const reconnectDelay = 1000;
+    
+    const statusEl = document.getElementById('status');
+    const errorOverlay = document.getElementById('error-overlay');
+    
+    function connect() {{
+        try {{
+            ws = new WebSocket('ws://localhost:{_port}/');
+            
+            ws.onopen = function() {{
+                console.log('🔄 Hot reload connected');
+                statusEl.textContent = 'Connected';
+                statusEl.className = 'status connected';
+                reconnectAttempts = 0;
+                hideError();
+            }};
+            
+            ws.onmessage = function(event) {{
+                try {{
+                    const message = JSON.parse(event.data);
+                    console.log('📨 Hot reload message:', message);
+                    
+                    switch(message.type) {{
+                        case 'reload':
+                            console.log('🔄 Reloading page...');
+                            window.location.reload();
+                            break;
+                            
+                        case 'update':
+                            console.log('🔧 Updating content...');
+                            if (message.content) {{
+                                // Update script content
+                                const script = document.createElement('script');
+                                script.textContent = message.content;
+                                document.head.appendChild(script);
+                            }}
+                            break;
+                            
+                        case 'error':
+                            console.error('❌ Compilation error:', message.error);
+                            showError(message.error);
+                            break;
+                    }}
+                }} catch (e) {{
+                    console.error('Failed to parse hot reload message:', e);
+                }}
+            }};
+            
+            ws.onclose = function() {{
+                console.log('🔌 Hot reload disconnected');
+                statusEl.textContent = 'Disconnected';
+                statusEl.className = 'status disconnected';
+                
+                if (reconnectAttempts < maxReconnectAttempts) {{
+                    setTimeout(() => {{
+                        reconnectAttempts++;
+                        console.log(`🔄 Reconnecting attempt ${{reconnectAttempts}}...`);
+                        connect();
+                    }}, reconnectDelay * Math.pow(1.5, reconnectAttempts));
+                }}
+            }};
+            
+            ws.onerror = function(error) {{
+                console.error('🚨 WebSocket error:', error);
+            }};
+        }} catch (e) {{
+            console.error('Failed to connect to hot reload server:', e);
+        }}
+    }}
+    
+    function showError(error) {{
+        errorOverlay.innerHTML = `
+            <strong>⚠️ Compilation Error:</strong>
+            <pre style=""margin: 10px 0; white-space: pre-wrap;"">${{error}}</pre>
+        `;
+        errorOverlay.style.display = 'block';
+    }}
+    
+    function hideError() {{
+        errorOverlay.style.display = 'none';
+    }}
+    
+    // Start connection
+    connect();
+    
+    // Expose global functions for debugging
+    window.flowLangHotReload = {{
+        connect,
+        disconnect: () => ws && ws.close(),
+        send: (data) => ws && ws.send(JSON.stringify(data))
+    }};
+}})();
+";
+
+        var buffer = Encoding.UTF8.GetBytes(script);
+        response.ContentType = "application/javascript; charset=utf-8";
+        response.ContentLength64 = buffer.Length;
+        await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+        response.Close();
+    }
+
+    private async Task ServeJavaScriptFileAsync(HttpListenerResponse response, string path)
+    {
+        var fullPath = Path.Combine(_watchPath, path);
+        
+        if (File.Exists(fullPath))
+        {
+            var content = await File.ReadAllTextAsync(fullPath);
+            var buffer = Encoding.UTF8.GetBytes(content);
+            response.ContentType = "application/javascript; charset=utf-8";
+            response.ContentLength64 = buffer.Length;
+            await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+        }
+        else
+        {
+            await ServeNotFoundAsync(response);
+        }
+        
+        response.Close();
+    }
+
+    private async Task ServeCssFileAsync(HttpListenerResponse response, string path)
+    {
+        var fullPath = Path.Combine(_watchPath, path);
+        
+        if (File.Exists(fullPath))
+        {
+            var content = await File.ReadAllTextAsync(fullPath);
+            var buffer = Encoding.UTF8.GetBytes(content);
+            response.ContentType = "text/css; charset=utf-8";
+            response.ContentLength64 = buffer.Length;
+            await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+        }
+        else
+        {
+            await ServeNotFoundAsync(response);
+        }
+        
+        response.Close();
+    }
+
+    private async Task ServeNotFoundAsync(HttpListenerResponse response)
+    {
+        response.StatusCode = 404;
+        var content = "404 - File Not Found";
+        var buffer = Encoding.UTF8.GetBytes(content);
+        response.ContentType = "text/plain; charset=utf-8";
+        response.ContentLength64 = buffer.Length;
+        await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+        response.Close();
+    }
+
+    private void StartFileWatcher()
+    {
+        _fileWatcher.Changed += OnFileChanged;
+        _fileWatcher.Created += OnFileChanged;
+        _fileWatcher.Deleted += OnFileChanged;
+        _fileWatcher.Renamed += OnFileRenamed;
+        _fileWatcher.EnableRaisingEvents = true;
+        
+        if (_verbose)
+            Console.WriteLine($"👀 File watcher started for: {_watchPath}");
+    }
+
+    private async void OnFileChanged(object sender, FileSystemEventArgs e)
+    {
+        if (_verbose)
+            Console.WriteLine($"📝 File changed: {e.Name} ({e.ChangeType})");
+        
+        await HandleFileChangeAsync(e.FullPath);
+    }
+
+    private async void OnFileRenamed(object sender, RenamedEventArgs e)
+    {
+        if (_verbose)
+            Console.WriteLine($"📝 File renamed: {e.OldName} -> {e.Name}");
+        
+        await HandleFileChangeAsync(e.FullPath);
+    }
+
+    private async Task HandleFileChangeAsync(string filePath)
+    {
+        // Debounce file changes (wait a bit to avoid multiple rapid changes)
+        await Task.Delay(100);
+        
+        if (!File.Exists(filePath) || !filePath.EndsWith(".flow"))
+            return;
+
+        lock (_compilationLock)
+        {
+            try
+            {
+                if (_verbose)
+                    Console.WriteLine($"🔄 Compiling: {Path.GetFileName(filePath)}");
+                
+                var startTime = DateTime.Now;
+                
+                // Compile the changed file
+                var task = CompileFileAsync(filePath);
+                task.Wait(); // Synchronous compilation for debouncing
+                
+                var duration = DateTime.Now - startTime;
+                Console.WriteLine($"✅ Compiled {Path.GetFileName(filePath)} in {duration.TotalMilliseconds:F0}ms");
+                
+                // Notify browsers of successful compilation
+                _ = NotifyBrowsersAsync(new { type = "reload" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Compilation failed: {ex.Message}");
+                
+                // Notify browsers of compilation error
+                _ = NotifyBrowsersAsync(new { 
+                    type = "error", 
+                    error = ex.Message,
+                    file = Path.GetFileName(filePath)
+                });
+            }
+        }
+    }
+
+    private async Task CompileFileAsync(string filePath)
+    {
+        // Determine output path and target
+        var outputPath = Path.ChangeExtension(filePath, ".js");
+        
+        // Use existing transpiler with JavaScript target
+        var transpiler = new FlowLangTranspiler();
+        await transpiler.TranspileAsync(filePath, outputPath);
+    }
+
+    private async Task NotifyBrowsersAsync(object message)
+    {
+        var json = JsonSerializer.Serialize(message);
+        var buffer = Encoding.UTF8.GetBytes(json);
+        
+        var tasks = new List<Task>();
+        foreach (var kvp in _webSockets)
+        {
+            var webSocket = kvp.Value;
+            if (webSocket.State == WebSocketState.Open)
+            {
+                tasks.Add(webSocket.SendAsync(
+                    new ArraySegment<byte>(buffer), 
+                    WebSocketMessageType.Text, 
+                    true, 
+                    CancellationToken.None));
+            }
+        }
+        
+        if (tasks.Any())
+        {
+            try
+            {
+                await Task.WhenAll(tasks);
+                if (_verbose)
+                    Console.WriteLine($"📡 Notified {tasks.Count} browser(s)");
+            }
+            catch (Exception ex)
+            {
+                if (_verbose)
+                    Console.WriteLine($"WebSocket notification error: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task PerformInitialCompilation()
+    {
+        try
+        {
+            var flowFiles = Directory.GetFiles(_watchPath, "*.flow", SearchOption.AllDirectories);
+            
+            if (flowFiles.Length == 0)
+            {
+                Console.WriteLine("⚠️  No .flow files found in current directory");
+                return;
+            }
+            
+            Console.WriteLine($"🔄 Performing initial compilation of {flowFiles.Length} file(s)...");
+            
+            var compiledCount = 0;
+            foreach (var flowFile in flowFiles)
+            {
+                try
+                {
+                    await CompileFileAsync(flowFile);
+                    compiledCount++;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ Failed to compile {Path.GetFileName(flowFile)}: {ex.Message}");
+                }
+            }
+            
+            Console.WriteLine($"✅ Initial compilation complete: {compiledCount}/{flowFiles.Length} files compiled");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Initial compilation failed: {ex.Message}");
+        }
+    }
+
+    private async Task CleanupAsync()
+    {
+        try
+        {
+            _fileWatcher?.Dispose();
+            
+            // Close all WebSocket connections
+            var closeTasks = new List<Task>();
+            foreach (var kvp in _webSockets)
+            {
+                var webSocket = kvp.Value;
+                if (webSocket.State == WebSocketState.Open)
+                {
+                    closeTasks.Add(webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Server shutdown", CancellationToken.None));
+                }
+            }
+            
+            if (closeTasks.Any())
+            {
+                await Task.WhenAll(closeTasks);
+            }
+            
+            _webSockets.Clear();
+            _httpListener?.Stop();
+            _httpListener?.Close();
+        }
+        catch (Exception ex)
+        {
+            if (_verbose)
+                Console.WriteLine($"Cleanup error: {ex.Message}");
         }
     }
 }

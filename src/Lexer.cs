@@ -17,11 +17,43 @@ public class FlowLangLexer
         ["return"] = TokenType.Return,
         ["if"] = TokenType.If,
         ["else"] = TokenType.Else,
+        ["for"] = TokenType.For,
+        ["in"] = TokenType.In,
+        ["where"] = TokenType.Where,
         ["effects"] = TokenType.Effects,
         ["pure"] = TokenType.Pure,
         ["int"] = TokenType.Int,
         ["string"] = TokenType.String_Type,
         ["bool"] = TokenType.Bool,
+        
+        // Saga keywords
+        ["saga"] = TokenType.Saga,
+        ["step"] = TokenType.Step,
+        ["compensate"] = TokenType.Compensate,
+        ["transaction"] = TokenType.Transaction,
+        
+        // UI Component keywords
+        ["component"] = TokenType.Component,
+        ["state"] = TokenType.State,
+        ["events"] = TokenType.Events,
+        ["render"] = TokenType.Render,
+        ["on_mount"] = TokenType.OnMount,
+        ["on_unmount"] = TokenType.OnUnmount,
+        ["on_update"] = TokenType.OnUpdate,
+        ["event_handler"] = TokenType.EventHandler,
+        ["declare_state"] = TokenType.DeclareState,
+        ["set_state"] = TokenType.SetState,
+        ["container"] = TokenType.Container,
+        
+        // State management keywords
+        ["app_state"] = TokenType.AppState,
+        ["action"] = TokenType.Action,
+        ["updates"] = TokenType.Updates,
+        
+        // API client keywords
+        ["api_client"] = TokenType.ApiClient,
+        ["from"] = TokenType.From,
+        ["endpoint"] = TokenType.Endpoint,
     };
 
     public FlowLangLexer(string source)
@@ -67,14 +99,22 @@ public class FlowLangLexer
             ',' => new Token(TokenType.Comma, ",", startLine, startColumn),
             ';' => new Token(TokenType.Semicolon, ";", startLine, startColumn),
             ':' => new Token(TokenType.Colon, ":", startLine, startColumn),
-            '=' => new Token(TokenType.Assign, "=", startLine, startColumn),
+            '=' => Match('=') ? new Token(TokenType.Equal, "==", startLine, startColumn) : new Token(TokenType.Assign, "=", startLine, startColumn),
             '+' => new Token(TokenType.Plus, "+", startLine, startColumn),
             '-' => Match('>') ? new Token(TokenType.Arrow, "->", startLine, startColumn) : new Token(TokenType.Minus, "-", startLine, startColumn),
             '*' => new Token(TokenType.Multiply, "*", startLine, startColumn),
             '/' => new Token(TokenType.Divide, "/", startLine, startColumn),
+            '%' => new Token(TokenType.Modulo, "%", startLine, startColumn),
             '>' => Match('=') ? new Token(TokenType.GreaterEqual, ">=", startLine, startColumn) : new Token(TokenType.Greater, ">", startLine, startColumn),
             '<' => Match('=') ? new Token(TokenType.LessEqual, "<=", startLine, startColumn) : new Token(TokenType.Less, "<", startLine, startColumn),
+            '!' => Match('=') ? new Token(TokenType.NotEqual, "!=", startLine, startColumn) : new Token(TokenType.LogicalNot, "!", startLine, startColumn),
+            '&' => Match('&') ? new Token(TokenType.LogicalAnd, "&&", startLine, startColumn) : throw new Exception($"Unexpected character '&' at line {startLine}, column {startColumn}"),
+            '|' => Match('|') ? new Token(TokenType.LogicalOr, "||", startLine, startColumn) : throw new Exception($"Unexpected character '|' at line {startLine}, column {startColumn}"),
+            '?' => new Token(TokenType.Question, "?", startLine, startColumn),
+            '.' => new Token(TokenType.Dot, ".", startLine, startColumn),
             '\n' => new Token(TokenType.Newline, "\n", startLine, startColumn),
+            '"' => ReadStringLiteral(startLine, startColumn),
+            '$' => ReadInterpolatedString(startLine, startColumn),
             _ when char.IsDigit(c) => ReadNumber(c, startLine, startColumn),
             _ when char.IsLetter(c) || c == '_' => ReadIdentifier(c, startLine, startColumn),
             _ => throw new Exception($"Unexpected character '{c}' at line {startLine}, column {startColumn}")
@@ -141,4 +181,85 @@ public class FlowLangLexer
     }
 
     private bool IsAtEnd() => _position >= _source.Length;
+
+    private Token ReadStringLiteral(int line, int column)
+    {
+        var value = "";
+        
+        while (!IsAtEnd() && Peek() != '"')
+        {
+            if (Peek() == '\\')
+            {
+                Advance(); // Skip backslash
+                if (!IsAtEnd())
+                {
+                    var escaped = Advance();
+                    value += escaped switch
+                    {
+                        'n' => '\n',
+                        't' => '\t',
+                        'r' => '\r',
+                        '\\' => '\\',
+                        '"' => '"',
+                        _ => escaped
+                    };
+                }
+            }
+            else
+            {
+                value += Advance();
+            }
+        }
+        
+        if (IsAtEnd())
+        {
+            throw new Exception($"Unterminated string literal at line {line}, column {column}");
+        }
+        
+        Advance(); // Consume closing quote
+        return new Token(TokenType.String, value, line, column);
+    }
+
+    private Token ReadInterpolatedString(int line, int column)
+    {
+        if (!Match('"'))
+        {
+            throw new Exception($"Expected '\"' after '$' at line {line}, column {column}");
+        }
+        
+        var value = "";
+        
+        while (!IsAtEnd() && Peek() != '"')
+        {
+            if (Peek() == '\\')
+            {
+                Advance(); // Skip backslash
+                if (!IsAtEnd())
+                {
+                    var escaped = Advance();
+                    value += escaped switch
+                    {
+                        'n' => '\n',
+                        't' => '\t',
+                        'r' => '\r',
+                        '\\' => '\\',
+                        '"' => '"',
+                        _ => escaped
+                    };
+                }
+            }
+            else
+            {
+                value += Advance();
+            }
+        }
+        
+        if (IsAtEnd())
+        {
+            throw new Exception($"Unterminated interpolated string literal at line {line}, column {column}");
+        }
+        
+        Advance(); // Consume closing quote
+        return new Token(TokenType.InterpolatedString, value, line, column);
+    }
 }

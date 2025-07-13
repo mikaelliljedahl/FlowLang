@@ -7,14 +7,47 @@ public enum TokenType
     Identifier,
     Number,
     String,
+    InterpolatedString,
     
     // Keywords
     Function,
     Return,
     If,
     Else,
+    For,
+    In,
+    Where,
     Effects,
     Pure,
+    
+    // Saga keywords
+    Saga,
+    Step,
+    Compensate,
+    Transaction,
+    
+    // UI Component keywords
+    Component,
+    State,
+    Events,
+    Render,
+    OnMount,
+    OnUnmount,
+    OnUpdate,
+    EventHandler,
+    DeclareState,
+    SetState,
+    Container,
+    
+    // State management keywords
+    AppState,
+    Action,
+    Updates,
+    
+    // API client keywords
+    ApiClient,
+    From,
+    Endpoint,
     
     // Types
     Int,
@@ -39,10 +72,18 @@ public enum TokenType
     Minus,
     Multiply,
     Divide,
+    Modulo,
     Greater,
     Less,
     GreaterEqual,
     LessEqual,
+    Equal,
+    NotEqual,
+    LogicalAnd,
+    LogicalOr,
+    LogicalNot,
+    Question,
+    Dot,
     
     // Special
     EOF,

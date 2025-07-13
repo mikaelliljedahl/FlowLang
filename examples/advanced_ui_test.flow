@@ -1,0 +1,156 @@
+// Advanced UI Component Test - demonstrates all new parser features
+component UserDashboard(user_id: string, user_permissions: List<string>) uses [Network, LocalStorage] -> Component {
+    declare_state user: User?
+    declare_state notifications: List<Notification>
+    declare_state loading: bool = false
+    declare_state show_modal: bool = false
+    declare_state selected_items: List<string>
+    
+    event_handler handle_load_user(id: string) uses [Network] {
+        set_state(loading, true)
+        let user_result = fetch_user_data(id)
+        set_state(user, user_result)
+        set_state(loading, false)
+    }
+    
+    event_handler handle_toggle_modal() {
+        set_state(show_modal, !show_modal)
+    }
+    
+    event_handler handle_item_select(item_id: string) {
+        let updated_items = selected_items.contains(item_id) ? 
+            selected_items.filter(id => id != item_id) : 
+            selected_items.append(item_id)
+        set_state(selected_items, updated_items)
+    }
+    
+    render {
+        div(class: "dashboard-container") {
+            header(class: "dashboard-header") {
+                h1 { $"Welcome, {user?.name ?? "Guest"}" }
+                
+                if user_permissions.contains("admin") {
+                    admin_badge(text: "Administrator")
+                }
+                
+                button(
+                    class: loading ? "btn-loading" : "btn-primary",
+                    disabled: loading || !user?.is_verified,
+                    text: loading ? "Loading..." : "Refresh Data",
+                    on_click: handle_load_user
+                )
+            }
+            
+            main(class: "dashboard-content") {
+                if loading {
+                    loading_spinner(size: "large")
+                } else {
+                    if user != null {
+                        user_profile_section(
+                            user: user,
+                            editable: user_permissions.contains("edit_profile")
+                        )
+                        
+                        if notifications.length > 0 {
+                            notification_panel {
+                                h3 { $"Notifications ({notifications.length})" }
+                                
+                                for notification in notifications where notification.is_unread {
+                                    notification_item(
+                                        title: notification.title,
+                                        message: notification.message,
+                                        type: notification.priority == "high" ? "urgent" : "normal",
+                                        timestamp: notification.created_at,
+                                        on_click: handle_mark_as_read
+                                    )
+                                }
+                            }
+                        }
+                        
+                        data_table {
+                            table_header {
+                                th { "Item" }
+                                th { "Status" }
+                                th { "Actions" }
+                            }
+                            
+                            for item in user.items where item.is_visible {
+                                table_row(
+                                    class: selected_items.contains(item.id) ? "selected" : "",
+                                    on_click: () => handle_item_select(item.id)
+                                ) {
+                                    td { item.name }
+                                    td { 
+                                        status_badge(
+                                            text: item.status,
+                                            color: item.status == "active" ? "green" : "gray"
+                                        )
+                                    }
+                                    td {
+                                        action_buttons {
+                                            edit_button(
+                                                disabled: !user_permissions.contains("edit_items"),
+                                                on_click: () => edit_item(item.id)
+                                            )
+                                            delete_button(
+                                                disabled: !user_permissions.contains("delete_items") || item.is_protected,
+                                                on_click: () => delete_item(item.id)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        error_message {
+                            h2 { "User Not Found" }
+                            p { "Please check your user ID and try again." }
+                            retry_button(on_click: handle_load_user)
+                        }
+                    }
+                }
+            }
+            
+            if show_modal {
+                modal_overlay(on_click: handle_toggle_modal) {
+                    modal_content(class: "large-modal") {
+                        modal_header {
+                            h2 { "Advanced Settings" }
+                            close_button(on_click: handle_toggle_modal)
+                        }
+                        
+                        modal_body {
+                            settings_form(
+                                user: user,
+                                permissions: user_permissions,
+                                on_save: handle_save_settings,
+                                on_cancel: handle_toggle_modal
+                            )
+                        }
+                    }
+                }
+            }
+            
+            footer(class: "dashboard-footer") {
+                status_info {
+                    span { $"Last updated: {user?.last_updated ?? "Never"}" }
+                    span { $"Selected items: {selected_items.length}" }
+                }
+                
+                action_toolbar {
+                    bulk_actions(
+                        visible: selected_items.length > 0,
+                        items: selected_items,
+                        permissions: user_permissions
+                    )
+                    
+                    export_button(
+                        disabled: user?.items.length == 0,
+                        format: "csv",
+                        on_click: handle_export_data
+                    )
+                }
+            }
+        }
+    }
+}

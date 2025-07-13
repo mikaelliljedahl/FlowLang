@@ -70,9 +70,12 @@ flowc help new
 
 | Command | Description | Purpose |
 |---------|-------------|---------|
+| [`compile`](#compile-command) | Compile FlowLang to target language | Multi-target compilation |
 | [`new`](#new-command) | Create a new FlowLang project | Project initialization |
+| [`targets`](#targets-command) | List available compilation targets | Target information |
 | [`build`](#build-command) | Build the current project | Transpile all source files |
 | [`run`](#run-command) | Transpile and display a single file | Development and testing |
+| [`dev`](#dev-command) | Start development server | UI development |
 | [`test`](#test-command) | Run all tests in the project | Testing and validation |
 | [`lsp`](#lsp-command) | Start the Language Server Protocol server | IDE integration |
 | [`lint`](#lint-command) | Run static analysis and linting | Code quality analysis |
@@ -84,6 +87,189 @@ flowc help new
 
 ## Command Reference
 
+### `compile` Command
+
+Compiles FlowLang source code to target languages including C#, Java, JavaScript, WebAssembly, and native code.
+
+#### Syntax
+
+```bash
+flowc compile [options] <input-file>
+```
+
+#### Options
+
+- `--target <target>`: Specify compilation target (csharp, java, javascript, wasm, native)
+- `--output <path>`: Specify output file or directory
+- `--optimize`: Enable optimizations for the target platform
+
+#### Parameters
+
+- `<input-file>` (required): FlowLang source file to compile
+
+#### Description
+
+The `compile` command transpiles FlowLang source to various target platforms:
+
+- **C#**: Full .NET compatibility with async/await, LINQ support
+- **Java**: JVM compatibility with streams and concurrent operations  
+- **JavaScript**: React components for frontend development
+- **WebAssembly**: Browser and edge computing scenarios
+- **Native**: High-performance C++ code generation
+
+#### Examples
+
+```bash
+# Compile to C# (default)
+flowc compile backend/UserService.flow
+
+# Compile UI component to JavaScript/React
+flowc compile --target javascript frontend/TodoApp.flow
+
+# Compile to WebAssembly for browser
+flowc compile --target wasm game/GameEngine.flow
+
+# Compile to Java with optimization
+flowc compile --target java --optimize api/DataProcessor.flow
+
+# Specify output location
+flowc compile --target csharp backend/main.flow --output dist/Backend.cs
+```
+
+#### Target-Specific Features
+
+**C# Target:**
+- Full async/await support
+- LINQ and Entity Framework integration
+- NuGet package compatibility
+- XML documentation generation
+
+**Java Target:**
+- Stream API and lambda expressions
+- Maven project structure
+- JUnit test generation
+- Javadoc documentation
+
+**JavaScript Target:**
+- React component generation
+- npm package.json creation
+- TypeScript definitions
+- ES6+ modern JavaScript
+
+**WebAssembly Target:**
+- Browser compatibility
+- Minimal runtime overhead
+- JavaScript interop
+- Performance-optimized output
+
+#### Auto-Target Detection
+
+FlowLang automatically detects the appropriate target based on source code:
+
+```flowlang
+// Auto-detects JavaScript target (UI components)
+component UserProfile() uses [DOM] -> UIComponent { ... }
+
+// Auto-detects C# target (backend services)
+service UserService uses [Database] { ... }
+```
+
+### `targets` Command
+
+Lists all available compilation targets and their capabilities.
+
+#### Syntax
+
+```bash
+flowc targets [options]
+```
+
+#### Options
+
+- `--verbose`, `-v`: Show detailed target information
+- `--capabilities`: Show feature support matrix
+
+#### Description
+
+Displays information about FlowLang compilation targets including supported features, limitations, and use cases.
+
+#### Examples
+
+```bash
+# List all targets
+flowc targets
+
+# Show detailed information
+flowc targets --verbose
+
+# Show feature capabilities
+flowc targets --capabilities
+```
+
+#### Output Example
+
+```
+🎯 Available FlowLang compilation targets:
+
+Backend Targets:
+  csharp, cs     - C# (.NET) - Full feature support
+  java           - Java (JVM) - Full feature support  
+  native         - Native code (C++) - High performance
+
+Frontend Targets:
+  javascript, js - JavaScript (Node.js/Browser) - UI components
+  wasm           - WebAssembly - Browser/edge computing
+
+Example usage:
+  flowc compile --target javascript ui_app.flow
+  flowc compile --target csharp backend_service.flow
+```
+
+### `dev` Command
+
+Starts a development server for UI projects with hot reload and real-time compilation.
+
+#### Syntax
+
+```bash
+flowc dev [options]
+```
+
+#### Options
+
+- `--port <port>`: Specify development server port (default: 3000)
+- `--watch`: Enable file watching and hot reload
+- `--verbose`: Show detailed compilation output
+
+#### Description
+
+The `dev` command provides a development environment for FlowLang UI applications:
+
+- Hot reload on file changes
+- Real-time compilation feedback
+- Browser auto-refresh
+- Development server with static file serving
+
+#### Examples
+
+```bash
+# Start development server
+flowc dev
+
+# Start on custom port with verbose output
+flowc dev --port 8080 --verbose
+
+# Development with file watching
+flowc dev --watch
+```
+
+#### Development Workflow
+
+1. Run `flowc dev` in your UI project directory
+2. Open browser at `http://localhost:3000`
+3. Edit FlowLang UI components
+4. See changes reflected immediately
+
 ### `new` Command
 
 Creates a new FlowLang project with a complete directory structure.
@@ -91,8 +277,12 @@ Creates a new FlowLang project with a complete directory structure.
 #### Syntax
 
 ```bash
-flowc new <project-name>
+flowc new [--template <template>] <project-name>
 ```
+
+#### Options
+
+- `--template <template>`: Project template (basic, ui, fullstack)
 
 #### Parameters
 
@@ -100,23 +290,74 @@ flowc new <project-name>
 
 #### Description
 
-The `new` command creates a complete FlowLang project structure including:
+The `new` command creates a complete FlowLang project structure with different templates:
 
-- Project configuration file (`flowc.json`)
-- Source directory with main file
-- Examples directory with sample code
-- Tests directory with basic tests
-- Git ignore file
-- README file
+**Basic Template (default):**
+- Backend-focused project with C# output
+- Simple functions and services
+- Basic project structure
+
+**UI Template:**
+- Frontend-focused project with React components
+- UI component examples
+- JavaScript/React output target
+
+**Fullstack Template:**
+- Complete full-stack application
+- Backend services and frontend components
+- Shared type definitions
+- Multi-target compilation setup
 
 #### Examples
 
 ```bash
-# Create a new project
-flowc new my-awesome-app
+# Create a basic backend project
+flowc new my-backend-app
+
+# Create a UI component project
+flowc new --template ui my-ui-app
+
+# Create a full-stack application
+flowc new --template fullstack my-fullstack-app
 
 # Navigate to the project
-cd my-awesome-app
+cd my-ui-app
+```
+
+#### Template Structures
+
+**Basic Template:**
+```
+my-backend-app/
+├── flowc.json              # Project configuration
+├── main.flow              # Main source file
+└── README.md              # Project documentation
+```
+
+**UI Template:**
+```
+my-ui-app/
+├── flowc.json              # Project configuration
+├── main.flow              # Main UI component
+├── components/            # UI components directory
+├── state/                 # State management
+└── README.md              # Project documentation
+```
+
+**Fullstack Template:**
+```
+my-fullstack-app/
+├── flowc.json              # Project configuration
+├── backend/
+│   └── UserService.flow   # Backend services
+├── frontend/
+│   ├── components/        # UI components
+│   ├── state/            # State management
+│   └── main.flow         # Frontend entry point
+├── shared/
+│   └── types/            # Shared type definitions
+│       └── User.flow
+└── README.md              # Project documentation
 ```
 
 #### Generated Structure

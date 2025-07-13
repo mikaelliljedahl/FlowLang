@@ -1,0 +1,839 @@
+// FlowLang UI Components Example - Complete E-Commerce Application
+// Designed for LLM developers with maximum explicitness and predictability
+
+// Shared types across the application
+type User {
+    id: string
+    username: string
+    email: string
+    full_name: string
+    avatar_url: Option<string>
+    created_at: DateTime
+    is_premium: bool
+}
+
+type Product {
+    id: string
+    name: string
+    description: string
+    price: float
+    image_url: string
+    category: string
+    in_stock: bool
+    rating: float
+    reviews_count: int
+}
+
+type CartItem {
+    product: Product
+    quantity: int
+    added_at: DateTime
+}
+
+type Cart {
+    items: List<CartItem>
+    total_amount: float
+    discount_amount: float
+    tax_amount: float
+}
+
+type Notification {
+    id: string
+    message: string
+    type: NotificationType
+    timestamp: DateTime
+}
+
+enum NotificationType {
+    Success,
+    Warning,
+    Error,
+    Info
+}
+
+// API Client definitions - auto-generated from backend services
+api_client UserApi from UserService {
+    base_url: "https://api.myshop.com"
+    auth_type: bearer_token
+    timeout: 30s
+    
+    function get_user(id: string) uses [Network] -> Result<User, ApiError>
+    function update_user(user: User) uses [Network] -> Result<User, ApiError>
+    function authenticate(credentials: LoginCredentials) uses [Network] -> Result<AuthResult, AuthError>
+}
+
+api_client ProductApi from ProductService {
+    base_url: "https://api.myshop.com"
+    auth_type: bearer_token
+    timeout: 30s
+    
+    function search_products(query: SearchQuery) uses [Network] -> Result<List<Product>, ApiError>
+    function get_product(id: string) uses [Network] -> Result<Product, ApiError>
+    function get_categories() uses [Network] -> Result<List<string>, ApiError>
+}
+
+api_client CartApi from CartService {
+    base_url: "https://api.myshop.com"
+    auth_type: bearer_token
+    timeout: 30s
+    
+    function get_cart() uses [Network] -> Result<Cart, ApiError>
+    function add_to_cart(product_id: string, quantity: int) uses [Network] -> Result<Cart, ApiError>
+    function update_cart_item(item_id: string, quantity: int) uses [Network] -> Result<Cart, ApiError>
+    function remove_from_cart(item_id: string) uses [Network] -> Result<Cart, ApiError>
+}
+
+// Global application state management
+app_state ECommerceAppState uses [LocalStorage, Network] {
+    // Explicit state shape - LLMs can see everything
+    current_user: Option<User> = None
+    shopping_cart: Cart = Cart { items: [], total_amount: 0.0, discount_amount: 0.0, tax_amount: 0.0 }
+    product_search_results: List<Product> = []
+    categories: List<string> = []
+    notifications: List<Notification> = []
+    loading_states: Map<string, bool> = Map.empty()
+    
+    // Authentication actions
+    action login_user(credentials: LoginCredentials) 
+        uses [Network, LocalStorage] 
+        updates [current_user, loading_states]
+        -> Result<User, AuthError> 
+    {
+        set_loading("user_login", true)
+        
+        let auth_result = UserApi.authenticate(credentials)
+        match auth_result {
+            Ok(auth_response) -> {
+                set_state(current_user, Some(auth_response.user))
+                storage_save("auth_token", auth_response.token)
+                storage_save("current_user", auth_response.user)
+                set_loading("user_login", false)
+                return Ok(auth_response.user)
+            }
+            Error(auth_error) -> {
+                set_loading("user_login", false)
+                return Error(auth_error)
+            }
+        }
+    }
+    
+    action logout_user() 
+        uses [LocalStorage] 
+        updates [current_user, shopping_cart]
+        -> Result<Unit, Error> 
+    {
+        set_state(current_user, None)
+        set_state(shopping_cart, Cart.empty())
+        storage_remove("auth_token")
+        storage_remove("current_user")
+        storage_remove("shopping_cart")
+        return Ok(unit)
+    }
+    
+    // Product search actions
+    action search_products(query: string, category: Option<string>) 
+        uses [Network] 
+        updates [product_search_results, loading_states]
+        -> Result<List<Product>, ApiError> 
+    {
+        set_loading("product_search", true)
+        
+        let search_query = SearchQuery {
+            text: query,
+            category: category,
+            sort_by: SortOption.Relevance,
+            min_price: None,
+            max_price: None
+        }
+        
+        let search_result = ProductApi.search_products(search_query)
+        match search_result {
+            Ok(products) -> {
+                set_state(product_search_results, products)
+                set_loading("product_search", false)
+                return Ok(products)
+            }
+            Error(api_error) -> {
+                set_loading("product_search", false)
+                return Error(api_error)
+            }
+        }
+    }
+    
+    // Shopping cart actions
+    action add_to_cart(product: Product, quantity: int) 
+        uses [Network, LocalStorage] 
+        updates [shopping_cart, notifications]
+        -> Result<Unit, CartError> 
+    {
+        guard quantity > 0 else {
+            return Error(CartError.InvalidQuantity)
+        }
+        
+        guard product.in_stock else {
+            return Error(CartError.ProductOutOfStock)
+        }
+        
+        set_loading("cart_update", true)
+        
+        let cart_result = CartApi.add_to_cart(product.id, quantity)
+        match cart_result {
+            Ok(updated_cart) -> {
+                set_state(shopping_cart, updated_cart)
+                storage_save("shopping_cart", updated_cart)
+                
+                let notification = Notification {
+                    id: generate_id(),
+                    message: $"Added {product.name} to cart",
+                    type: NotificationType.Success,
+                    timestamp: current_time()
+                }
+                add_notification(notification)
+                
+                set_loading("cart_update", false)
+                return Ok(unit)
+            }
+            Error(cart_error) -> {
+                set_loading("cart_update", false)
+                return Error(cart_error)
+            }
+        }
+    }
+    
+    action update_cart_quantity(item_id: string, new_quantity: int) 
+        uses [Network, LocalStorage] 
+        updates [shopping_cart]
+        -> Result<Unit, CartError> 
+    {
+        guard new_quantity >= 0 else {
+            return Error(CartError.InvalidQuantity)
+        }
+        
+        set_loading("cart_update", true)
+        
+        let update_result = if new_quantity == 0 {
+            CartApi.remove_from_cart(item_id)
+        } else {
+            CartApi.update_cart_item(item_id, new_quantity)
+        }
+        
+        match update_result {
+            Ok(updated_cart) -> {
+                set_state(shopping_cart, updated_cart)
+                storage_save("shopping_cart", updated_cart)
+                set_loading("cart_update", false)
+                return Ok(unit)
+            }
+            Error(cart_error) -> {
+                set_loading("cart_update", false)
+                return Error(cart_error)
+            }
+        }
+    }
+    
+    // Notification management
+    action add_notification(notification: Notification) 
+        uses [LocalStorage] 
+        updates [notifications]
+        -> Result<Unit, Error> 
+    {
+        let updated_notifications = notifications.prepend(notification)
+        set_state(notifications, updated_notifications)
+        
+        // Auto-remove notification after 5 seconds
+        schedule_task(5000) {
+            remove_notification(notification.id)
+        }
+        
+        return Ok(unit)
+    }
+    
+    action remove_notification(notification_id: string) 
+        uses [] 
+        updates [notifications]
+        -> Result<Unit, Error> 
+    {
+        let filtered_notifications = notifications.filter(n -> n.id != notification_id)
+        set_state(notifications, filtered_notifications)
+        return Ok(unit)
+    }
+}
+
+// Main application component
+component ECommerceApp() 
+    uses [LocalStorage, Network, DOM] 
+    state [current_route, is_initializing]
+    events [on_route_change, on_app_init]
+    -> UIComponent 
+{
+    declare_state current_route: string = "/home"
+    declare_state is_initializing: bool = true
+    
+    on_mount {
+        // Initialize application state
+        let stored_user = storage_load("current_user")
+        match stored_user {
+            Some(user) -> {
+                ECommerceAppState.set_state(current_user, Some(user))
+            }
+            None -> {} // No stored user
+        }
+        
+        let stored_cart = storage_load("shopping_cart")
+        match stored_cart {
+            Some(cart) -> {
+                ECommerceAppState.set_state(shopping_cart, cart)
+            }
+            None -> {} // No stored cart
+        }
+        
+        set_state(is_initializing, false)
+    }
+    
+    event_handler handle_route_change(new_route: string) uses [DOM] {
+        set_state(current_route, new_route)
+        // Update browser URL
+        window_set_url(new_route)
+    }
+    
+    render {
+        container(class: "ecommerce-app") {
+            if is_initializing {
+                loading_screen(message: "Initializing application...")
+            } else {
+                // Navigation header
+                app_header(
+                    current_user: ECommerceAppState.current_user,
+                    cart_item_count: ECommerceAppState.shopping_cart.items.length,
+                    on_navigation: handle_route_change,
+                    on_logout: ECommerceAppState.logout_user
+                )
+                
+                // Main content based on current route
+                main_content(class: "app-main") {
+                    match current_route {
+                        "/home" -> home_page()
+                        "/products" -> product_search_page()
+                        "/cart" -> shopping_cart_page()
+                        "/profile" -> user_profile_page()
+                        "/login" -> login_page(on_login_success: handle_route_change)
+                        _ -> not_found_page()
+                    }
+                }
+                
+                // Notification system
+                notification_container(
+                    notifications: ECommerceAppState.notifications,
+                    on_dismiss: ECommerceAppState.remove_notification
+                )
+            }
+        }
+    }
+}
+
+// Product search and listing component
+component ProductSearchPage() 
+    uses [Network, DOM] 
+    state [search_query, selected_category, search_results, is_searching]
+    events [on_search, on_category_change, on_product_click]
+    -> UIComponent 
+{
+    declare_state search_query: string = ""
+    declare_state selected_category: Option<string> = None
+    declare_state search_results: List<Product> = []
+    declare_state is_searching: bool = false
+    
+    on_mount {
+        // Load initial products and categories
+        load_categories()
+        perform_search("", None) // Load all products initially
+    }
+    
+    event_handler handle_search_input(query: string) uses [DOM] {
+        set_state(search_query, query)
+        // Debounce search to avoid too many API calls
+        debounce_search(query, selected_category, 500)
+    }
+    
+    event_handler handle_category_change(category: Option<string>) uses [DOM] {
+        set_state(selected_category, category)
+        perform_search(search_query, category)
+    }
+    
+    event_handler perform_search(query: string, category: Option<string>) uses [Network] {
+        set_state(is_searching, true)
+        
+        let search_result = ECommerceAppState.search_products(query, category)
+        match search_result {
+            Ok(products) -> {
+                set_state(search_results, products)
+                set_state(is_searching, false)
+            }
+            Error(search_error) -> {
+                set_state(is_searching, false)
+                ECommerceAppState.add_notification(Notification {
+                    id: generate_id(),
+                    message: $"Search failed: {search_error}",
+                    type: NotificationType.Error,
+                    timestamp: current_time()
+                })
+            }
+        }
+    }
+    
+    event_handler handle_product_click(product: Product) uses [DOM] {
+        // Navigate to product detail page
+        navigate_to($"/product/{product.id}")
+    }
+    
+    render {
+        container(class: "product-search-page") {
+            // Search controls
+            search_controls(class: "search-section") {
+                text_input(
+                    value: search_query,
+                    placeholder: "Search products...",
+                    on_change: handle_search_input
+                )
+                
+                category_selector(
+                    selected: selected_category,
+                    categories: ECommerceAppState.categories,
+                    on_change: handle_category_change
+                )
+            }
+            
+            // Search results
+            search_results_section(class: "results-section") {
+                if is_searching {
+                    loading_indicator(message: "Searching products...")
+                } else if search_results.is_empty() {
+                    empty_state(
+                        message: "No products found",
+                        suggestion: "Try adjusting your search terms"
+                    )
+                } else {
+                    product_grid(class: "product-grid") {
+                        for product in search_results {
+                            product_card(
+                                product: product,
+                                on_click: () -> handle_product_click(product),
+                                on_add_to_cart: (quantity) -> ECommerceAppState.add_to_cart(product, quantity)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Individual product card component
+component ProductCard(product: Product) 
+    uses [DOM] 
+    state [is_hovered, quantity_to_add]
+    events [on_click, on_add_to_cart, on_mouse_enter, on_mouse_leave]
+    -> UIComponent 
+{
+    declare_state is_hovered: bool = false
+    declare_state quantity_to_add: int = 1
+    
+    event_handler handle_mouse_enter() uses [DOM] {
+        set_state(is_hovered, true)
+    }
+    
+    event_handler handle_mouse_leave() uses [DOM] {
+        set_state(is_hovered, false)
+    }
+    
+    event_handler handle_add_to_cart() uses [DOM] {
+        on_add_to_cart(quantity_to_add)
+        set_state(quantity_to_add, 1) // Reset quantity
+    }
+    
+    event_handler handle_quantity_change(new_quantity: int) uses [DOM] {
+        guard new_quantity > 0 else { return }
+        set_state(quantity_to_add, new_quantity)
+    }
+    
+    render {
+        card(
+            class: if is_hovered then "product-card hovered" else "product-card",
+            on_mouse_enter: handle_mouse_enter,
+            on_mouse_leave: handle_mouse_leave
+        ) {
+            // Product image
+            image(
+                src: product.image_url,
+                alt: product.name,
+                class: "product-image",
+                on_click: on_click
+            )
+            
+            // Product info
+            product_info(class: "product-info") {
+                heading(level: 3, text: product.name, on_click: on_click)
+                
+                price_display(class: "price") {
+                    text(content: $"${product.price}", style: "price-amount")
+                }
+                
+                rating_display(
+                    rating: product.rating,
+                    reviews_count: product.reviews_count
+                )
+                
+                // Stock status
+                if product.in_stock {
+                    stock_indicator(status: "in-stock", text: "In Stock")
+                } else {
+                    stock_indicator(status: "out-of-stock", text: "Out of Stock")
+                }
+            }
+            
+            // Add to cart section
+            if product.in_stock {
+                add_to_cart_section(class: "add-to-cart") {
+                    quantity_selector(
+                        value: quantity_to_add,
+                        min: 1,
+                        max: 10,
+                        on_change: handle_quantity_change
+                    )
+                    
+                    button(
+                        text: "Add to Cart",
+                        type: "primary",
+                        disabled: ECommerceAppState.loading_states.get("cart_update"),
+                        on_click: handle_add_to_cart
+                    )
+                }
+            } else {
+                out_of_stock_message(text: "Currently unavailable")
+            }
+        }
+    }
+}
+
+// Shopping cart page component
+component ShoppingCartPage() 
+    uses [Network, DOM] 
+    state [is_updating_cart]
+    events [on_quantity_change, on_remove_item, on_checkout]
+    -> UIComponent 
+{
+    declare_state is_updating_cart: bool = false
+    
+    event_handler handle_quantity_change(item_id: string, new_quantity: int) uses [Network] {
+        set_state(is_updating_cart, true)
+        
+        let update_result = ECommerceAppState.update_cart_quantity(item_id, new_quantity)
+        match update_result {
+            Ok(_) -> {
+                set_state(is_updating_cart, false)
+            }
+            Error(cart_error) -> {
+                set_state(is_updating_cart, false)
+                ECommerceAppState.add_notification(Notification {
+                    id: generate_id(),
+                    message: $"Failed to update cart: {cart_error}",
+                    type: NotificationType.Error,
+                    timestamp: current_time()
+                })
+            }
+        }
+    }
+    
+    event_handler handle_remove_item(item_id: string) uses [Network] {
+        handle_quantity_change(item_id, 0)
+    }
+    
+    event_handler handle_checkout() uses [DOM] {
+        // Navigate to checkout process
+        navigate_to("/checkout")
+    }
+    
+    render {
+        container(class: "shopping-cart-page") {
+            page_header {
+                heading(level: 1, text: "Shopping Cart")
+            }
+            
+            cart_content {
+                if ECommerceAppState.shopping_cart.items.is_empty() {
+                    empty_cart_state(
+                        message: "Your cart is empty",
+                        action_text: "Continue Shopping",
+                        on_action: () -> navigate_to("/products")
+                    )
+                } else {
+                    cart_items_list(class: "cart-items") {
+                        for item in ECommerceAppState.shopping_cart.items {
+                            cart_item_row(
+                                item: item,
+                                on_quantity_change: (new_qty) -> handle_quantity_change(item.id, new_qty),
+                                on_remove: () -> handle_remove_item(item.id),
+                                disabled: is_updating_cart
+                            )
+                        }
+                    }
+                    
+                    cart_summary(class: "cart-summary") {
+                        price_breakdown(cart: ECommerceAppState.shopping_cart)
+                        
+                        checkout_button(
+                            text: $"Checkout (${ECommerceAppState.shopping_cart.total_amount})",
+                            disabled: is_updating_cart,
+                            on_click: handle_checkout
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// User authentication component
+component LoginPage(on_login_success: Function<string, Unit>) 
+    uses [Network, DOM] 
+    state [username, password, is_logging_in, login_error]
+    events [on_username_change, on_password_change, on_submit, on_forgot_password]
+    -> UIComponent 
+{
+    declare_state username: string = ""
+    declare_state password: string = ""
+    declare_state is_logging_in: bool = false
+    declare_state login_error: Option<string> = None
+    
+    event_handler handle_username_change(new_username: string) uses [DOM] {
+        set_state(username, new_username)
+        set_state(login_error, None) // Clear error when user types
+    }
+    
+    event_handler handle_password_change(new_password: string) uses [DOM] {
+        set_state(password, new_password)
+        set_state(login_error, None) // Clear error when user types
+    }
+    
+    event_handler handle_login_submit() uses [Network, DOM] {
+        // Validate input
+        guard username.length > 0 else {
+            set_state(login_error, Some("Username is required"))
+            return
+        }
+        
+        guard password.length > 0 else {
+            set_state(login_error, Some("Password is required"))
+            return
+        }
+        
+        set_state(is_logging_in, true)
+        set_state(login_error, None)
+        
+        let credentials = LoginCredentials {
+            username: username,
+            password: password
+        }
+        
+        let login_result = ECommerceAppState.login_user(credentials)
+        match login_result {
+            Ok(user) -> {
+                set_state(is_logging_in, false)
+                on_login_success("/home") // Navigate to home page
+            }
+            Error(auth_error) -> {
+                set_state(is_logging_in, false)
+                set_state(login_error, Some(auth_error.message))
+            }
+        }
+    }
+    
+    event_handler handle_key_press(key: KeyEvent) uses [DOM] {
+        match key.code {
+            "Enter" -> handle_login_submit()
+            _ -> {} // Ignore other keys
+        }
+    }
+    
+    render {
+        container(class: "login-page") {
+            login_card(class: "login-form") {
+                form_header {
+                    heading(level: 2, text: "Sign In")
+                    subtitle(text: "Welcome back to our store")
+                }
+                
+                form_fields {
+                    form_field {
+                        label(text: "Username", for: "username-input")
+                        text_input(
+                            id: "username-input",
+                            value: username,
+                            placeholder: "Enter your username",
+                            on_change: handle_username_change,
+                            on_key_press: handle_key_press
+                        )
+                    }
+                    
+                    form_field {
+                        label(text: "Password", for: "password-input")
+                        password_input(
+                            id: "password-input",
+                            value: password,
+                            placeholder: "Enter your password",
+                            on_change: handle_password_change,
+                            on_key_press: handle_key_press
+                        )
+                    }
+                    
+                    if login_error.is_some() {
+                        error_message(
+                            message: login_error.unwrap(),
+                            class: "login-error"
+                        )
+                    }
+                }
+                
+                form_actions {
+                    button(
+                        text: if is_logging_in then "Signing In..." else "Sign In",
+                        type: "primary",
+                        disabled: is_logging_in,
+                        on_click: handle_login_submit
+                    )
+                    
+                    text_button(
+                        text: "Forgot Password?",
+                        on_click: () -> navigate_to("/forgot-password")
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Notification system component
+component NotificationContainer(notifications: List<Notification>, on_dismiss: Function<string, Unit>) 
+    uses [DOM] 
+    state []
+    events [on_notification_dismiss]
+    -> UIComponent 
+{
+    event_handler handle_notification_dismiss(notification_id: string) uses [DOM] {
+        on_dismiss(notification_id)
+    }
+    
+    render {
+        notification_overlay(class: "notification-container") {
+            for notification in notifications {
+                notification_item(
+                    notification: notification,
+                    on_dismiss: () -> handle_notification_dismiss(notification.id)
+                )
+            }
+        }
+    }
+}
+
+// Individual notification component
+component NotificationItem(notification: Notification, on_dismiss: Function<Unit>) 
+    uses [DOM] 
+    state [is_visible, is_exiting]
+    events [on_dismiss_click]
+    -> UIComponent 
+{
+    declare_state is_visible: bool = false
+    declare_state is_exiting: bool = false
+    
+    on_mount {
+        // Animate in
+        schedule_task(10) { // Small delay for animation
+            set_state(is_visible, true)
+        }
+    }
+    
+    event_handler handle_dismiss() uses [DOM] {
+        set_state(is_exiting, true)
+        
+        // Wait for exit animation, then call dismiss
+        schedule_task(300) {
+            on_dismiss()
+        }
+    }
+    
+    render {
+        notification_card(
+            class: build_notification_classes(notification.type, is_visible, is_exiting),
+            role: "alert"
+        ) {
+            notification_content {
+                notification_icon(type: notification.type)
+                
+                notification_text {
+                    text(content: notification.message)
+                    timestamp(value: notification.timestamp)
+                }
+                
+                dismiss_button(
+                    on_click: handle_dismiss,
+                    aria_label: "Dismiss notification"
+                )
+            }
+        }
+    }
+}
+
+// Utility function for building CSS classes
+pure function build_notification_classes(type: NotificationType, visible: bool, exiting: bool) -> string {
+    let base_class = "notification-item"
+    let type_class = match type {
+        NotificationType.Success -> "notification-success"
+        NotificationType.Warning -> "notification-warning"
+        NotificationType.Error -> "notification-error"
+        NotificationType.Info -> "notification-info"
+    }
+    let state_class = if exiting {
+        "notification-exiting"
+    } else if visible {
+        "notification-visible"
+    } else {
+        "notification-hidden"
+    }
+    
+    return $"{base_class} {type_class} {state_class}"
+}
+
+// Helper functions for component interactions
+function navigate_to(route: string) uses [DOM] -> Unit {
+    // Update browser URL and trigger route change
+    window_set_url(route)
+    // This would trigger the router to update the current route
+}
+
+function schedule_task(delay_ms: int, task: Function<Unit>) uses [DOM] -> Unit {
+    // Schedule a task to run after a delay
+    // Implementation would use setTimeout in JavaScript
+}
+
+function debounce_search(query: string, category: Option<string>, delay_ms: int) uses [DOM] -> Unit {
+    // Debounce search to avoid excessive API calls
+    // Implementation would use setTimeout with clearing previous timeouts
+}
+
+function generate_id() -> string {
+    // Generate unique ID for notifications and other elements
+    return "id_" + current_timestamp().toString()
+}
+
+function current_time() -> DateTime {
+    // Get current timestamp
+    return DateTime.now()
+}
+
+// This complete example demonstrates:
+// 1. Explicit component declarations with all effects, state, and events
+// 2. Predictable state management with clear action definitions
+// 3. Type-safe API integration with auto-generated clients
+// 4. Comprehensive error handling at every level
+// 5. Clear event flow with explicit handlers
+// 6. Self-documenting code structure perfect for LLM understanding

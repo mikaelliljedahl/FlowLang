@@ -1,0 +1,5 @@
+component Simple() -> Component {
+    render {
+        div { "Hello World" }
+    }
+}

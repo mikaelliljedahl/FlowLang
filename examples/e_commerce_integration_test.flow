@@ -1,0 +1,702 @@
+// Comprehensive E-Commerce Integration Test
+// Tests all Phase 4B features: development server, hot reload, advanced parser features
+// Complex conditionals, loops, expressions, component composition, effect tracking
+
+module ECommerceTest {
+    // Type definitions for comprehensive testing
+    type Product = {
+        id: ProductId,
+        name: string,
+        price: int,  // in cents
+        category: string,
+        in_stock: bool,
+        rating: decimal,
+        description: string,
+        image_url: string,
+        tags: List<string>,
+        is_featured: bool,
+        is_on_sale: bool,
+        sale_percentage: int,
+        vendor_id: string,
+        created_at: DateTime,
+        is_protected: bool
+    }
+    
+    type FilterState = {
+        category: string?,
+        price_min: int?,
+        price_max: int?,
+        in_stock_only: bool,
+        min_rating: decimal?,
+        search_term: string?,
+        sort_by: SortField,
+        sort_order: SortDirection
+    }
+    
+    type SortField = enum { Name, Price, Rating, Created }
+    type SortDirection = enum { Asc, Desc }
+    type ProductId = string
+    type CartItem = { product_id: ProductId, quantity: int }
+    type Cart = List<CartItem>
+    type CheckoutState = enum { Idle, Processing, Success, Error }
+    
+    // Main e-commerce component with comprehensive feature testing
+    component ProductGrid(
+        products: List<Product>, 
+        filters: FilterState, 
+        user_permissions: List<string>,
+        cart: Cart
+    ) 
+        uses [Network, LocalStorage, Analytics, Payment] 
+        state [selected_items, sort_order, is_loading, checkout_state, error_message, show_filters]
+        -> UIComponent 
+    {
+        // Complex state management with multiple types
+        declare_state selected_items: List<ProductId> = List.empty()
+        declare_state sort_order: SortField = SortField.Name
+        declare_state sort_direction: SortDirection = SortDirection.Asc
+        declare_state is_loading: bool = false
+        declare_state checkout_state: CheckoutState = CheckoutState.Idle
+        declare_state error_message: string? = null
+        declare_state show_filters: bool = false
+        declare_state expanded_product: ProductId? = null
+        declare_state price_range: { min: int, max: int } = { min: 0, max: 100000 }
+        declare_state view_mode: string = "grid"  // "grid" | "list" | "compact"
+        
+        // Complex event handlers with effect tracking
+        event_handler handle_select_item(product_id: ProductId) uses [LocalStorage, Analytics] {
+            track_user_interaction("product_select", product_id)
+            
+            let updated_items = selected_items.contains(product_id) 
+                ? selected_items.filter(id => id != product_id)
+                : selected_items.append(product_id)
+                
+            set_state(selected_items, updated_items)
+            save_selection_to_storage(updated_items)?
+            
+            // Complex conditional logic
+            if updated_items.length > 10 {
+                show_warning("Too many items selected. Consider using bulk actions.")
+            }
+        }
+        
+        event_handler handle_sort_change(new_field: SortField) uses [Analytics] {
+            track_sort_change(new_field, sort_direction)
+            
+            let new_direction = sort_order == new_field && sort_direction == SortDirection.Asc 
+                ? SortDirection.Desc 
+                : SortDirection.Asc
+                
+            set_state(sort_order, new_field)
+            set_state(sort_direction, new_direction)
+        }
+        
+        event_handler handle_add_to_cart(product_id: ProductId, quantity: int) uses [LocalStorage, Network, Analytics] {
+            let product = products.find(p => p.id == product_id)?
+            
+            if product.in_stock && quantity > 0 {
+                let cart_item = CartItem { product_id: product_id, quantity: quantity }
+                let updated_cart = add_to_cart(cart, cart_item)?
+                
+                save_cart_to_storage(updated_cart)?
+                track_add_to_cart(product_id, quantity, product.price * quantity)
+                
+                show_success_message($"Added {product.name} to cart")
+            } else {
+                set_state(error_message, "Product is out of stock or invalid quantity")
+            }
+        }
+        
+        event_handler handle_bulk_checkout() uses [Network, Payment, LocalStorage, Analytics] {
+            if selected_items.length == 0 {
+                set_state(error_message, "No items selected for checkout")
+                return
+            }
+            
+            set_state(checkout_state, CheckoutState.Processing)
+            set_state(is_loading, true)
+            
+            let selected_products = products.filter(p => selected_items.contains(p.id))
+            let total_amount = calculate_bulk_total(selected_products)
+            
+            track_checkout_start(selected_items, total_amount)
+            
+            let checkout_result = process_bulk_checkout(selected_products, total_amount)
+            
+            match checkout_result {
+                Ok(order_id) => {
+                    set_state(checkout_state, CheckoutState.Success)
+                    set_state(selected_items, List.empty())
+                    clear_cart()?
+                    track_checkout_success(order_id, total_amount)
+                    show_success_message($"Order {order_id} placed successfully!")
+                }
+                Error(error) => {
+                    set_state(checkout_state, CheckoutState.Error)
+                    set_state(error_message, error.message)
+                    track_checkout_error(error.code, error.message)
+                }
+            }
+            
+            set_state(is_loading, false)
+        }
+        
+        event_handler handle_filter_change(new_filters: FilterState) uses [Analytics] {
+            track_filter_usage(new_filters)
+            apply_filters(new_filters)
+        }
+        
+        event_handler handle_view_mode_change(mode: string) uses [LocalStorage] {
+            set_state(view_mode, mode)
+            save_user_preference("view_mode", mode)?
+        }
+        
+        // Complex computed properties
+        computed filtered_products: List<Product> = 
+            products
+                .filter(p => passes_filters(p, filters))
+                .filter(p => filters.search_term == null || 
+                    p.name.to_lower().contains(filters.search_term.to_lower()) ||
+                    p.description.to_lower().contains(filters.search_term.to_lower()) ||
+                    p.tags.any(tag => tag.to_lower().contains(filters.search_term.to_lower())))
+                .sort_by(p => get_sort_value(p, sort_order), sort_direction)
+        
+        computed selected_total: int = 
+            products
+                .filter(p => selected_items.contains(p.id))
+                .map(p => p.price)
+                .sum()
+        
+        computed cart_item_count: int = cart.map(item => item.quantity).sum()
+        
+        computed has_admin_permissions: bool = user_permissions.contains("admin")
+        computed can_bulk_edit: bool = user_permissions.contains("bulk_edit") && selected_items.length > 0
+        computed can_manage_inventory: bool = user_permissions.contains("inventory_manager")
+        
+        // Complex render block with all advanced features
+        render {
+            div(class: "e-commerce-container") {
+                // Complex header with conditional rendering and expressions
+                header(class: "product-grid-header") {
+                    div(class: "header-content") {
+                        h1 { 
+                            $"Products ({filtered_products.length} of {products.length})"
+                        }
+                        
+                        // Complex conditional rendering based on multiple states
+                        if is_loading {
+                            loading_indicator(
+                                text: checkout_state == CheckoutState.Processing 
+                                    ? "Processing checkout..." 
+                                    : "Loading products...",
+                                size: "small"
+                            )
+                        } else {
+                            if error_message != null {
+                                error_alert(
+                                    message: error_message,
+                                    type: checkout_state == CheckoutState.Error ? "checkout-error" : "general-error",
+                                    dismissible: true,
+                                    on_dismiss: () => set_state(error_message, null)
+                                )
+                            }
+                        }
+                        
+                        // View mode selector with complex expressions
+                        view_mode_selector(
+                            current_mode: view_mode,
+                            modes: ["grid", "list", "compact"],
+                            on_change: handle_view_mode_change,
+                            disabled: is_loading || checkout_state == CheckoutState.Processing
+                        )
+                    }
+                    
+                    // Filter and sort controls
+                    div(class: "controls-bar") {
+                        filter_toggle(
+                            active: show_filters,
+                            count: count_active_filters(filters),
+                            on_toggle: () => set_state(show_filters, !show_filters)
+                        )
+                        
+                        sort_dropdown(
+                            value: sort_order,
+                            direction: sort_direction,
+                            options: [
+                                { field: SortField.Name, label: "Name" },
+                                { field: SortField.Price, label: "Price" },
+                                { field: SortField.Rating, label: "Rating" },
+                                { field: SortField.Created, label: "Newest" }
+                            ],
+                            on_change: handle_sort_change
+                        )
+                        
+                        // Bulk actions with complex conditional visibility
+                        if selected_items.length > 0 {
+                            bulk_actions_panel(
+                                selected_count: selected_items.length,
+                                total_value: selected_total,
+                                actions: [
+                                    {
+                                        name: "Add to Cart",
+                                        enabled: selected_items.all(id => 
+                                            products.find(p => p.id == id)?.in_stock ?? false
+                                        ),
+                                        handler: handle_bulk_add_to_cart
+                                    },
+                                    {
+                                        name: "Checkout",
+                                        enabled: can_bulk_checkout() && checkout_state != CheckoutState.Processing,
+                                        handler: handle_bulk_checkout,
+                                        primary: true
+                                    },
+                                    {
+                                        name: "Export",
+                                        enabled: has_admin_permissions,
+                                        handler: handle_export_selected
+                                    },
+                                    {
+                                        name: "Edit Prices",
+                                        enabled: can_bulk_edit && can_manage_inventory,
+                                        handler: handle_bulk_price_edit
+                                    }
+                                ]
+                            )
+                        }
+                    }
+                }
+                
+                // Complex filter panel with conditional visibility
+                if show_filters {
+                    filter_panel(
+                        filters: filters,
+                        price_range: price_range,
+                        available_categories: products.map(p => p.category).distinct(),
+                        on_change: handle_filter_change,
+                        on_reset: () => handle_filter_change(FilterState.default())
+                    ) {
+                        filter_section(title: "Category") {
+                            for category in products.map(p => p.category).distinct().sort() {
+                                category_filter(
+                                    name: category,
+                                    selected: filters.category == category,
+                                    count: products.filter(p => p.category == category).length,
+                                    on_toggle: (selected) => toggle_category_filter(category, selected)
+                                )
+                            }
+                        }
+                        
+                        filter_section(title: "Price Range") {
+                            price_range_slider(
+                                min: price_range.min,
+                                max: price_range.max,
+                                current_min: filters.price_min ?? price_range.min,
+                                current_max: filters.price_max ?? price_range.max,
+                                on_change: handle_price_range_change
+                            )
+                        }
+                        
+                        filter_section(title: "Availability") {
+                            checkbox(
+                                label: "In Stock Only",
+                                checked: filters.in_stock_only,
+                                on_change: (checked) => update_filter("in_stock_only", checked)
+                            )
+                        }
+                    }
+                }
+                
+                // Main product grid with complex nested loops and conditionals
+                main(class: $"product-grid product-grid--{view_mode}") {
+                    if filtered_products.length > 0 {
+                        // Different layouts based on view mode
+                        if view_mode == "grid" {
+                            grid_container(class: "product-grid-container") {
+                                for product in filtered_products {
+                                    product_card(
+                                        class: [
+                                            "product-card",
+                                            selected_items.contains(product.id) ? "selected" : "",
+                                            product.is_featured ? "featured" : "",
+                                            product.is_on_sale ? "on-sale" : "",
+                                            !product.in_stock ? "out-of-stock" : ""
+                                        ].filter(c => c != "").join(" "),
+                                        data_product_id: product.id
+                                    ) {
+                                        product_image(
+                                            src: product.image_url,
+                                            alt: product.name,
+                                            loading: "lazy",
+                                            on_click: () => set_state(expanded_product, product.id)
+                                        )
+                                        
+                                        // Complex product info with multiple conditionals
+                                        product_info {
+                                            product_header {
+                                                h3(class: "product-title") { product.name }
+                                                
+                                                if product.is_featured {
+                                                    featured_badge()
+                                                }
+                                                
+                                                if product.is_on_sale && product.sale_percentage > 0 {
+                                                    sale_badge(
+                                                        percentage: product.sale_percentage,
+                                                        text: $"{product.sale_percentage}% OFF"
+                                                    )
+                                                }
+                                            }
+                                            
+                                            product_meta {
+                                                price_display(
+                                                    current_price: product.price,
+                                                    original_price: product.is_on_sale ? 
+                                                        calculate_original_price(product.price, product.sale_percentage) : 
+                                                        null,
+                                                    currency: "USD",
+                                                    format: "dollars_cents"
+                                                ) {
+                                                    if product.is_on_sale {
+                                                        span(class: "price-current") { 
+                                                            $"${product.price / 100}.{product.price % 100:00}" 
+                                                        }
+                                                        span(class: "price-original") { 
+                                                            $"${calculate_original_price(product.price, product.sale_percentage) / 100}.{calculate_original_price(product.price, product.sale_percentage) % 100:00}" 
+                                                        }
+                                                    } else {
+                                                        span(class: "price-current") { 
+                                                            $"${product.price / 100}.{product.price % 100:00}" 
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                rating_display(
+                                                    rating: product.rating,
+                                                    max_rating: 5.0,
+                                                    show_number: true,
+                                                    readonly: true
+                                                )
+                                                
+                                                stock_indicator(
+                                                    in_stock: product.in_stock,
+                                                    text: product.in_stock ? "In Stock" : "Out of Stock",
+                                                    show_icon: true
+                                                )
+                                            }
+                                            
+                                            // Tag list with loop and conditional rendering
+                                            if product.tags.length > 0 {
+                                                tag_list(class: "product-tags") {
+                                                    for tag in product.tags where tag.length > 0 {
+                                                        tag_item(
+                                                            text: tag,
+                                                            clickable: true,
+                                                            on_click: () => search_by_tag(tag)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Action buttons with complex conditional logic
+                                        product_actions {
+                                            selection_checkbox(
+                                                checked: selected_items.contains(product.id),
+                                                disabled: !product.in_stock,
+                                                on_change: (checked) => 
+                                                    checked ? 
+                                                        handle_select_item(product.id) : 
+                                                        handle_deselect_item(product.id)
+                                            )
+                                            
+                                            if product.in_stock {
+                                                quantity_selector(
+                                                    min: 1,
+                                                    max: 10,
+                                                    default: 1,
+                                                    on_add_to_cart: (quantity) => handle_add_to_cart(product.id, quantity)
+                                                )
+                                            } else {
+                                                notify_when_available_button(
+                                                    product_id: product.id,
+                                                    on_click: handle_notify_when_available
+                                                )
+                                            }
+                                            
+                                            // Admin actions with permission checks
+                                            if has_admin_permissions {
+                                                admin_actions {
+                                                    edit_product_button(
+                                                        product_id: product.id,
+                                                        disabled: product.is_protected,
+                                                        on_click: handle_edit_product
+                                                    )
+                                                    
+                                                    if can_manage_inventory {
+                                                        inventory_button(
+                                                            product_id: product.id,
+                                                            current_stock: product.in_stock,
+                                                            on_click: handle_manage_inventory
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Expanded view with conditional rendering
+                                        if expanded_product == product.id {
+                                            expanded_product_details(
+                                                product: product,
+                                                on_close: () => set_state(expanded_product, null)
+                                            ) {
+                                                product_description(text: product.description)
+                                                
+                                                specifications_table {
+                                                    spec_row(label: "Category", value: product.category)
+                                                    spec_row(label: "Vendor", value: product.vendor_id)
+                                                    spec_row(label: "Created", value: format_date(product.created_at))
+                                                    
+                                                    if has_admin_permissions {
+                                                        spec_row(label: "ID", value: product.id)
+                                                        spec_row(label: "Protected", value: product.is_protected ? "Yes" : "No")
+                                                    }
+                                                }
+                                                
+                                                related_products {
+                                                    h4 { "Related Products" }
+                                                    for related in find_related_products(product) where related.id != product.id {
+                                                        related_product_card(
+                                                            product: related,
+                                                            compact: true,
+                                                            on_click: () => set_state(expanded_product, related.id)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else if view_mode == "list" {
+                            // List view with different layout
+                            list_container(class: "product-list-container") {
+                                for product in filtered_products {
+                                    product_list_item(
+                                        product: product,
+                                        selected: selected_items.contains(product.id),
+                                        on_select: handle_select_item,
+                                        show_detailed_info: true
+                                    )
+                                }
+                            }
+                        } else {
+                            // Compact view
+                            compact_container(class: "product-compact-container") {
+                                for product in filtered_products {
+                                    product_compact_item(
+                                        product: product,
+                                        selected: selected_items.contains(product.id),
+                                        on_select: handle_select_item
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Pagination with complex calculations
+                        if filtered_products.length > 20 {
+                            pagination_controls(
+                                total_items: filtered_products.length,
+                                items_per_page: 20,
+                                current_page: current_page,
+                                on_page_change: handle_page_change,
+                                show_page_size_selector: has_admin_permissions
+                            )
+                        }
+                    } else {
+                        // Empty state with conditional messaging
+                        empty_state(class: "products-empty-state") {
+                            if filters_are_active(filters) {
+                                empty_state_icon(type: "filter")
+                                h2 { "No products match your filters" }
+                                p { "Try adjusting your search criteria or clearing some filters." }
+                                
+                                action_buttons {
+                                    clear_filters_button(
+                                        on_click: () => handle_filter_change(FilterState.default())
+                                    )
+                                    
+                                    if filters.search_term != null && filters.search_term.length > 0 {
+                                        search_suggestions {
+                                            h4 { "Search suggestions:" }
+                                            for suggestion in get_search_suggestions(filters.search_term) {
+                                                suggestion_link(
+                                                    text: suggestion,
+                                                    on_click: () => search_for(suggestion)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                empty_state_icon(type: "products")
+                                h2 { "No products available" }
+                                p { "Check back later for new products." }
+                                
+                                if has_admin_permissions {
+                                    add_product_button(
+                                        text: "Add First Product",
+                                        on_click: handle_add_product
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Shopping cart summary with complex state tracking
+                if cart_item_count > 0 {
+                    cart_summary_panel(
+                        items: cart,
+                        total: calculate_cart_total(cart),
+                        item_count: cart_item_count,
+                        checkout_state: checkout_state,
+                        position: "floating"
+                    ) {
+                        cart_items_list {
+                            for cart_item in cart {
+                                let product = products.find(p => p.id == cart_item.product_id)
+                                
+                                if product != null {
+                                    cart_item_row(
+                                        product: product,
+                                        quantity: cart_item.quantity,
+                                        subtotal: product.price * cart_item.quantity,
+                                        on_quantity_change: (new_quantity) => update_cart_quantity(cart_item.product_id, new_quantity),
+                                        on_remove: () => remove_from_cart(cart_item.product_id)
+                                    )
+                                }
+                            }
+                        }
+                        
+                        cart_totals {
+                            subtotal_row(amount: calculate_cart_subtotal(cart))
+                            tax_row(amount: calculate_tax(cart))
+                            shipping_row(amount: calculate_shipping(cart))
+                            total_row(amount: calculate_cart_total(cart))
+                        }
+                        
+                        checkout_actions {
+                            continue_shopping_button(
+                                on_click: close_cart_summary
+                            )
+                            
+                            checkout_button(
+                                disabled: checkout_state == CheckoutState.Processing || !cart_has_available_items(cart),
+                                loading: checkout_state == CheckoutState.Processing,
+                                text: checkout_state == CheckoutState.Processing ? "Processing..." : "Checkout",
+                                on_click: handle_cart_checkout
+                            )
+                        }
+                    }
+                }
+                
+                // Footer with analytics and performance info (admin only)
+                if has_admin_permissions && _verbose_mode {
+                    debug_footer {
+                        performance_metrics {
+                            metric(label: "Filtered Products", value: filtered_products.length.to_string())
+                            metric(label: "Selected Items", value: selected_items.length.to_string())
+                            metric(label: "Render Time", value: $"{get_render_time()}ms")
+                            metric(label: "Memory Usage", value: $"{get_memory_usage()}MB")
+                        }
+                        
+                        filter_debug {
+                            h5 { "Active Filters:" }
+                            for filter_item in get_active_filters(filters) {
+                                debug_item(key: filter_item.key, value: filter_item.value)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Lifecycle methods for comprehensive testing
+        on_mount {
+            track_component_mount("ProductGrid")
+            load_user_preferences()?
+            preload_popular_products()?
+        }
+        
+        on_unmount {
+            save_current_state()?
+            track_component_unmount("ProductGrid")
+        }
+        
+        on_state_change(field: string, old_value: any, new_value: any) {
+            track_state_change(field, old_value, new_value)
+            
+            if field == "selected_items" && new_value.length > 0 {
+                schedule_auto_save()
+            }
+        }
+    }
+    
+    // Helper functions for complex logic
+    function passes_filters(product: Product, filters: FilterState) -> bool {
+        if filters.category != null && product.category != filters.category {
+            return false
+        }
+        
+        if filters.price_min != null && product.price < filters.price_min {
+            return false
+        }
+        
+        if filters.price_max != null && product.price > filters.price_max {
+            return false
+        }
+        
+        if filters.in_stock_only && !product.in_stock {
+            return false
+        }
+        
+        if filters.min_rating != null && product.rating < filters.min_rating {
+            return false
+        }
+        
+        return true
+    }
+    
+    function calculate_original_price(sale_price: int, discount_percentage: int) -> int {
+        return (sale_price * 100) / (100 - discount_percentage)
+    }
+    
+    function get_sort_value(product: Product, sort_field: SortField) -> comparable {
+        match sort_field {
+            SortField.Name => product.name
+            SortField.Price => product.price
+            SortField.Rating => product.rating
+            SortField.Created => product.created_at
+        }
+    }
+    
+    function filters_are_active(filters: FilterState) -> bool {
+        return filters.category != null || 
+               filters.price_min != null || 
+               filters.price_max != null || 
+               filters.in_stock_only || 
+               filters.min_rating != null || 
+               (filters.search_term != null && filters.search_term.length > 0)
+    }
+    
+    function count_active_filters(filters: FilterState) -> int {
+        let count = 0
+        if filters.category != null { count = count + 1 }
+        if filters.price_min != null { count = count + 1 }
+        if filters.price_max != null { count = count + 1 }
+        if filters.in_stock_only { count = count + 1 }
+        if filters.min_rating != null { count = count + 1 }
+        if filters.search_term != null && filters.search_term.length > 0 { count = count + 1 }
+        return count
+    }
+}

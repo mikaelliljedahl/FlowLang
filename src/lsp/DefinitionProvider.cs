@@ -384,7 +384,7 @@ namespace FlowLang.LSP
                 Location = new Location
                 {
                     Uri = uri,
-                    Range = new Range(new Position(0, 0), new Position(0, 0)) // TODO: Get actual range
+                    Range = new Microsoft.VisualStudio.LanguageServer.Protocol.Range { Start = new Position(0, 0), End = new Position(0, 0) } // TODO: Get actual range
                 },
                 ContainerName = containerName
             };
@@ -402,7 +402,7 @@ namespace FlowLang.LSP
                 Location = new Location
                 {
                     Uri = uri,
-                    Range = new Range(new Position(0, 0), new Position(0, 0)) // TODO: Get actual range
+                    Range = new Microsoft.VisualStudio.LanguageServer.Protocol.Range { Start = new Position(0, 0), End = new Position(0, 0) } // TODO: Get actual range
                 }
             };
         }
@@ -416,10 +416,11 @@ namespace FlowLang.LSP
             var column = Math.Max(0, token.Column - 1); // Convert to 0-based
             var endColumn = column + token.Value.Length;
 
-            return new Microsoft.VisualStudio.LanguageServer.Protocol.Range(
-                new Position(line, column),
-                new Position(line, endColumn)
-            );
+            return new Microsoft.VisualStudio.LanguageServer.Protocol.Range
+            {
+                Start = new Position(line, column),
+                End = new Position(line, endColumn)
+            };
         }
     }
 }

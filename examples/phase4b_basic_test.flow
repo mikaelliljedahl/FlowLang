@@ -1,0 +1,56 @@
+// Basic Phase 4B Integration Test
+// Tests core advanced parser features: conditionals, loops, expressions
+
+component SimpleProductList(products: List<Product>) uses [Network] -> Component {
+    declare_state selected_id: string? = null
+    declare_state show_details: bool = false
+    
+    event_handler handle_select(id: string) {
+        set_state(selected_id, id)
+        set_state(show_details, true)
+    }
+    
+    render {
+        div(class: "product-list") {
+            h1 { $"Products ({products.length})" }
+            
+            if products.length > 0 {
+                ul {
+                    for product in products {
+                        li(
+                            class: selected_id == product.id ? "selected" : "",
+                            on_click: () => handle_select(product.id)
+                        ) {
+                            span { product.name }
+                            span { $"${product.price / 100}.{product.price % 100:00}" }
+                            
+                            if product.in_stock {
+                                badge(text: "In Stock", color: "green")
+                            } else {
+                                badge(text: "Out of Stock", color: "red")
+                            }
+                        }
+                    }
+                }
+                
+                if show_details && selected_id != null {
+                    details_panel {
+                        h2 { "Product Details" }
+                        close_button(on_click: () => set_state(show_details, false))
+                    }
+                }
+            } else {
+                empty_message {
+                    p { "No products available" }
+                }
+            }
+        }
+    }
+}
+
+type Product = {
+    id: string,
+    name: string,
+    price: int,
+    in_stock: bool
+}

@@ -222,7 +222,7 @@ public abstract class LintRule
     /// <summary>
     /// Create a diagnostic for this rule
     /// </summary>
-    protected AnalysisDiagnostic CreateDiagnostic(
+    public AnalysisDiagnostic CreateDiagnostic(
         string message,
         SourceLocation location,
         string? fixSuggestion = null,

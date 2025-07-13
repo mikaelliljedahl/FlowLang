@@ -131,7 +131,7 @@ namespace FlowLang.LSP
 
             return new Diagnostic
             {
-                Range = range ?? new Range(new Position(0, 0), new Position(0, 0)),
+                Range = range ?? new Microsoft.VisualStudio.LanguageServer.Protocol.Range { Start = new Position(0, 0), End = new Position(0, 0) },
                 Severity = DiagnosticSeverity.Error,
                 Source = "FlowLang",
                 Message = CleanErrorMessage(message),
@@ -311,7 +311,7 @@ namespace FlowLang.LSP
             {
                 diagnostics.Add(new Diagnostic
                 {
-                    Range = new Range(new Position(0, 0), new Position(0, 0)), // TODO: Get actual range
+                    Range = new Microsoft.VisualStudio.LanguageServer.Protocol.Range { Start = new Position(0, 0), End = new Position(0, 0) }, // TODO: Get actual range
                     Severity = DiagnosticSeverity.Error,
                     Source = "FlowLang",
                     Message = $"Pure function '{func.Name}' cannot have effect annotations",
@@ -328,7 +328,7 @@ namespace FlowLang.LSP
                     {
                         diagnostics.Add(new Diagnostic
                         {
-                            Range = new Range(new Position(0, 0), new Position(0, 0)), // TODO: Get actual range
+                            Range = new Microsoft.VisualStudio.LanguageServer.Protocol.Range { Start = new Position(0, 0), End = new Position(0, 0) }, // TODO: Get actual range
                             Severity = DiagnosticSeverity.Error,
                             Source = "FlowLang",
                             Message = $"Unknown effect: '{effect}'. Valid effects are: Database, Network, Logging, FileSystem, Memory, IO",
@@ -434,10 +434,11 @@ namespace FlowLang.LSP
             var column = Math.Max(0, token.Column - 1); // Convert to 0-based
             var endColumn = column + token.Value.Length;
 
-            return new Microsoft.VisualStudio.LanguageServer.Protocol.Range(
-                new Position(line, column),
-                new Position(line, endColumn)
-            );
+            return new Microsoft.VisualStudio.LanguageServer.Protocol.Range
+            {
+                Start = new Position(line, column),
+                End = new Position(line, endColumn)
+            };
         }
 
         private bool IsOperator(Token token)

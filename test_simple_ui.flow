@@ -1,0 +1,28 @@
+// Simple UI component test
+component SimpleCounter() -> Component {
+    declare_state count: int = 0
+    
+    event_handler increment() {
+        set_state(count, count + 1)
+    }
+    
+    render {
+        div(class: "counter") {
+            h1 { $"Count: {count}" }
+            
+            if count > 0 {
+                button(
+                    text: "Reset",
+                    on_click: reset,
+                    class: count > 10 ? "btn-danger" : "btn-warning"
+                )
+            }
+            
+            button(
+                text: count == 0 ? "Start Counting" : "Increment", 
+                on_click: increment,
+                disabled: false
+            )
+        }
+    }
+}
