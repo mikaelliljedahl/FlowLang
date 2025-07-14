@@ -31,17 +31,21 @@ dotnet build
 All commands are run through the .NET CLI:
 
 ```bash
-dotnet run --project src/flowc.csproj -- <command> [options]
+# Core transpiler (direct)
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- <inputfile.flow> <outputfile.cs>
+
+# Or use the simple wrapper script
+./flowc <inputfile.flow>
 ```
 
 For convenience, you can create an alias:
 
 ```bash
-# Linux/macOS
-alias flowc="dotnet run --project /path/to/flowlang/src/flowc.csproj --"
+# Linux/macOS  
+alias flowc="dotnet run --project /path/to/flowlang/src/FlowLang.Core/flowc-core.csproj --"
 
 # Windows (PowerShell)
-function flowc { dotnet run --project C:\path\to\flowlang\src\flowc.csproj -- $args }
+function flowc { dotnet run --project C:\path\to\flowlang\src\FlowLang.Core\flowc-core.csproj -- $args }
 ```
 
 ## Global Options

@@ -169,69 +169,87 @@ function orchestrate(id: string) uses [Database, Network, Logging] -> Result<str
 
 ## 📋 Specification Blocks
 
-### Embedded Specifications
+Specification blocks link business intent directly to the code, ensuring context is never lost. They are version-controlled with the implementation.
+
+### Structure and Fields
+A `spec` block is a structured comment placed directly above a function or module.
+
 ```flowlang
 /*spec
-intent: "Brief description of what this function does and why"
+intent: "Required: What this function/module does and why it exists."
 rules:
-  - "Business rule or constraint 1"
-  - "Business rule or constraint 2"
+  - "Optional: A list of business rules or constraints the code must follow."
 postconditions:
-  - "Expected outcome 1"
-  - "Expected outcome 2"
-source_doc: "optional-reference-to-external-docs.md"
+  - "Optional: A list of expected outcomes or state changes after successful execution."
+source_doc: "Optional: A reference to external documentation (e.g., requirements.md)."
 spec*/
-function functionName(param: type) -> returnType {
-    // Implementation follows specification above
-}
 ```
 
+- **`intent`**: The core purpose. What business value does this code provide?
+- **`rules`**: Testable business logic, constraints, and edge cases.
+- **`postconditions`**: The expected state of the system after the code runs successfully.
+
 ### Function-Level Example
+This example shows how a `spec` block documents a critical business function.
+
 ```flowlang
 /*spec
-intent: "Transfer funds between accounts with validation"
+intent: "Process a product return request, validating eligibility and calculating the refund."
 rules:
-  - "Source account must have sufficient balance"
-  - "Transfer amount must be positive"
-  - "Both accounts must exist and be active"
+  - "Return must be requested within 30 days of the delivery date."
+  - "The product must be in its original condition (not damaged or used)."
+  - "Digital products are not eligible for return."
+  - "The refund amount is the original price minus any restocking fee."
+  - "Shipping costs are non-refundable unless the item was defective."
 postconditions:
-  - "Source account balance is reduced by amount"
-  - "Destination account balance is increased by amount"
-  - "Transaction is logged for audit trail"
+  - "A return request is created with a unique RMA number."
+  - "The calculated refund amount is held pending approval."
+  - "The customer is sent an email with return shipping instructions."
+  - "The original order's status is updated to 'return-pending'."
+source_doc: "policy/return-and-refund-policy.md"
 spec*/
-function transferFunds(from: Account, to: Account, amount: Money) 
-    uses [Database, Logging] -> Result<Transaction, TransferError> {
+function processReturnRequest(orderId: OrderId, productId: ProductId, reason: string) 
+    uses [Database, Email, Inventory] -> Result<ReturnAuthorization, ReturnError> {
     
-    guard amount > 0 else {
-        return Error(TransferError.InvalidAmount)
+    let order = getOrder(orderId)?
+    guard order.deliveryDate.isWithinDays(30) else {
+        return Error(ReturnError.PastReturnWindow)
     }
     
-    guard from.balance >= amount else {
-        return Error(TransferError.InsufficientFunds)
+    let product = getProduct(productId)?
+    guard !product.isDigital else {
+        return Error(ReturnError.DigitalProductNotReturnable)
     }
     
-    // Transfer implementation
-    let transaction = executeTransfer(from, to, amount)?
-    let logged = logTransaction(transaction)?
+    let restockingFee = product.category.restockingFee
+    let refundAmount = product.price - restockingFee
     
-    return Ok(transaction)
+    let rma = createReturnAuthorization(orderId, productId, refundAmount, reason)?
+    sendReturnInstructions(order.customerEmail, rma)?
+    updateOrderStatus(orderId, "ReturnPending")?
+    
+    return Ok(rma)
 }
 ```
 
 ### Module-Level Example
+Specs can also define the high-level purpose of an entire module.
+
 ```flowlang
 /*spec
-intent: "Authentication and authorization utilities"
+intent: "A comprehensive user management system for the e-commerce platform."
 rules:
-  - "All password operations must be cryptographically secure"
-  - "Session management follows OAuth 2.0 standards"
-  - "All operations are logged for security audit"
+  - "All user data operations must be GDPR compliant."
+  - "Password handling must follow OWASP security guidelines."
+  - "Administrative operations require elevated permissions and are logged for audit."
 postconditions:
-  - "Secure user authentication and session management"
-  - "Comprehensive security audit trail"
+  - "Provides a secure and compliant user lifecycle management system."
+  - "Maintains a comprehensive audit trail for all sensitive operations."
 spec*/
-module AuthService {
-    // Module implementation
+module UserManagement {
+    // ... function definitions for createUser, updateProfile, etc.
+    
+    export { createUser, updateProfile }
 }
 ```
 

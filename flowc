@@ -4,20 +4,20 @@
 # Routes to flowc-core for basic compilation, tools for advanced features
 
 # Build core compiler if not already built
-if [ ! -f "core/bin/Debug/net8.0/flowc-core.dll" ]; then
+if [ ! -f "src/FlowLang.Core/bin/Debug/net8.0/flowc-core.dll" ]; then
     echo "Building FlowLang core compiler..."
-    cd core && dotnet build flowc-core.csproj >/dev/null
+    cd src/FlowLang.Core && dotnet build flowc-core.csproj >/dev/null
     if [ $? -ne 0 ]; then
         echo "Error: Failed to build core compiler"
         exit 1
     fi
-    cd ..
+    cd ../..
 fi
 
 # Function to run core compiler
 run_core() {
     local orig_dir=$(pwd)
-    cd core
+    cd src/FlowLang.Core
     # Convert relative paths to absolute from original directory
     local args=()
     for arg in "$@"; do
@@ -63,17 +63,17 @@ case "$1" in
         ;;
     "dev")
         echo "🚧 Development server not yet implemented in pure FlowLang"
-        echo "Use the old flowc for now: src/flowc.cs dev"
+        echo "Use the FlowLang tools for now: src/FlowLang.Tools/dev-server.flow"
         exit 1
         ;;
     "lint")
         echo "🚧 Linter not yet implemented in pure FlowLang"
-        echo "Use the old flowc for now: src/flowc.cs lint"
+        echo "Use the FlowLang tools for now: src/FlowLang.Tools/linter.flow"
         exit 1
         ;;
     "lsp")
         echo "🚧 Language server not yet implemented in pure FlowLang"
-        echo "Use the old flowc for now: src/flowc.cs lsp"
+        echo "Use the original LSP implementation for now"
         exit 1
         ;;
     *)

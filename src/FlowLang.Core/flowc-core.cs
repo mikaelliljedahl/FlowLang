@@ -36,6 +36,9 @@ public enum TokenType
     Ok,
     Error,
     Let,
+    Some,
+    None,
+    Match,
     
     // Effect names
     Database,
@@ -49,6 +52,8 @@ public enum TokenType
     Int,
     String_Type,
     Bool,
+    List,
+    Option,
     
     // Symbols
     LeftParen,
@@ -112,6 +117,10 @@ public enum TokenType
     // Modulus operator
     Modulo,   // %
     
+    // Specification block tokens
+    SpecStart,  // /*spec
+    SpecEnd,    // spec*/
+    
     EOF
 }
 
@@ -126,9 +135,17 @@ public abstract record ASTNode;
 public record Program(List<ASTNode> Statements) : ASTNode;
 
 // Module system AST nodes
-public record ModuleDeclaration(string Name, List<ASTNode> Body, List<string>? Exports = null) : ASTNode;
+public record ModuleDeclaration(string Name, List<ASTNode> Body, List<string>? Exports = null, SpecificationBlock? Specification = null) : ASTNode;
 public record ImportStatement(string ModuleName, List<string>? SpecificImports = null, bool IsWildcard = false) : ASTNode;
 public record ExportStatement(List<string> ExportedNames) : ASTNode;
+
+// Specification block AST node
+public record SpecificationBlock(
+    string Intent,
+    List<string>? Rules = null,
+    List<string>? Postconditions = null,
+    string? SourceDoc = null
+) : ASTNode;
 
 // Function AST nodes
 public record FunctionDeclaration(
@@ -138,7 +155,8 @@ public record FunctionDeclaration(
     List<ASTNode> Body, 
     bool IsPure = false,
     List<string>? Effects = null,
-    bool IsExported = false
+    bool IsExported = false,
+    SpecificationBlock? Specification = null
 ) : ASTNode;
 
 public record Parameter(string Name, string Type);
@@ -147,7 +165,7 @@ public record Parameter(string Name, string Type);
 public record ReturnStatement(ASTNode? Expression) : ASTNode;
 public record IfStatement(ASTNode Condition, List<ASTNode> ThenBody, List<ASTNode>? ElseBody = null) : ASTNode;
 public record LetStatement(string Name, string? Type, ASTNode Expression) : ASTNode;
-public record GuardStatement(ASTNode Condition, ASTNode? Expression = null) : ASTNode;
+public record GuardStatement(ASTNode Condition, List<ASTNode>? ElseBody = null) : ASTNode;
 
 // Expression AST nodes
 public record BinaryExpression(ASTNode Left, string Operator, ASTNode Right) : ASTNode;
@@ -166,6 +184,12 @@ public record TernaryExpression(ASTNode Condition, ASTNode ThenExpr, ASTNode Els
 public record LogicalExpression(ASTNode Left, string Operator, ASTNode Right) : ASTNode;
 public record ComparisonExpression(ASTNode Left, string Operator, ASTNode Right) : ASTNode;
 public record ArithmeticExpression(ASTNode Left, string Operator, ASTNode Right) : ASTNode;
+public record ListExpression(List<ASTNode> Elements) : ASTNode;
+public record ListAccessExpression(ASTNode List, ASTNode Index) : ASTNode;
+public record GenericType(string BaseType, List<string> TypeArguments) : ASTNode;
+public record OptionExpression(string Type, ASTNode? Value) : ASTNode; // Some(value) or None
+public record MatchExpression(ASTNode Value, List<MatchCase> Cases) : ASTNode;
+public record MatchCase(string Pattern, string? Variable, List<ASTNode> Body) : ASTNode;
 
 // UI Component AST nodes (Phase 4)
 public record ComponentDeclaration(
@@ -230,6 +254,9 @@ public class FlowLangLexer
         {"Ok", TokenType.Ok},
         {"Error", TokenType.Error},
         {"let", TokenType.Let},
+        {"Some", TokenType.Some},
+        {"None", TokenType.None},
+        {"match", TokenType.Match},
         {"guard", TokenType.Guard},
         {"module", TokenType.Module},
         {"import", TokenType.Import},
@@ -257,7 +284,9 @@ public class FlowLangLexer
         {"IO", TokenType.IO},
         {"int", TokenType.Int},
         {"string", TokenType.String_Type},
-        {"bool", TokenType.Bool}
+        {"bool", TokenType.Bool},
+        {"List", TokenType.List},
+        {"Option", TokenType.Option}
     };
 
     public FlowLangLexer(string source)
@@ -332,6 +361,11 @@ public class FlowLangLexer
                 {
                     // Line comment
                     while (Peek() != '\n' && !IsAtEnd()) Advance();
+                }
+                else if (Match('*'))
+                {
+                    // Check for specification block comment
+                    ScanSpecificationOrComment();
                 }
                 else
                 {
@@ -467,6 +501,98 @@ public class FlowLangLexer
     private char Peek() => IsAtEnd() ? '\0' : _source[_current];
 
     private char PeekNext() => (_current + 1 >= _source.Length) ? '\0' : _source[_current + 1];
+
+    private bool MatchSequence(string sequence)
+    {
+        if (_current + sequence.Length > _source.Length) return false;
+        
+        for (int i = 0; i < sequence.Length; i++)
+        {
+            if (_source[_current + i] != sequence[i]) return false;
+        }
+        
+        // Consume the sequence
+        _current += sequence.Length;
+        _column += sequence.Length;
+        return true;
+    }
+
+    private void ScanSpecificationOrComment()
+    {
+        // We're already past /*
+        // Check if this is a specification block
+        if (MatchSequence("spec"))
+        {
+            // Scan the specification content
+            var specContent = new System.Text.StringBuilder();
+            
+            // Scan until we find spec*/
+            while (!IsAtEnd())
+            {
+                if (Peek() == 's')
+                {
+                    // Check if this is the end marker
+                    var saved_current = _current;
+                    var saved_column = _column;
+                    
+                    if (MatchSequence("spec*/"))
+                    {
+                        // Found the end - create a token with the content
+                        AddToken(TokenType.SpecStart, specContent.ToString().Trim());
+                        return;
+                    }
+                    
+                    // Not the end marker, restore position and continue
+                    _current = saved_current;
+                    _column = saved_column;
+                }
+                
+                if (Peek() == '\n')
+                {
+                    _line++;
+                    _column = 1;
+                    specContent.AppendLine();
+                }
+                else
+                {
+                    _column++;
+                    specContent.Append(Peek());
+                }
+                Advance();
+            }
+            
+            throw new Exception($"Unterminated specification block starting at line {_line}");
+        }
+        else
+        {
+            // Regular block comment - skip it
+            SkipBlockComment();
+        }
+    }
+
+    private void SkipBlockComment()
+    {
+        // We're already past /*
+        while (!IsAtEnd())
+        {
+            if (Peek() == '*' && PeekNext() == '/')
+            {
+                Advance(); // consume '*'
+                Advance(); // consume '/'
+                break;
+            }
+            if (Peek() == '\n')
+            {
+                _line++;
+                _column = 1;
+            }
+            else
+            {
+                _column++;
+            }
+            Advance();
+        }
+    }
 
     private void AddToken(TokenType type, object? literal = null)
     {
@@ -647,8 +773,11 @@ public class FlowLangParser
 
     private ASTNode? ParseStatement()
     {
+        // Check for specification block first
+        var specification = ParseSpecificationBlock();
+        
         if (Match(TokenType.Module))
-            return ParseModuleDeclaration();
+            return ParseModuleDeclaration(specification);
         if (Match(TokenType.Import))
             return ParseImportStatement();
         if (Match(TokenType.Export))
@@ -660,7 +789,7 @@ public class FlowLangParser
         if (Match(TokenType.ApiClient))
             return ParseApiClientDeclaration();
         if (Match(TokenType.Function) || Match(TokenType.Pure))
-            return ParseFunctionDeclaration();
+            return ParseFunctionDeclaration(specification);
         if (Match(TokenType.Return))
             return ParseReturnStatement();
         if (Match(TokenType.If))
@@ -670,13 +799,19 @@ public class FlowLangParser
         if (Match(TokenType.Guard))
             return ParseGuardStatement();
 
+        // If we have a specification but no matching declaration, that's an error
+        if (specification != null)
+        {
+            throw new Exception($"Specification block found but no function or module declaration follows at line {Peek().Line}");
+        }
+
         // Expression statement
         var expr = ParseExpression();
         if (Match(TokenType.Semicolon)) {} // Optional semicolon
         return expr;
     }
 
-    private ModuleDeclaration ParseModuleDeclaration()
+    private ModuleDeclaration ParseModuleDeclaration(SpecificationBlock? specification = null)
     {
         var name = Consume(TokenType.Identifier, "Expected module name").Lexeme;
         Consume(TokenType.LeftBrace, "Expected '{' after module name");
@@ -701,7 +836,7 @@ public class FlowLangParser
         
         Consume(TokenType.RightBrace, "Expected '}' after module body");
         
-        return new ModuleDeclaration(name, body, exports.Any() ? exports : null);
+        return new ModuleDeclaration(name, body, exports.Any() ? exports : null, specification);
     }
 
     private ImportStatement ParseImportStatement()
@@ -739,31 +874,25 @@ public class FlowLangParser
         return new ImportStatement(moduleName, specificImports, isWildcard);
     }
 
-    private ExportStatement ParseExportStatement()
+    private ASTNode ParseExportStatement()
     {
-        var exports = new List<string>();
-        
         if (Match(TokenType.Function) || Match(TokenType.Pure))
         {
             // This is an export function declaration - mark it as exported
             Previous(); // Go back
-            var func = ParseFunctionDeclaration();
-            if (func is FunctionDeclaration fd)
-            {
-                exports.Add(fd.Name);
-                return new ExportStatement(exports);
-            }
+            return ParseFunctionDeclaration(null, true); // Mark as exported
         }
         else
         {
             // Export list
+            var exports = new List<string>();
             do
             {
                 exports.Add(Consume(TokenType.Identifier, "Expected export name").Lexeme);
             } while (Match(TokenType.Comma));
+            
+            return new ExportStatement(exports);
         }
-        
-        return new ExportStatement(exports);
     }
 
     private ComponentDeclaration ParseComponentDeclaration()
@@ -1212,7 +1341,7 @@ public class FlowLangParser
         return new ApiClientDeclaration(name, baseUrl, methods);
     }
 
-    private FunctionDeclaration ParseFunctionDeclaration()
+    private FunctionDeclaration ParseFunctionDeclaration(SpecificationBlock? specification = null, bool isExported = false)
     {
         bool isPure = Previous().Type == TokenType.Pure;
         if (isPure && !Match(TokenType.Function))
@@ -1254,7 +1383,7 @@ public class FlowLangParser
         var body = ParseStatements();
         Consume(TokenType.RightBrace, "Expected '}' after function body");
         
-        return new FunctionDeclaration(name, parameters, returnType, body, isPure, effects);
+        return new FunctionDeclaration(name, parameters, returnType, body, isPure, effects, isExported, specification);
     }
 
     private List<string> ParseEffectsList()
@@ -1265,8 +1394,20 @@ public class FlowLangParser
         
         do
         {
-            var effect = Consume(TokenType.Identifier, "Expected effect name").Lexeme;
-            effects.Add(effect);
+            // Effect names can be specific token types or identifiers
+            var token = Advance();
+            string effectName = token.Type switch
+            {
+                TokenType.Database => "Database",
+                TokenType.Network => "Network", 
+                TokenType.Logging => "Logging",
+                TokenType.FileSystem => "FileSystem",
+                TokenType.Memory => "Memory",
+                TokenType.IO => "IO",
+                TokenType.Identifier => token.Lexeme,
+                _ => throw new Exception($"Expected effect name. Got '{token.Lexeme}' at line {token.Line}")
+            };
+            effects.Add(effectName);
         } while (Match(TokenType.Comma));
         
         Consume(TokenType.RightBracket, "Expected ']' after effects list");
@@ -1284,6 +1425,22 @@ public class FlowLangParser
             var errorType = ParseType();
             Consume(TokenType.Greater, "Expected '>' after Result type");
             return $"Result<{okType}, {errorType}>";
+        }
+        
+        if (Match(TokenType.List))
+        {
+            Consume(TokenType.Less, "Expected '<' after List");
+            var elementType = ParseType();
+            Consume(TokenType.Greater, "Expected '>' after List type");
+            return $"List<{elementType}>";
+        }
+        
+        if (Match(TokenType.Option))
+        {
+            Consume(TokenType.Less, "Expected '<' after Option");
+            var valueType = ParseType();
+            Consume(TokenType.Greater, "Expected '>' after Option type");
+            return $"Option<{valueType}>";
         }
         
         var token = Advance();
@@ -1342,15 +1499,69 @@ public class FlowLangParser
     {
         var condition = ParseExpression();
         
-        ASTNode? expression = null;
+        List<ASTNode>? elseBody = null;
         if (Match(TokenType.Else))
         {
-            expression = ParseExpression();
+            Consume(TokenType.LeftBrace, "Expected '{' after 'else' in guard statement");
+            elseBody = ParseStatements();
+            Consume(TokenType.RightBrace, "Expected '}' to close guard else block");
         }
         
         if (Match(TokenType.Semicolon)) {} // Optional semicolon
         
-        return new GuardStatement(condition, expression);
+        return new GuardStatement(condition, elseBody);
+    }
+    
+    private MatchExpression ParseMatchExpression()
+    {
+        var value = ParseExpression();
+        Consume(TokenType.LeftBrace, "Expected '{' after match expression");
+        
+        var cases = new List<MatchCase>();
+        
+        while (!Check(TokenType.RightBrace) && !IsAtEnd())
+        {
+            // Parse pattern like "Ok(x)" or "Error(e)" or "Some(val)" or "None"
+            string pattern;
+            if (Check(TokenType.Ok) || Check(TokenType.Error) || Check(TokenType.Some) || Check(TokenType.None))
+            {
+                pattern = Advance().Lexeme;
+            }
+            else
+            {
+                pattern = Consume(TokenType.Identifier, "Expected pattern in match case").Lexeme;
+            }
+            string? variable = null;
+            
+            if (Match(TokenType.LeftParen))
+            {
+                variable = Consume(TokenType.Identifier, "Expected variable name in pattern").Lexeme;
+                Consume(TokenType.RightParen, "Expected ')' after pattern variable");
+            }
+            
+            Consume(TokenType.Arrow, "Expected '->' after match pattern");
+            
+            // Parse the case body
+            var caseBody = new List<ASTNode>();
+            if (Match(TokenType.LeftBrace))
+            {
+                caseBody = ParseStatements();
+                Consume(TokenType.RightBrace, "Expected '}' after match case body");
+            }
+            else
+            {
+                // Single expression
+                caseBody.Add(ParseExpression());
+            }
+            
+            cases.Add(new MatchCase(pattern, variable, caseBody));
+            
+            // Optional comma between cases
+            Match(TokenType.Comma);
+        }
+        
+        Consume(TokenType.RightBrace, "Expected '}' after match cases");
+        return new MatchExpression(value, cases);
     }
 
     private List<ASTNode> ParseStatements()
@@ -1527,6 +1738,13 @@ public class FlowLangParser
                 // Error propagation
                 expr = new ErrorPropagation(expr);
             }
+            else if (Match(TokenType.LeftBracket))
+            {
+                // List access: list[index]
+                var index = ParseExpression();
+                Consume(TokenType.RightBracket, "Expected ']' after list index");
+                expr = new ListAccessExpression(expr, index);
+            }
             else
             {
                 break;
@@ -1615,6 +1833,41 @@ public class FlowLangParser
             return new ResultExpression(type, value);
         }
         
+        if (Match(TokenType.Some))
+        {
+            Consume(TokenType.LeftParen, "Expected '(' after 'Some'");
+            var value = ParseExpression();
+            Consume(TokenType.RightParen, "Expected ')' after Some value");
+            return new OptionExpression("Some", value);
+        }
+        
+        if (Match(TokenType.None))
+        {
+            return new OptionExpression("None", null);
+        }
+        
+        if (Match(TokenType.Match))
+        {
+            return ParseMatchExpression();
+        }
+        
+        if (Match(TokenType.LeftBracket))
+        {
+            // List literal: [1, 2, 3]
+            var elements = new List<ASTNode>();
+            
+            if (!Check(TokenType.RightBracket))
+            {
+                do
+                {
+                    elements.Add(ParseExpression());
+                } while (Match(TokenType.Comma));
+            }
+            
+            Consume(TokenType.RightBracket, "Expected ']' after list elements");
+            return new ListExpression(elements);
+        }
+        
         if (Match(TokenType.LeftParen))
         {
             var expr = ParseExpression();
@@ -1637,6 +1890,72 @@ public class FlowLangParser
             }
         }
         return false;
+    }
+
+    private SpecificationBlock? ParseSpecificationBlock()
+    {
+        if (!Check(TokenType.SpecStart)) return null;
+        
+        var specToken = Advance(); // Consume SpecStart token
+        var content = specToken.Literal?.ToString() ?? "";
+        
+        // Parse the YAML-like content
+        var intent = "";
+        var rules = new List<string>();
+        var postconditions = new List<string>();
+        string? sourceDoc = null;
+        
+        var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        string? currentSection = null;
+        
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+            if (string.IsNullOrEmpty(trimmed)) continue;
+            
+            if (trimmed.StartsWith("intent:"))
+            {
+                intent = trimmed.Substring(7).Trim().Trim('"');
+                currentSection = "intent";
+            }
+            else if (trimmed.StartsWith("rules:"))
+            {
+                currentSection = "rules";
+            }
+            else if (trimmed.StartsWith("postconditions:"))
+            {
+                currentSection = "postconditions";
+            }
+            else if (trimmed.StartsWith("source_doc:"))
+            {
+                sourceDoc = trimmed.Substring(11).Trim().Trim('"');
+                currentSection = "source_doc";
+            }
+            else if (trimmed.StartsWith("- "))
+            {
+                var item = trimmed.Substring(2).Trim().Trim('"');
+                if (currentSection == "rules")
+                {
+                    rules.Add(item);
+                }
+                else if (currentSection == "postconditions")
+                {
+                    postconditions.Add(item);
+                }
+            }
+        }
+        
+        if (string.IsNullOrEmpty(intent))
+        {
+            throw new Exception($"Specification block missing required 'intent' field at line {specToken.Line}");
+        }
+        
+        return new SpecificationBlock(
+            intent,
+            rules.Count > 0 ? rules : null,
+            postconditions.Count > 0 ? postconditions : null,
+            sourceDoc
+        );
     }
 
     private bool Check(TokenType type) => !IsAtEnd() && Peek().Type == type;
@@ -1670,9 +1989,13 @@ public class CSharpGenerator
         var namespaceMembers = new Dictionary<string, List<MemberDeclarationSyntax>>();
         var globalMembers = new List<MemberDeclarationSyntax>();
         
-        // Add Result class if any function uses Result types
-        var resultClass = GenerateResultClass();
-        globalMembers.Add(resultClass);
+        // Add Result struct and helper class if any function uses Result types
+        var resultTypes = GenerateResultTypes();
+        globalMembers.AddRange(resultTypes);
+        
+        // Add Option struct and helper class if any function uses Option types
+        var optionTypes = GenerateOptionTypes();
+        globalMembers.AddRange(optionTypes);
         
         foreach (var statement in program.Statements)
         {
@@ -1708,6 +2031,34 @@ public class CSharpGenerator
             compilationUnit = compilationUnit.AddUsings(UsingDirective(ParseName(usingStmt)));
         }
         
+        // Check for main function and generate entry point
+        bool hasMainFunction = false;
+        string mainNamespace = "";
+        
+        // Look for main function in modules
+        foreach (var statement in program.Statements)
+        {
+            if (statement is ModuleDeclaration module)
+            {
+                foreach (var stmt in module.Body)
+                {
+                    if (stmt is FunctionDeclaration func && func.Name == "main")
+                    {
+                        hasMainFunction = true;
+                        mainNamespace = $"FlowLang.Modules.{module.Name}";
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Add top-level statement FIRST if main function exists
+        if (hasMainFunction)
+        {
+            var entryPoint = GenerateTopLevelStatement(mainNamespace);
+            compilationUnit = compilationUnit.AddMembers(entryPoint);
+        }
+        
         // Add namespace members
         foreach (var (namespaceName, members) in namespaceMembers)
         {
@@ -1716,10 +2067,75 @@ public class CSharpGenerator
             compilationUnit = compilationUnit.AddMembers(namespaceDecl);
         }
         
-        // Add global members
+        // Add global members (structs and classes)
         compilationUnit = compilationUnit.AddMembers(globalMembers.ToArray());
         
         return CSharpSyntaxTree.Create(compilationUnit);
+    }
+    
+    private GlobalStatementSyntax GenerateTopLevelStatement(string mainNamespace)
+    {
+        // Generate: MainNamespace.ClassName.main(); 
+        // Extract module name from namespace
+        var moduleName = mainNamespace.Replace("FlowLang.Modules.", "");
+        var fullPath = $"{mainNamespace}.{moduleName}";
+        
+        var statement = ExpressionStatement(
+            InvocationExpression(
+                MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        ParseName(mainNamespace),
+                        IdentifierName(moduleName)
+                    ),
+                    IdentifierName("main")
+                )
+            )
+        );
+        
+        return GlobalStatement(statement);
+    }
+    
+    private MemberDeclarationSyntax[] GenerateResultTypes()
+    {
+        // Generate Result<T,E> struct
+        var resultStruct = StructDeclaration("Result")
+            .AddModifiers(Token(SyntaxKind.PublicKeyword))
+            .AddTypeParameterListParameters(
+                TypeParameter("T"),
+                TypeParameter("E"))
+            .AddMembers(
+                FieldDeclaration(
+                    VariableDeclaration(ParseTypeName("bool"))
+                        .AddVariables(VariableDeclarator("IsSuccess")))
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.ReadOnlyKeyword)),
+                FieldDeclaration(
+                    VariableDeclaration(ParseTypeName("T"))
+                        .AddVariables(VariableDeclarator("Value")))
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.ReadOnlyKeyword)),
+                FieldDeclaration(
+                    VariableDeclaration(ParseTypeName("E"))
+                        .AddVariables(VariableDeclarator("Error")))
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.ReadOnlyKeyword)),
+                ConstructorDeclaration("Result")
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                    .AddParameterListParameters(
+                        Parameter(Identifier("isSuccess")).WithType(ParseTypeName("bool")),
+                        Parameter(Identifier("value")).WithType(ParseTypeName("T")),
+                        Parameter(Identifier("error")).WithType(ParseTypeName("E")))
+                    .WithBody(Block(
+                        ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                            IdentifierName("IsSuccess"), IdentifierName("isSuccess"))),
+                        ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                            IdentifierName("Value"), IdentifierName("value"))),
+                        ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                            IdentifierName("Error"), IdentifierName("error"))))));
+
+        // Generate Result helper class
+        var resultClass = GenerateResultClass();
+
+        return new MemberDeclarationSyntax[] { resultStruct, resultClass };
     }
     
     private ClassDeclarationSyntax GenerateResultClass()
@@ -1757,6 +2173,66 @@ public class CSharpGenerator
             );
     }
     
+    private MemberDeclarationSyntax[] GenerateOptionTypes()
+    {
+        // Generate Option<T> struct
+        var optionStruct = StructDeclaration("Option")
+            .AddModifiers(Token(SyntaxKind.PublicKeyword))
+            .AddTypeParameterListParameters(TypeParameter("T"))
+            .AddMembers(
+                FieldDeclaration(
+                    VariableDeclaration(ParseTypeName("bool"))
+                        .AddVariables(VariableDeclarator("HasValue")))
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.ReadOnlyKeyword)),
+                FieldDeclaration(
+                    VariableDeclaration(ParseTypeName("T"))
+                        .AddVariables(VariableDeclarator("Value")))
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.ReadOnlyKeyword)),
+                ConstructorDeclaration("Option")
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                    .AddParameterListParameters(
+                        Parameter(Identifier("hasValue")).WithType(ParseTypeName("bool")),
+                        Parameter(Identifier("value")).WithType(ParseTypeName("T")))
+                    .WithBody(Block(
+                        ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                            IdentifierName("HasValue"), IdentifierName("hasValue"))),
+                        ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                            IdentifierName("Value"), IdentifierName("value"))))));
+
+        // Generate Option helper class
+        var optionClass = GenerateOptionClass();
+
+        return new MemberDeclarationSyntax[] { optionStruct, optionClass };
+    }
+    
+    private ClassDeclarationSyntax GenerateOptionClass()
+    {
+        return ClassDeclaration("Option")
+            .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
+            .AddMembers(
+                MethodDeclaration(ParseTypeName("Option<T>"), "Some")
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
+                    .AddTypeParameterListParameters(TypeParameter("T"))
+                    .AddParameterListParameters(Parameter(Identifier("value")).WithType(ParseTypeName("T")))
+                    .WithBody(Block(
+                        ReturnStatement(
+                            ObjectCreationExpression(ParseTypeName("Option<T>"))
+                                .AddArgumentListArguments(
+                                    Argument(LiteralExpression(SyntaxKind.TrueLiteralExpression)),
+                                    Argument(IdentifierName("value")))))),
+                
+                MethodDeclaration(ParseTypeName("Option<T>"), "None")
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
+                    .AddTypeParameterListParameters(TypeParameter("T"))
+                    .WithBody(Block(
+                        ReturnStatement(
+                            ObjectCreationExpression(ParseTypeName("Option<T>"))
+                                .AddArgumentListArguments(
+                                    Argument(LiteralExpression(SyntaxKind.FalseLiteralExpression)),
+                                    Argument(LiteralExpression(SyntaxKind.DefaultLiteralExpression))))))
+            );
+    }
+    
     private MemberDeclarationSyntax? GenerateStatement(ASTNode statement)
     {
         return statement switch
@@ -1771,7 +2247,7 @@ public class CSharpGenerator
     private MethodDeclarationSyntax GenerateFunctionDeclaration(FunctionDeclaration func)
     {
         var method = MethodDeclaration(
-            ParseTypeName(func.ReturnType ?? "void"),
+            ParseTypeName(MapFlowLangTypeToCSharp(func.ReturnType ?? "void")),
             func.Name)
             .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword));
         
@@ -1780,16 +2256,15 @@ public class CSharpGenerator
         {
             method = method.AddParameterListParameters(
                 Parameter(Identifier(param.Name))
-                    .WithType(ParseTypeName(param.Type))
+                    .WithType(ParseTypeName(MapFlowLangTypeToCSharp(param.Type)))
             );
         }
         
-        // Add XML documentation for effects
-        if (func.Effects?.Any() == true)
+        // Generate XML documentation from specification block or effects
+        var xmlDocumentation = GenerateXmlDocumentation(func);
+        if (xmlDocumentation.Any())
         {
-            var effectsComment = $"Effects: {string.Join(", ", func.Effects)}";
-            method = method.WithLeadingTrivia(
-                Comment($"/// <summary>{effectsComment}</summary>"));
+            method = method.WithLeadingTrivia(xmlDocumentation);
         }
         
         // Generate method body
@@ -1806,6 +2281,18 @@ public class CSharpGenerator
         method = method.WithBody(Block(statements));
         
         return method;
+    }
+    
+    private string MapFlowLangTypeToCSharp(string flowLangType)
+    {
+        return flowLangType switch
+        {
+            "string" => "string",
+            "int" => "int", 
+            "bool" => "bool",
+            "Unit" => "void",
+            _ => flowLangType
+        };
     }
     
     private MemberDeclarationSyntax GenerateModuleDeclaration(ModuleDeclaration module)
@@ -1868,6 +2355,9 @@ public class CSharpGenerator
             ReturnStatement ret => GenerateReturnStatement(ret),
             LetStatement let => GenerateLetStatement(let),
             IfStatement ifStmt => GenerateIfStatement(ifStmt),
+            GuardStatement guard => GenerateGuardStatement(guard),
+            CallExpression call => ExpressionStatement(GenerateCallExpression(call)),
+            MethodCallExpression methodCall => ExpressionStatement(GenerateMethodCallExpression(methodCall)),
             _ => ExpressionStatement(GenerateExpression(statement))
         };
     }
@@ -1876,6 +2366,11 @@ public class CSharpGenerator
     {
         if (ret.Expression != null)
         {
+            // Skip generating return for Unit literal in void functions
+            if (ret.Expression is Identifier id && id.Name == "Unit")
+            {
+                return ReturnStatement();
+            }
             return ReturnStatement(GenerateExpression(ret.Expression));
         }
         return ReturnStatement();
@@ -1883,7 +2378,7 @@ public class CSharpGenerator
     
     private LocalDeclarationStatementSyntax GenerateLetStatement(LetStatement let)
     {
-        var variableType = let.Type != null ? ParseTypeName(let.Type) : IdentifierName("var");
+        var variableType = let.Type != null ? ParseTypeName(MapFlowLangTypeToCSharp(let.Type)) : IdentifierName("var");
         
         return LocalDeclarationStatement(
             VariableDeclaration(variableType)
@@ -1913,12 +2408,28 @@ public class CSharpGenerator
         return ifSyntax;
     }
     
+    private StatementSyntax GenerateGuardStatement(GuardStatement guard)
+    {
+        // Generate: if (!(condition)) { else_block }
+        var negatedCondition = PrefixUnaryExpression(
+            SyntaxKind.LogicalNotExpression, 
+            ParenthesizedExpression(GenerateExpression(guard.Condition))
+        );
+        
+        var elseBlock = guard.ElseBody?.Any() == true
+            ? Block(guard.ElseBody.Select(GenerateStatementSyntax).Where(s => s != null).Cast<StatementSyntax>())
+            : Block(); // Empty block if no else body
+            
+        return IfStatement(negatedCondition, elseBlock);
+    }
+    
     private ExpressionSyntax GenerateExpression(ASTNode expression)
     {
         return expression switch
         {
             BinaryExpression binary => GenerateBinaryExpression(binary),
             CallExpression call => GenerateCallExpression(call),
+            MethodCallExpression methodCall => GenerateMethodCallExpression(methodCall),
             Identifier id => IdentifierName(id.Name),
             NumberLiteral num => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(num.Value)),
             StringLiteral str => LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(str.Value)),
@@ -1931,6 +2442,10 @@ public class CSharpGenerator
             ComparisonExpression comparison => GenerateComparisonExpression(comparison),
             ArithmeticExpression arithmetic => GenerateArithmeticExpression(arithmetic),
             UnaryExpression unary => GenerateUnaryExpression(unary),
+            ListExpression list => GenerateListExpression(list),
+            ListAccessExpression listAccess => GenerateListAccessExpression(listAccess),
+            OptionExpression option => GenerateOptionExpression(option),
+            MatchExpression match => GenerateMatchExpression(match),
             _ => IdentifierName("null")
         };
     }
@@ -1958,9 +2473,48 @@ public class CSharpGenerator
         return BinaryExpression(kind, left, right);
     }
 
+    private InvocationExpressionSyntax GenerateMethodCallExpression(MethodCallExpression methodCall)
+    {
+        // Generate the object expression first
+        var objectExpression = GenerateExpression(methodCall.Object);
+        
+        // Create member access expression: object.method
+        var memberAccess = MemberAccessExpression(
+            SyntaxKind.SimpleMemberAccessExpression,
+            objectExpression,
+            IdentifierName(methodCall.Method)
+        );
+        
+        // Generate arguments
+        var args = methodCall.Arguments.Select(arg => Argument(GenerateExpression(arg))).ToArray();
+        
+        return InvocationExpression(memberAccess)
+            .AddArgumentListArguments(args);
+    }
+    
     private InvocationExpressionSyntax GenerateCallExpression(CallExpression call)
     {
-        var expression = IdentifierName(call.Name);
+        ExpressionSyntax expression;
+        
+        // Handle member access calls like Console.WriteLine
+        if (call.Name.Contains('.'))
+        {
+            var parts = call.Name.Split('.');
+            expression = IdentifierName(parts[0]);
+            for (int i = 1; i < parts.Length; i++)
+            {
+                expression = MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    expression,
+                    IdentifierName(parts[i])
+                );
+            }
+        }
+        else
+        {
+            expression = IdentifierName(call.Name);
+        }
+        
         var args = call.Arguments.Select(arg => Argument(GenerateExpression(arg))).ToArray();
         
         return InvocationExpression(expression)
@@ -1995,26 +2549,120 @@ public class CSharpGenerator
         );
     }
     
-    private InterpolatedStringExpressionSyntax GenerateStringInterpolation(StringInterpolation interpolation)
+    private ExpressionSyntax GenerateStringInterpolation(StringInterpolation interpolation)
     {
-        var content = new List<InterpolatedStringContentSyntax>();
+        // For now, convert to string concatenation
+        ExpressionSyntax result = LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(""));
         
         foreach (var part in interpolation.Parts)
         {
+            ExpressionSyntax partExpr;
             if (part is StringLiteral str)
             {
-                content.Add(InterpolatedStringText(Token(SyntaxKind.InterpolatedStringTextToken, str.Value)));
+                partExpr = LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(str.Value));
             }
             else
             {
-                content.Add(Interpolation(GenerateExpression(part)));
+                partExpr = GenerateExpression(part);
             }
+            
+            result = BinaryExpression(SyntaxKind.AddExpression, result, partExpr);
         }
         
-        return InterpolatedStringExpression(Token(SyntaxKind.InterpolatedStringStartToken))
-            .AddContents(content.ToArray());
+        return result;
     }
     
+    private List<SyntaxTrivia> GenerateXmlDocumentation(FunctionDeclaration func)
+    {
+        var trivia = new List<SyntaxTrivia>();
+        
+        if (func.Specification != null)
+        {
+            // Generate rich XML documentation from specification block
+            trivia.Add(Comment("/// <summary>"));
+            trivia.Add(EndOfLine("\n"));
+            
+            // Add intent
+            trivia.Add(Comment($"/// {func.Specification.Intent}"));
+            trivia.Add(EndOfLine("\n"));
+            
+            // Add business rules if present
+            if (func.Specification.Rules?.Any() == true)
+            {
+                trivia.Add(Comment("/// "));
+                trivia.Add(EndOfLine("\n"));
+                trivia.Add(Comment("/// Business Rules:"));
+                trivia.Add(EndOfLine("\n"));
+                foreach (var rule in func.Specification.Rules)
+                {
+                    trivia.Add(Comment($"/// - {rule}"));
+                    trivia.Add(EndOfLine("\n"));
+                }
+            }
+            
+            // Add postconditions if present
+            if (func.Specification.Postconditions?.Any() == true)
+            {
+                trivia.Add(Comment("/// "));
+                trivia.Add(EndOfLine("\n"));
+                trivia.Add(Comment("/// Expected Outcomes:"));
+                trivia.Add(EndOfLine("\n"));
+                foreach (var postcondition in func.Specification.Postconditions)
+                {
+                    trivia.Add(Comment($"/// - {postcondition}"));
+                    trivia.Add(EndOfLine("\n"));
+                }
+            }
+            
+            // Add source document reference if present
+            if (!string.IsNullOrEmpty(func.Specification.SourceDoc))
+            {
+                trivia.Add(Comment("/// "));
+                trivia.Add(EndOfLine("\n"));
+                trivia.Add(Comment($"/// Source: {func.Specification.SourceDoc}"));
+                trivia.Add(EndOfLine("\n"));
+            }
+            
+            trivia.Add(Comment("/// </summary>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        else if (func.Effects?.Any() == true)
+        {
+            // Fallback to basic effects documentation
+            trivia.Add(Comment("/// <summary>"));
+            trivia.Add(EndOfLine("\n"));
+            
+            if (func.IsPure)
+            {
+                trivia.Add(Comment("/// Pure function - no side effects"));
+            }
+            else
+            {
+                trivia.Add(Comment($"/// Effects: {string.Join(", ", func.Effects)}"));
+            }
+            
+            trivia.Add(EndOfLine("\n"));
+            trivia.Add(Comment("/// </summary>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        
+        // Add parameter documentation
+        foreach (var param in func.Parameters)
+        {
+            trivia.Add(Comment($"/// <param name=\"{param.Name}\">Parameter of type {param.Type}</param>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        
+        // Add return documentation
+        if (!string.IsNullOrEmpty(func.ReturnType))
+        {
+            trivia.Add(Comment($"/// <returns>Returns {func.ReturnType}</returns>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        
+        return trivia;
+    }
+
     private ConditionalExpressionSyntax GenerateTernaryExpression(TernaryExpression ternary)
     {
         return ConditionalExpression(
@@ -2090,6 +2738,98 @@ public class CSharpGenerator
         
         return PrefixUnaryExpression(kind, GenerateExpression(unary.Operand));
     }
+    
+    private ExpressionSyntax GenerateListExpression(ListExpression list)
+    {
+        // Generate: new List<T> { element1, element2, ... }
+        var elements = list.Elements.Select(GenerateExpression).ToArray();
+        
+        return ObjectCreationExpression(
+            IdentifierName("List<int>") // For now, assume int lists
+        ).WithInitializer(
+            InitializerExpression(
+                SyntaxKind.CollectionInitializerExpression,
+                SeparatedList<ExpressionSyntax>(elements)
+            )
+        );
+    }
+    
+    private ExpressionSyntax GenerateListAccessExpression(ListAccessExpression listAccess)
+    {
+        // Generate: list[index]
+        return ElementAccessExpression(
+            GenerateExpression(listAccess.List)
+        ).WithArgumentList(
+            BracketedArgumentList(
+                SingletonSeparatedList(
+                    Argument(GenerateExpression(listAccess.Index))
+                )
+            )
+        );
+    }
+    
+    private ExpressionSyntax GenerateOptionExpression(OptionExpression option)
+    {
+        if (option.Type == "Some" && option.Value != null)
+        {
+            // Generate: Option<T>.Some(value)
+            return InvocationExpression(
+                MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    IdentifierName("Option<object>"), // For now, use object type
+                    IdentifierName("Some")
+                )
+            ).AddArgumentListArguments(Argument(GenerateExpression(option.Value)));
+        }
+        else
+        {
+            // Generate: Option<T>.None<T>()
+            return InvocationExpression(
+                MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    IdentifierName("Option<object>"),
+                    IdentifierName("None")
+                )
+            );
+        }
+    }
+    
+    private ExpressionSyntax GenerateMatchExpression(MatchExpression match)
+    {
+        // For now, generate a simple ternary conditional for 2-case matches
+        // This is a simplified implementation
+        
+        var valueExpr = GenerateExpression(match.Value);
+        
+        if (match.Cases.Count == 2)
+        {
+            var okCase = match.Cases.FirstOrDefault(c => c.Pattern == "Ok");
+            var errorCase = match.Cases.FirstOrDefault(c => c.Pattern == "Error");
+            
+            if (okCase != null && errorCase != null)
+            {
+                // Generate: result.Success ? okExpression : errorExpression
+                var condition = MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    valueExpr,
+                    IdentifierName("Success")
+                );
+                
+                var thenExpr = okCase.Body.Count > 0 ? GenerateExpression(okCase.Body[0]) : LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("ok"));
+                var elseExpr = errorCase.Body.Count > 0 ? GenerateExpression(errorCase.Body[0]) : LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("error"));
+                
+                return ConditionalExpression(condition, thenExpr, elseExpr);
+            }
+        }
+        
+        // Fallback: just return the first case body
+        if (match.Cases.Count > 0 && match.Cases[0].Body.Count > 0)
+        {
+            return GenerateExpression(match.Cases[0].Body[0]);
+        }
+        
+        return LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("match"));
+    }
 }
 
 // =============================================================================
@@ -2115,7 +2855,7 @@ public class FlowLangTranspiler
         var generator = new CSharpGenerator();
         var syntaxTree = generator.GenerateFromAST(ast);
         
-        var csharpCode = syntaxTree.ToString();
+        var csharpCode = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
         
         // Write to output file if specified
         if (outputFile != null)
@@ -2144,7 +2884,7 @@ public class FlowLangTranspiler
 // MAIN PROGRAM
 // =============================================================================
 
-public class Program
+public class FlowCoreProgram
 {
     public static async Task<int> Main(string[] args)
     {

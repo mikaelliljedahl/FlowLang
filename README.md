@@ -32,10 +32,11 @@ function main() -> string {
 ### 4. Run It
 ```bash
 # Quick transpilation (from FlowLang root directory)
-dotnet run --project src/flowc.csproj -- run hello.flow
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- hello.flow hello.cs
+dotnet run hello.cs
 
-# Or create an alias for easier use:
-alias flowc="dotnet run --project $(pwd)/src/flowc.csproj --"
+# Or use the simple flowc script:
+./flowc hello.flow
 flowc run hello.flow
 ```
 
@@ -168,8 +169,9 @@ flowc help <command>
 ### 📖 Comprehensive Guides
 1. **[Getting Started Guide](docs/getting-started.md)** - Detailed installation and first steps
 2. **[Language Reference](docs/language-reference.md)** - Complete language documentation
-3. **[Examples](docs/examples/)** - [Basic Syntax](docs/examples/basic-syntax.md) | [Result Types](docs/examples/result-types.md) | [Effect System](docs/examples/effect-system.md) | [Specification Blocks](examples/specification_example.flow)
-4. **[Tools](docs/)** - [CLI Reference](docs/cli-reference.md) | [LSP Integration](docs/lsp-integration.md) | [Package Manager](docs/package-manager.md)
+3. **[Transpiler Architecture](docs/transpiler-architecture.md)** - How FlowLang uses Roslyn to generate C# code
+4. **[Examples](docs/examples/)** - [Basic Syntax](docs/examples/basic-syntax.md) | [Result Types](docs/examples/result-types.md) | [Effect System](docs/examples/effect-system.md) | [Specification Blocks](examples/specification_example.flow)
+5. **[Tools](docs/)** - [CLI Reference](docs/cli-reference.md) | [LSP Integration](docs/lsp-integration.md) | [Package Manager](docs/package-manager.md)
 
 ## 🔧 IDE Integration
 

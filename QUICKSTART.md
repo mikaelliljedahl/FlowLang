@@ -289,12 +289,12 @@ cd src && dotnet build
 
 **Command not found?**
 ```bash
-# Use full command
-dotnet run --project src/flowc.csproj -- run myfile.flow
+# Use the core transpiler directly
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- myfile.flow myfile.cs
+dotnet run myfile.cs
 
-# Or set up alias (recommended)
-echo 'alias flowc="dotnet run --project $(pwd)/src/flowc.csproj --"' >> ~/.bashrc
-source ~/.bashrc
+# Or use the simple flowc script:
+./flowc myfile.flow
 ```
 
 ## 📚 Next Steps

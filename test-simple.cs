@@ -1,1 +1,0 @@
-usingSystem;usingSystem.Collections.Generic;usingSystem.Threading.Tasks;publicstaticclassResult{publicstaticResult<T, E>Ok<T,E>(Tvalue){returnnewResult<T, E>(true,value,default);}publicstaticResult<T, E>Error<T,E>(Eerror){returnnewResult<T, E>(false,default,error);}}publicstaticintadd(inta,intb){returna+b;}publicstaticintmain(){varresult=add(5,3);returnresult;}
