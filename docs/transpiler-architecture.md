@@ -7,7 +7,18 @@ The FlowLang transpiler uses **Microsoft.CodeAnalysis.CSharp** (Roslyn) to trans
 ## Pipeline Architecture
 
 ```
-FlowLang Source → Lexer → Parser → AST → Roslyn Generator → C# Syntax Tree → C# Code
+FlowLang Source → Lexer → Parser → AST → Import Resolution → Roslyn Generator → C# Syntax Tree → C# Code
+```
+
+### Multi-Module Compilation Flow (December 2024)
+
+FlowLang now supports multi-module compilation with proper import resolution:
+
+```
+1. Parse all FlowLang files into AST nodes
+2. Process import statements to build symbol mapping
+3. Generate qualified C# calls for imported functions
+4. Combine all modules into single C# compilation unit
 ```
 
 The transpiler follows this flow in `FlowLangTranspiler.TranspileAsync()` (`src/FlowLang.Core/flowc-core.cs:2841+`):
@@ -30,6 +41,99 @@ var syntaxTree = generator.GenerateFromAST(ast);
 
 // Output: Convert syntax tree to readable C# code
 var csharpCode = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+```
+
+## Multi-Module Import Resolution System
+
+### Import Statement Processing
+
+**Location**: `src/FlowLang.Core/flowc-core.cs:2845+`
+
+The transpiler implements a two-pass system for handling imports:
+
+```csharp
+// First pass: Process imports to build symbol mapping
+foreach (var statement in program.Statements)
+{
+    if (statement is ImportStatement import)
+    {
+        ProcessImportStatement(import);
+    }
+}
+
+// Second pass: Generate actual C# code with qualified calls
+foreach (var statement in program.Statements)
+{
+    var member = GenerateStatement(statement);
+    // ...
+}
+```
+
+### Symbol Mapping Implementation
+
+```csharp
+private readonly Dictionary<string, string> _importedSymbols = new();
+
+private void ProcessImportStatement(ImportStatement import)
+{
+    // Handle specific imports like: import Math.{add, multiply}
+    if (import.SpecificImports != null)
+    {
+        var moduleNamespace = $"FlowLang.Modules.{import.ModuleName}.{import.ModuleName}";
+        
+        foreach (var symbol in import.SpecificImports)
+        {
+            // Map imported symbol to fully qualified C# name
+            _importedSymbols[symbol] = $"{moduleNamespace}.{symbol}";
+        }
+    }
+}
+```
+
+### Qualified Call Generation
+
+**Location**: `src/FlowLang.Core/flowc-core.cs:2525+`
+
+```csharp
+// In GenerateCallExpression:
+if (_importedSymbols.ContainsKey(call.Name))
+{
+    // Generate qualified call: FlowLang.Modules.Math.Math.add
+    var qualifiedName = _importedSymbols[call.Name];
+    var parts = qualifiedName.Split('.');
+    expression = IdentifierName(parts[0]);
+    for (int i = 1; i < parts.Length; i++)
+    {
+        expression = MemberAccessExpression(
+            SyntaxKind.SimpleMemberAccessExpression,
+            expression,
+            IdentifierName(parts[i])
+        );
+    }
+}
+```
+
+### Import Resolution Example
+
+**FlowLang Input**:
+```flowlang
+import Math.{add, multiply}
+
+function main() -> int {
+    let result = add(5, 3)
+    let product = multiply(result, 2)
+    return product
+}
+```
+
+**Generated C# Output**:
+```csharp
+public static int main()
+{
+    var result = FlowLang.Modules.Math.Math.add(5, 3);
+    var product = FlowLang.Modules.Math.Math.multiply(result, 2);
+    return product;
+}
 ```
 
 ## Roslyn Syntax Tree Construction

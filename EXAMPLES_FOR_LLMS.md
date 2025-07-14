@@ -98,9 +98,155 @@ function greet(name: string, age: int) -> string {
 }
 ```
 
+### Module System: FlowLang vs Others
+
+❌ **C# - Complex namespace management:**
+```csharp
+// Multiple ways to organize and import code
+using System;
+using System.Collections.Generic;
+using MyProject.Utils;
+using MyProject.Database;
+using MyProject.Models;
+using static MyProject.MathUtils;  // Static imports
+using DatabaseService = MyProject.Database.DatabaseService;  // Aliases
+
+namespace MyProject.Services {
+    public class UserService {
+        public void ProcessUser() {
+            // Which namespace does Calculate come from?
+            var result = Calculate(5, 3);  // Unclear origin
+            
+            // Namespace conflicts possible
+            var user = new User();  // Which User class?
+        }
+    }
+}
+```
+
+❌ **JavaScript - Inconsistent module systems:**
+```javascript
+// CommonJS
+const math = require('./math');
+const { add, multiply } = require('./math');
+
+// ES6 imports
+import * as math from './math';
+import { add, multiply } from './math';
+import math, { add } from './math';  // Mixed default/named
+
+// AMD, SystemJS, etc. - even more variations
+```
+
+✅ **FlowLang - One clear module system:**
+```flowlang
+// math.flow - Module definition
+module Math {
+    pure function add(a: int, b: int) -> int {
+        return a + b
+    }
+    
+    pure function multiply(a: int, b: int) -> int {
+        return a * b
+    }
+    
+    // Only one way to export
+    export { add, multiply }
+}
+
+// main.flow - Module usage
+import Math.{add, multiply}  // Selective imports (clear origin)
+
+function main() -> int {
+    let result = add(5, 3)        // Generates: Math.add(5, 3)
+    let product = multiply(result, 2)  // Generates: Math.multiply(result, 2)
+    return product
+}
+
+// Alternative: qualified calls (even clearer)
+import Math.*
+
+function main() -> int {
+    let result = Math.add(5, 3)      // Explicit namespace
+    let product = Math.multiply(result, 2)  // No ambiguity
+    return product
+}
+```
+
 ## 🛡️ LLM Safety Examples
 
-### Example 1: User Registration System
+### Example 1: Multi-Module E-commerce System
+
+**Task:** Create a modular e-commerce system with user management, product catalog, and order processing.
+
+✅ **FlowLang forces clear module boundaries:**
+
+```flowlang
+// users.flow - User management module
+module Users {
+    function validateEmail(email: string) -> Result<string, string> {
+        guard email.Contains("@") else {
+            return Error("Invalid email format")
+        }
+        return Ok(email)
+    }
+    
+    function createUser(email: string, name: string) uses [Database] -> Result<string, string> {
+        let validEmail = validateEmail(email)?
+        let userId = database_create_user(validEmail, name)?
+        return Ok(userId)
+    }
+    
+    export { createUser, validateEmail }
+}
+
+// products.flow - Product catalog module
+module Products {
+    function getProduct(id: string) uses [Database] -> Result<Product, string> {
+        let product = database_get_product(id)?
+        return Ok(product)
+    }
+    
+    function updateInventory(productId: string, quantity: int) uses [Database] -> Result<Unit, string> {
+        let updated = database_update_inventory(productId, quantity)?
+        return Ok(Unit)
+    }
+    
+    export { getProduct, updateInventory }
+}
+
+// orders.flow - Order processing module
+import Users.{createUser}
+import Products.{getProduct, updateInventory}
+
+module Orders {
+    function processOrder(email: string, productId: string, quantity: int) 
+        uses [Database, Network, Logging] -> Result<string, string> {
+        
+        // Clear module boundaries - each function's origin is obvious
+        let user = createUser(email, "Guest")?    // From Users module
+        let product = getProduct(productId)?      // From Products module
+        
+        // Validation with guard clauses
+        guard product.stock >= quantity else {
+            return Error("Insufficient stock")
+        }
+        
+        // Update inventory
+        updateInventory(productId, product.stock - quantity)?
+        
+        // Create order
+        let orderId = database_create_order(user, productId, quantity)?
+        
+        log_info($"Order created: {orderId}")
+        return Ok(orderId)
+    }
+    
+    export { processOrder }
+}
+```
+
+### Example 2: User Registration System
 
 **Task:** Create a user registration function that validates input and saves to database.
 

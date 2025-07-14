@@ -884,12 +884,28 @@ public class FlowLangParser
         }
         else
         {
-            // Export list
+            // Export list - handle both syntax: export add, multiply AND export { add, multiply }
             var exports = new List<string>();
-            do
+            
+            // Check if using curly brace syntax: export { ... }
+            if (Match(TokenType.LeftBrace))
             {
-                exports.Add(Consume(TokenType.Identifier, "Expected export name").Lexeme);
-            } while (Match(TokenType.Comma));
+                // Parse: export { add, multiply }
+                do
+                {
+                    exports.Add(Consume(TokenType.Identifier, "Expected export name").Lexeme);
+                } while (Match(TokenType.Comma));
+                
+                Consume(TokenType.RightBrace, "Expected '}' after export list");
+            }
+            else
+            {
+                // Parse: export add, multiply
+                do
+                {
+                    exports.Add(Consume(TokenType.Identifier, "Expected export name").Lexeme);
+                } while (Match(TokenType.Comma));
+            }
             
             return new ExportStatement(exports);
         }
@@ -1983,6 +1999,7 @@ public class CSharpGenerator
 {
     private readonly HashSet<string> _generatedNamespaces = new();
     private readonly List<string> _usingStatements = new();
+    private readonly Dictionary<string, string> _importedSymbols = new(); // Track imported symbols
     
     public SyntaxTree GenerateFromAST(Program program)
     {
@@ -1997,6 +2014,16 @@ public class CSharpGenerator
         var optionTypes = GenerateOptionTypes();
         globalMembers.AddRange(optionTypes);
         
+        // First pass: Process imports to build symbol mapping
+        foreach (var statement in program.Statements)
+        {
+            if (statement is ImportStatement import)
+            {
+                ProcessImportStatement(import);
+            }
+        }
+        
+        // Second pass: Generate actual C# code
         foreach (var statement in program.Statements)
         {
             var member = GenerateStatement(statement);
@@ -2512,7 +2539,27 @@ public class CSharpGenerator
         }
         else
         {
-            expression = IdentifierName(call.Name);
+            // Check if this is an imported symbol that needs qualified name
+            if (_importedSymbols.ContainsKey(call.Name))
+            {
+                // Generate qualified call: FlowLang.Modules.Math.Math.add
+                var qualifiedName = _importedSymbols[call.Name];
+                var parts = qualifiedName.Split('.');
+                expression = IdentifierName(parts[0]);
+                for (int i = 1; i < parts.Length; i++)
+                {
+                    expression = MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        expression,
+                        IdentifierName(parts[i])
+                    );
+                }
+            }
+            else
+            {
+                // Regular function call - use simple name
+                expression = IdentifierName(call.Name);
+            }
         }
         
         var args = call.Arguments.Select(arg => Argument(GenerateExpression(arg))).ToArray();
@@ -2829,6 +2876,27 @@ public class CSharpGenerator
         }
         
         return LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("match"));
+    }
+    
+    private void ProcessImportStatement(ImportStatement import)
+    {
+        // Handle specific imports like: import Math.{add, multiply}
+        if (import.SpecificImports != null)
+        {
+            var moduleNamespace = $"FlowLang.Modules.{import.ModuleName}.{import.ModuleName}";
+            
+            foreach (var symbol in import.SpecificImports)
+            {
+                // Map imported symbol to fully qualified C# name
+                _importedSymbols[symbol] = $"{moduleNamespace}.{symbol}";
+            }
+        }
+        // Handle wildcard imports like: import Math.*
+        else if (import.IsWildcard)
+        {
+            // For now, wildcards are not supported - could be implemented later
+            // Would require knowing all exported symbols from the module
+        }
     }
 }
 

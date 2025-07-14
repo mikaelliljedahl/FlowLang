@@ -1,0 +1,6 @@
+// Test import resolution fix
+import Math.{add}
+
+function main() -> int {
+    return add(5, 3)
+}

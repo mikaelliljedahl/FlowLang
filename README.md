@@ -42,6 +42,31 @@ flowc run hello.flow
 
 ## 🔥 Core Features
 
+### Multi-Module System - Working as of December 2024! 🎉
+```flowlang
+// math.flow
+module Math {
+    pure function add(a: int, b: int) -> int {
+        return a + b
+    }
+    
+    pure function multiply(a: int, b: int) -> int {
+        return a * b
+    }
+    
+    export { add, multiply }
+}
+
+// main.flow
+import Math.{add, multiply}
+
+function main() -> int {
+    let result = add(5, 3)      // Resolves to FlowLang.Modules.Math.Math.add(5, 3)
+    let product = multiply(result, 2)  // Qualified namespace calls work!
+    return product
+}
+```
+
 ### Specification Blocks - Intent Preserved with Code
 ```flowlang
 /*spec

@@ -152,40 +152,50 @@ function main() -> string {
 flowc run validate.flow
 ```
 
-### 6. Module System
-**File: `utils.flow`**
+### 6. Module System (Multi-Module Projects)
+**File: `math.flow`**
 ```flowlang
-module MathUtils {
-    pure function square(x: int) -> int {
-        return x * x
+module Math {
+    pure function add(a: int, b: int) -> int {
+        return a + b
     }
     
-    pure function double(x: int) -> int {
-        return x * 2
+    pure function multiply(a: int, b: int) -> int {
+        return a * b
     }
     
-    export { square, double }
-}
-
-module StringUtils {
-    pure function shout(text: string) -> string {
-        return text + "!"
-    }
-    
-    export { shout }
-}
-
-import MathUtils.{square}
-import StringUtils.*
-
-function main() -> string {
-    let num = square(5)
-    return shout($"The square is {num}")
+    export { add, multiply }
 }
 ```
+
+**File: `main.flow`**
+```flowlang
+// Import specific functions (recommended)
+import Math.{add, multiply}
+
+function main() -> int {
+    let result = add(5, 3)           // Generates: Math.add(5, 3)
+    let product = multiply(result, 2) // Generates: Math.multiply(result, 2)
+    return product
+}
+```
+
+**Alternative: Qualified calls (explicit namespacing)**
+```flowlang
+// File: main_qualified.flow
+import Math.*
+
+function main() -> int {
+    let result = Math.add(5, 3)      // Explicit namespace
+    let product = Math.multiply(result, 2)  // No ambiguity
+    return product
+}
+```
+
 **Run:**
 ```bash
-flowc run utils.flow
+# Compile both files together
+flowc run math.flow main.flow
 ```
 
 ### 7. Complex Control Flow
