@@ -98,7 +98,6 @@ pure function celsius_to_fahrenheit(celsius: int) -> int {
 - **Issue**: The setup process and documentation are confusing and contain errors, making it difficult to get started.
 - **Suggestion**: Create a single, clear `CONTRIBUTING.md` or `BUILDING.md` that explains the setup process.
 - **Specific Problems Encountered**:
-    - **Incorrect Project Path**: The `setup.sh` script references a non-existent project file (`src/flowc.csproj`). The correct path is `src/FlowLang.Core/flowc-core.csproj`. This should be corrected.
     - **Unclear `flowc` command**: The documentation and scripts imply a global `flowc` command, but it requires manual setup of a shell alias. The primary method for running the compiler (`dotnet run --project ...`) should be clearly documented as the main entry point.
     - **Undocumented Tooling**: The distinction between the core transpiler (`flowc-core`) and the user-facing tool (`flowc`) is not explained. The core transpiler has a very basic, undocumented command-line interface (`<input> <output>`). This should be documented for contributors.
     - **Missing `run` command**: The `flowc run` command, which was previously reported to hang, does not seem to exist in the core transpiler. The intended workflow (transpile -> compile -> run) is not documented anywhere.

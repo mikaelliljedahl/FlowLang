@@ -8,16 +8,16 @@ module GeminiExample {
 
     // This is an effectful function. It uses the Console to print a message.
     // The 'uses [Console]' annotation declares the side effect.
-    effectful function printGreeting(message: String) uses [Console] -> Unit {
+    effectful function printGreeting(message: String) uses [Console] -> int {
         Console.WriteLine(message)
-        return Unit
+        return 0
     }
 
     // The main entry point of the program.
     // It's an effectful function because it calls 'printGreeting'.
-    effectful function main() uses [Console] -> Unit {
+    effectful function main() uses [Console] -> int {
         let greeting = createGreeting("Gemini")
         printGreeting(greeting)
-        return Unit
+        return 0
     }
 }

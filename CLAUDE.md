@@ -14,5 +14,5 @@ FlowLang is a backend programming language designed specifically for LLM-assiste
 
 ### Project Development Guidelines
 - If you create a folder for testing transpiler output, remove it afterward. Don't create transpiled files in the the root directory. Always follow existing directory structure, e.g. code in the src directory, documentation in the docs folder etc
-
-(Rest of the existing content remains unchanged)
+- You will not include estimated time in the sprint plan docs because it is irrelevant.
+- A feature is not completed or tested until you successfully run a test end to end (compiled code works). Transpilation might still generate invalid code.

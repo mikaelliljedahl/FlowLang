@@ -22,17 +22,30 @@ The FlowLang CLI (`flowc`) provides a comprehensive set of commands for creating
 ### Building the CLI
 
 ```bash
+# Build for development
 cd src
 dotnet build
+
+# Create standalone executable
+dotnet publish src/FlowLang.Core/flowc-core.csproj -c Release -o bin/release --self-contained false
 ```
+
+The standalone executable will be available at `bin/release/flowc-core`.
 
 ### Running Commands
 
-All commands are run through the .NET CLI:
+Commands can be run through the .NET CLI or using the standalone executable:
 
 ```bash
-# Core transpiler (direct)
+# Using dotnet run (development)
 dotnet run --project src/FlowLang.Core/flowc-core.csproj -- <inputfile.flow> <outputfile.cs>
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --compile <inputfile.flow>
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run <inputfile.flow>
+
+# Using standalone executable (recommended)
+./bin/release/flowc-core <inputfile.flow> <outputfile.cs>
+./bin/release/flowc-core --compile <inputfile.flow>
+./bin/release/flowc-core --run <inputfile.flow>
 
 # Or use the simple wrapper script
 ./flowc <inputfile.flow>
@@ -41,10 +54,16 @@ dotnet run --project src/FlowLang.Core/flowc-core.csproj -- <inputfile.flow> <ou
 For convenience, you can create an alias:
 
 ```bash
-# Linux/macOS  
+# Linux/macOS (using standalone executable)
+alias flowc="/path/to/flowlang/bin/release/flowc-core"
+
+# Linux/macOS (using dotnet run)
 alias flowc="dotnet run --project /path/to/flowlang/src/FlowLang.Core/flowc-core.csproj --"
 
-# Windows (PowerShell)
+# Windows (PowerShell - using standalone executable)
+function flowc { C:\path\to\flowlang\bin\release\flowc-core.exe $args }
+
+# Windows (PowerShell - using dotnet run)
 function flowc { dotnet run --project C:\path\to\flowlang\src\FlowLang.Core\flowc-core.csproj -- $args }
 ```
 
@@ -93,19 +112,32 @@ flowc help new
 
 ### `compile` Command
 
-Compiles FlowLang source code to target languages including C#, Java, JavaScript, WebAssembly, and native code.
+Compiles FlowLang source code directly to executable files or transpiles to target languages.
 
 #### Syntax
 
 ```bash
-flowc compile [options] <input-file>
+# Direct compilation to executable
+flowc-core --compile <input-file> [--output <output-file>]
+
+# Transpilation to target language
+flowc-core <input-file> <output-file> [--target <target>]
+
+# Compile and run immediately
+flowc-core --run <input-file>
+
+# Generate library
+flowc-core --library <input-file> [--output <output-file>]
 ```
 
 #### Options
 
-- `--target <target>`: Specify compilation target (csharp, java, javascript, wasm, native)
-- `--output <path>`: Specify output file or directory
-- `--optimize`: Enable optimizations for the target platform
+- `--compile, -c`: Compile directly to assembly (default: transpile)
+- `--run, -r`: Compile and run immediately  
+- `--library, -l`: Generate library (.dll) instead of executable
+- `--debug, -d`: Include debug symbols and disable optimizations
+- `--output, -o`: Specify output file path
+- `--target, -t`: Target language for transpilation (csharp, javascript)
 
 #### Parameters
 
@@ -124,20 +156,24 @@ The `compile` command transpiles FlowLang source to various target platforms:
 #### Examples
 
 ```bash
-# Compile to C# (default)
-flowc compile backend/UserService.flow
+# Transpile to C# (default)
+flowc-core backend/UserService.flow backend/UserService.cs
 
-# Compile UI component to JavaScript/React
-flowc compile --target javascript frontend/TodoApp.flow
+# Direct compilation to executable
+flowc-core --compile backend/UserService.flow
+flowc-core --compile backend/UserService.flow --output UserService.exe
 
-# Compile to WebAssembly for browser
-flowc compile --target wasm game/GameEngine.flow
+# Compile and run immediately
+flowc-core --run backend/UserService.flow
 
-# Compile to Java with optimization
-flowc compile --target java --optimize api/DataProcessor.flow
+# Generate library
+flowc-core --library shared/Utils.flow --output shared/Utils.dll
 
-# Specify output location
-flowc compile --target csharp backend/main.flow --output dist/Backend.cs
+# Transpile to JavaScript
+flowc-core frontend/TodoApp.flow frontend/TodoApp.js --target javascript
+
+# Debug compilation
+flowc-core --compile --debug backend/UserService.flow
 ```
 
 #### Target-Specific Features

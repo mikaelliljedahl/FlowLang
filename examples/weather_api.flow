@@ -1,17 +1,13 @@
 // Weather Forecast API Example
 // Demonstrates FlowLang HTTP service with comprehensive error handling
 
-// Define data types
-struct WeatherForecast {
-    date: string,
-    temperature_celsius: int,
-    temperature_fahrenheit: int,
-    summary: string
+// Define data construction functions
+function create_weather_forecast(date: string, temperature_celsius: int, temperature_fahrenheit: int, summary: string) -> Result<string, string> {
+    return Ok("WeatherForecast:" + date + "," + temperature_celsius + "," + temperature_fahrenheit + "," + summary)
 }
 
-struct ApiError {
-    code: int,
-    message: string
+function create_api_error(code: int, message: string) -> Result<string, string> {
+    return Ok("ApiError:" + code + "," + message)
 }
 
 // Pure function to convert temperatures
@@ -37,48 +33,31 @@ pure function get_weather_summary(temp: int) -> string {
 }
 
 // Function to generate forecast data
-function generate_forecast_data(days: int) 
-    uses [Memory] 
-    -> Result<WeatherForecast[], ApiError> {
+function generate_forecast_data(days: int) uses [Memory] -> Result<List<string>, string> {
     
     if days < 1 {
-        return Error(ApiError { code: 400, message: "Days must be positive" })
+        return Error("Days must be positive")
     }
     
     if days > 10 {
-        return Error(ApiError { code: 400, message: "Cannot forecast more than 10 days" })
+        return Error("Cannot forecast more than 10 days")
     }
     
-    // Generate sample forecast data
+    // Generate sample forecast data for the first day
     let base_temp = 20
-    let forecasts = []
+    let temp_celsius = base_temp + (days * 2) - 5
+    let temp_fahrenheit = celsius_to_fahrenheit(temp_celsius)
+    let summary = get_weather_summary(temp_celsius)
+    let date = "2024-01-01"
     
-    // Simulate generating forecast data for each day
-    let day_index = 0
-    while day_index < days {
-        let temp_celsius = base_temp + (day_index * 2) - 5
-        let temp_fahrenheit = celsius_to_fahrenheit(temp_celsius)
-        let summary = get_weather_summary(temp_celsius)
-        let date = "2024-01-" + (day_index + 1)
-        
-        let forecast = WeatherForecast {
-            date: date,
-            temperature_celsius: temp_celsius,
-            temperature_fahrenheit: temp_fahrenheit,
-            summary: summary
-        }
-        
-        // Add to forecasts array (simulated)
-        day_index = day_index + 1
-    }
+    let forecast = create_weather_forecast(date, temp_celsius, temp_fahrenheit, summary)?
     
-    return Ok(forecasts)
+    // Return a single forecast as a list with one element
+    return Ok([forecast])
 }
 
 // HTTP endpoint handler for weather forecast
-function get_weather_forecast(days_param: string) 
-    uses [Network, Logging, Memory] 
-    -> Result<WeatherForecast[], ApiError> {
+function get_weather_forecast(days_param: string) uses [Network, Logging, Memory] -> Result<string, string> {
     
     // Log the request
     let log_result = log_request("GET /weatherforecast?days=" + days_param)?
@@ -86,7 +65,7 @@ function get_weather_forecast(days_param: string)
     // Parse days parameter
     let days = parse_int(days_param)
     if days == 0 {
-        return Error(ApiError { code: 400, message: "Invalid days parameter" })
+        return Error("Invalid days parameter")
     }
     
     // Generate forecast data
@@ -95,36 +74,34 @@ function get_weather_forecast(days_param: string)
     // Log success
     let success_log = log_info("Generated " + days + " day forecast")?
     
-    return Ok(forecasts)
+    return Ok("Weather forecast data generated")
 }
 
 // HTTP endpoint handler for single day forecast
-function get_today_forecast() 
-    uses [Network, Logging, Memory] 
-    -> Result<WeatherForecast, ApiError> {
+function get_today_forecast() uses [Network, Logging, Memory] -> Result<string, string> {
     
     let log_result = log_request("GET /weatherforecast/today")?
     
     let forecasts = generate_forecast_data(1)?
-    if forecasts.length == 0 {
-        return Error(ApiError { code: 500, message: "Failed to generate forecast" })
+    if forecasts == [] {
+        return Error("Failed to generate forecast")
     }
     
-    return Ok(forecasts[0])
+    return Ok("Today's weather forecast generated")
 }
 
 // Logging utility functions
-function log_request(request: string) uses [Logging] -> Result<string, ApiError> {
+function log_request(request: string) uses [Logging] -> Result<string, string> {
     // Would integrate with actual logging system
     return Ok("Logged: " + request)
 }
 
-function log_info(message: string) uses [Logging] -> Result<string, ApiError> {
+function log_info(message: string) uses [Logging] -> Result<string, string> {
     // Would integrate with actual logging system  
     return Ok("Info: " + message)
 }
 
-function log_error(error: string) uses [Logging] -> Result<string, ApiError> {
+function log_error(error: string) uses [Logging] -> Result<string, string> {
     // Would integrate with actual logging system
     return Ok("Error: " + error)
 }
@@ -146,25 +123,23 @@ function parse_int(value: string) -> int {
 }
 
 // Main API service function
-function weather_api_service(endpoint: string, query_params: string) 
-    uses [Network, Logging, Memory] 
-    -> Result<string, ApiError> {
+function weather_api_service(api_endpoint: string, query_params: string) uses [Network, Logging, Memory] -> Result<string, string> {
     
-    if endpoint == "/weatherforecast" {
+    if api_endpoint == "/weatherforecast" {
         let forecasts = get_weather_forecast(query_params)?
         return Ok("Weather forecast data generated successfully")
     }
     
-    if endpoint == "/weatherforecast/today" {
+    if api_endpoint == "/weatherforecast/today" {
         let forecast = get_today_forecast()?
         return Ok("Today's forecast generated successfully")
     }
     
-    return Error(ApiError { code: 404, message: "Endpoint not found" })
+    return Error("Endpoint not found")
 }
 
 // Application entry point
-function main() uses [Network, Logging, Memory] -> Result<string, ApiError> {
+function main() uses [Network, Logging, Memory] -> Result<string, string> {
     let log_start = log_info("Weather API service starting")?
     
     // Simulate handling different API requests
