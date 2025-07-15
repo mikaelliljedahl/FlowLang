@@ -1,11 +1,11 @@
-# FlowLang Syntax Cheat Sheet 📝
+# Cadenza Syntax Cheat Sheet 📝
 
-**Quick reference for FlowLang syntax - perfect for LLMs and humans!**
+**Quick reference for Cadenza syntax - perfect for LLMs and humans!**
 
 ## 🏗️ Basic Structure
 
 ### Function Declaration
-```flowlang
+```cadenza
 // Basic function
 function functionName(param: type) -> returnType {
     return value
@@ -23,16 +23,16 @@ function saveData(data: string) uses [Database, Logging] -> Result<string, strin
 ```
 
 ### Main Function (Entry Point)
-```flowlang
+```cadenza
 function main() -> string {
-    return "Hello, FlowLang!"
+    return "Hello, Cadenza!"
 }
 ```
 
 ## 📊 Types
 
 ### Basic Types
-```flowlang
+```cadenza
 // Primitive types
 let number: int = 42
 let text: string = "hello"
@@ -44,7 +44,7 @@ let names: string[] = ["Alice", "Bob"]
 ```
 
 ### Result Types (Error Handling)
-```flowlang
+```cadenza
 // Function that can fail
 function divide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
@@ -74,7 +74,7 @@ function chainResults() -> Result<int, string> {
 ## 🔤 String Operations
 
 ### String Interpolation
-```flowlang
+```cadenza
 function greet(name: string, age: int) -> string {
     return $"Hello {name}! You are {age} years old."
 }
@@ -86,7 +86,7 @@ function calculate(a: int, b: int) -> string {
 ```
 
 ### String Concatenation
-```flowlang
+```cadenza
 function combine(first: string, second: string) -> string {
     return first + " " + second
 }
@@ -95,7 +95,7 @@ function combine(first: string, second: string) -> string {
 ## 🔀 Control Flow
 
 ### If/Else Statements
-```flowlang
+```cadenza
 function checkScore(score: int) -> string {
     if score >= 90 {
         return "Excellent"
@@ -108,7 +108,7 @@ function checkScore(score: int) -> string {
 ```
 
 ### Guard Clauses
-```flowlang
+```cadenza
 function validateInput(value: int) -> Result<string, string> {
     guard value >= 0 else {
         return Error("Value must be positive")
@@ -123,7 +123,7 @@ function validateInput(value: int) -> Result<string, string> {
 ```
 
 ### Boolean Logic
-```flowlang
+```cadenza
 function complexCheck(a: int, b: int, flag: bool) -> bool {
     return (a > 0 && b > 0) || (flag && a != b)
 }
@@ -136,7 +136,7 @@ function negate(value: bool) -> bool {
 ## ⚡ Effect System
 
 ### Pure Functions
-```flowlang
+```cadenza
 // No side effects allowed
 pure function multiply(x: int, y: int) -> int {
     return x * y
@@ -144,7 +144,7 @@ pure function multiply(x: int, y: int) -> int {
 ```
 
 ### Functions with Effects
-```flowlang
+```cadenza
 // Common effects: Database, Network, Logging, FileSystem, Memory, IO
 function fetchUserData(id: string) uses [Database, Network] -> Result<string, string> {
     // Implementation would use database and network
@@ -158,7 +158,7 @@ function processWithLogging(data: string) uses [Logging] -> Result<string, strin
 ```
 
 ### Effect Propagation
-```flowlang
+```cadenza
 // Callers must declare effects of functions they call
 function orchestrate(id: string) uses [Database, Network, Logging] -> Result<string, string> {
     let data = fetchUserData(id)?        // Uses Database, Network
@@ -174,7 +174,7 @@ Specification blocks link business intent directly to the code, ensuring context
 ### Structure and Fields
 A `spec` block is a structured comment placed directly above a function or module.
 
-```flowlang
+```cadenza
 /*spec
 intent: "Required: What this function/module does and why it exists."
 rules:
@@ -192,7 +192,7 @@ spec*/
 ### Function-Level Example
 This example shows how a `spec` block documents a critical business function.
 
-```flowlang
+```cadenza
 /*spec
 intent: "Process a product return request, validating eligibility and calculating the refund."
 rules:
@@ -235,7 +235,7 @@ function processReturnRequest(orderId: OrderId, productId: ProductId, reason: st
 ### Module-Level Example
 Specs can also define the high-level purpose of an entire module.
 
-```flowlang
+```cadenza
 /*spec
 intent: "A comprehensive user management system for the e-commerce platform."
 rules:
@@ -256,7 +256,7 @@ module UserManagement {
 ## 📦 Module System
 
 ### Defining Modules
-```flowlang
+```cadenza
 module MathUtils {
     pure function square(x: int) -> int {
         return x * x
@@ -280,7 +280,7 @@ module StringUtils {
 ```
 
 ### Using Modules
-```flowlang
+```cadenza
 // Selective imports
 import MathUtils.{square}
 import StringUtils.{upper}
@@ -303,7 +303,7 @@ function main() -> string {
 ## 🎯 Common Patterns
 
 ### Validation Pattern
-```flowlang
+```cadenza
 function validateUser(name: string, age: int) -> Result<string, string> {
     guard name != "" else {
         return Error("Name cannot be empty")
@@ -318,7 +318,7 @@ function validateUser(name: string, age: int) -> Result<string, string> {
 ```
 
 ### Processing Pattern
-```flowlang
+```cadenza
 function processData(input: string) uses [Database] -> Result<string, string> {
     // Validate input
     guard input != "" else {
@@ -335,7 +335,7 @@ function processData(input: string) uses [Database] -> Result<string, string> {
 ```
 
 ### Chaining Pattern
-```flowlang
+```cadenza
 function complexOperation(input: int) -> Result<int, string> {
     let step1 = validateInput(input)?
     let step2 = processStep(step1)?
@@ -349,38 +349,38 @@ function complexOperation(input: int) -> Result<int, string> {
 ### File Operations
 ```bash
 # Run single file
-flowc run myfile.flow
+cadenzac run myfile.cdz
 
 # Create new project
-flowc new my-project
+cadenzac new my-project
 
 # Build project
-flowc build
+cadenzac build
 
 # Run tests
-flowc test
+cadenzac test
 ```
 
 ### Analysis and Quality
 ```bash
 # Static analysis
-flowc lint
+cadenzac lint
 
 # Security audit
-flowc audit
+cadenzac audit
 
 # Start Language Server (IDE integration)
-flowc lsp
+cadenzac lsp
 ```
 
 ### Help
 ```bash
 # General help
-flowc --help
+cadenzac --help
 
 # Command-specific help
-flowc help run
-flowc help new
+cadenzac help run
+cadenzac help new
 ```
 
 ## 💡 Best Practices
@@ -396,14 +396,14 @@ flowc help new
 ## 🚀 Quick Examples
 
 **Hello World:**
-```flowlang
+```cadenza
 function main() -> string {
-    return "Hello, FlowLang!"
+    return "Hello, Cadenza!"
 }
 ```
 
 **Safe Division:**
-```flowlang
+```cadenza
 function safeDivide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")
@@ -413,14 +413,14 @@ function safeDivide(a: int, b: int) -> Result<int, string> {
 ```
 
 **String Interpolation:**
-```flowlang
+```cadenza
 function greet(name: string) -> string {
     return $"Hello, {name}!"
 }
 ```
 
 **Guard Clauses:**
-```flowlang
+```cadenza
 function validate(age: int) -> Result<string, string> {
     guard age >= 0 else {
         return Error("Age must be positive")
@@ -431,6 +431,6 @@ function validate(age: int) -> Result<string, string> {
 
 ---
 
-**That's it!** You now have everything you need to write FlowLang code. 🎉
+**That's it!** You now have everything you need to write Cadenza code. 🎉
 
 For more details, see the [full documentation](docs/) or try the [quick start examples](QUICKSTART.md).

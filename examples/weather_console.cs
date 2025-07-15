@@ -93,7 +93,7 @@ public static class WeatherApiProgram
 
     public static void Main(string[] args)
     {
-        Console.WriteLine("FlowLang Weather API Demo");
+        Console.WriteLine("Cadenza Weather API Demo");
         Console.WriteLine("========================");
 
         // Test various scenarios

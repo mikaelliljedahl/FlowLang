@@ -1,7 +1,7 @@
 # Documentation Implementation
 
 ## Overview
-Create comprehensive documentation for FlowLang including getting started guides, language reference, and examples.
+Create comprehensive documentation for Cadenza including getting started guides, language reference, and examples.
 
 ## Goals
 - Write getting started guide for new users
@@ -31,7 +31,7 @@ docs/
 ### 2. Content Requirements
 - Clear, beginner-friendly explanations
 - Comprehensive code examples
-- Side-by-side FlowLang vs C# comparisons
+- Side-by-side Cadenza vs C# comparisons
 - Practical use cases and patterns
 - Troubleshooting and FAQ sections
 
@@ -39,16 +39,16 @@ docs/
 
 ### Getting Started Guide
 ```markdown
-# FlowLang Getting Started
+# Cadenza Getting Started
 
 ## Installation
 1. Download .NET 10 Preview
-2. Clone FlowLang repository
+2. Clone Cadenza repository
 3. Build transpiler: `dotnet build`
 
 ## Your First Program
-Create `hello.flow`:
-```flowlang
+Create `hello.cdz`:
+```cadenza
 function greet(name: string) -> string {
     return "Hello, " + name + "!"
 }
@@ -56,7 +56,7 @@ function greet(name: string) -> string {
 
 Transpile to C#:
 ```bash
-flowc run hello.flow
+cadenzac run hello.cdz
 ```
 
 ## Next Steps
@@ -67,21 +67,21 @@ flowc run hello.flow
 
 ### Language Reference
 ```markdown
-# FlowLang Language Reference
+# Cadenza Language Reference
 
 ## Functions
-Functions are the primary building blocks in FlowLang:
+Functions are the primary building blocks in Cadenza:
 
-```flowlang
+```cadenza
 function add(a: int, b: int) -> int {
     return a + b
 }
 ```
 
 ## Result Types
-FlowLang uses Result types for error handling:
+Cadenza uses Result types for error handling:
 
-```flowlang
+```cadenza
 function divide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")
@@ -93,7 +93,7 @@ function divide(a: int, b: int) -> Result<int, string> {
 ## Effect System
 Functions can declare their side effects:
 
-```flowlang
+```cadenza
 function save_user(user: User) uses [Database] -> Result<UserId, Error> {
     return database.save(user)
 }
@@ -102,36 +102,36 @@ function save_user(user: User) uses [Database] -> Result<UserId, Error> {
 
 ### CLI Reference
 ```markdown
-# FlowLang CLI Reference
+# Cadenza CLI Reference
 
 ## Commands
 
-### flowc new <name>
-Create a new FlowLang project:
+### cadenzac new <name>
+Create a new Cadenza project:
 ```bash
-flowc new my-project
+cadenzac new my-project
 ```
 
-### flowc build
+### cadenzac build
 Build the current project:
 ```bash
-flowc build
+cadenzac build
 ```
 
-### flowc run <file>
+### cadenzac run <file>
 Transpile and run a single file:
 ```bash
-flowc run examples/hello.flow
+cadenzac run examples/hello.cdz
 ```
 
-### flowc test
+### cadenzac test
 Run tests in the current project:
 ```bash
-flowc test
+cadenzac test
 ```
 
 ## Configuration
-Project settings are stored in `flowc.json`:
+Project settings are stored in `cadenzac.json`:
 ```json
 {
   "name": "my-project",
@@ -148,13 +148,13 @@ Project settings are stored in `flowc.json`:
 
 ### Result Types Example
 ```markdown
-# Result Types in FlowLang
+# Result Types in Cadenza
 
 Result types provide a safe way to handle errors without exceptions.
 
 ## Basic Usage
 
-```flowlang
+```cadenza
 function parse_number(input: string) -> Result<int, string> {
     if input == "" {
         return Error("Empty input")
@@ -169,7 +169,7 @@ function parse_number(input: string) -> Result<int, string> {
 
 Use the `?` operator to propagate errors:
 
-```flowlang
+```cadenza
 function calculate(a: string, b: string) -> Result<int, string> {
     let x = parse_number(a)?
     let y = parse_number(b)?
@@ -179,7 +179,7 @@ function calculate(a: string, b: string) -> Result<int, string> {
 
 ## Generated C# Code
 
-FlowLang generates clean C# code with proper error handling:
+Cadenza generates clean C# code with proper error handling:
 
 ```csharp
 public static Result<int, string> parse_number(string input)

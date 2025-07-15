@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# FlowLang Tools Wrapper
-# Uses working transpiler to compile and run FlowLang-based tools
+# Cadenza Tools Wrapper
+# Uses working transpiler to compile and run Cadenza-based tools
 
 CORE_DIR="core"
 TOOLS_DIR="tools"
-TEMP_DIR="/tmp/flowc-tools"
+TEMP_DIR="/tmp/cadenzac-tools"
 
 # Ensure core compiler is built
 build_core_if_needed() {
-    if [ ! -f "$CORE_DIR/bin/Debug/net8.0/flowc-core.dll" ]; then
-        echo "Building FlowLang core compiler..."
-        cd $CORE_DIR && dotnet build flowc-core.csproj >/dev/null
+    if [ ! -f "$CORE_DIR/bin/Debug/net8.0/cadenzac-core.dll" ]; then
+        echo "Building Cadenza core compiler..."
+        cd $CORE_DIR && dotnet build cadenzac-core.csproj >/dev/null
         if [ $? -ne 0 ]; then
             echo "Error: Failed to build core compiler"
             exit 1
@@ -20,13 +20,13 @@ build_core_if_needed() {
     fi
 }
 
-# Compile and run a FlowLang tool
-run_flowlang_tool() {
+# Compile and run a Cadenza tool
+run_cadenza_tool() {
     local tool_name=$1
     shift
     local tool_args="$@"
     
-    local tool_file="$TOOLS_DIR/$tool_name.flow"
+    local tool_file="$TOOLS_DIR/$tool_name.cdz"
     local compiled_tool="$TEMP_DIR/$tool_name.cs"
     local compiled_exe="$TEMP_DIR/$tool_name.dll"
     
@@ -38,9 +38,9 @@ run_flowlang_tool() {
     # Create temp directory
     mkdir -p $TEMP_DIR
     
-    echo "Compiling FlowLang tool: $tool_name..."
+    echo "Compiling Cadenza tool: $tool_name..."
     
-    # Compile FlowLang tool to C#
+    # Compile Cadenza tool to C#
     cd $CORE_DIR
     dotnet run -- "../$tool_file" "../$compiled_tool" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -51,11 +51,11 @@ run_flowlang_tool() {
     
     # TODO: Compile C# to executable and run
     # For now, just show that the tool was compiled
-    echo "✅ FlowLang tool '$tool_name' compiled successfully"
+    echo "✅ Cadenza tool '$tool_name' compiled successfully"
     echo "📝 Generated C# code at: $compiled_tool"
     echo ""
     echo "🚧 Note: C# execution not implemented yet"
-    echo "    The FlowLang tool has been transpiled to C#"
+    echo "    The Cadenza tool has been transpiled to C#"
     echo "    Next step: compile C# and execute with args: $tool_args"
     
     return 0
@@ -63,7 +63,7 @@ run_flowlang_tool() {
 
 # Show usage
 show_usage() {
-    echo "FlowLang Tools - Self-Hosted Development Tools"
+    echo "Cadenza Tools - Self-Hosted Development Tools"
     echo ""
     echo "Usage:"
     echo "  $0 dev [--port 8080] [--verbose]     # Development server"
@@ -81,7 +81,7 @@ show_usage() {
     echo "  $0 dev --port 3000 --verbose"
     echo "  $0 lint src/ --auto-fix"
     echo ""
-    echo "Note: These tools are implemented in FlowLang itself!"
+    echo "Note: These tools are implemented in Cadenza itself!"
 }
 
 # Main script
@@ -90,19 +90,19 @@ build_core_if_needed
 case "$1" in
     "dev")
         shift
-        run_flowlang_tool "dev-server" "$@"
+        run_cadenza_tool "dev-server" "$@"
         ;;
     "lint")
         shift
-        run_flowlang_tool "linter" "$@"
+        run_cadenza_tool "linter" "$@"
         ;;
     "lsp")
         shift
-        run_flowlang_tool "lsp-server" "$@"
+        run_cadenza_tool "lsp-server" "$@"
         ;;
     "pkg")
         shift
-        run_flowlang_tool "package-mgr" "$@"
+        run_cadenza_tool "package-mgr" "$@"
         ;;
     "--help" | "-h" | "")
         show_usage

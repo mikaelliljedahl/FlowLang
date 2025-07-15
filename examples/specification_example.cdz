@@ -1,0 +1,175 @@
+// Cadenza Specification Blocks Example
+// This example demonstrates how to use specification blocks to preserve intent and business logic with code
+
+/*spec
+intent: "Calculate user discount based on loyalty tier and purchase history"
+rules:
+  - "Platinum members get 15% discount"
+  - "Gold members get 10% discount"
+  - "Silver members get 5% discount"  
+  - "New members get no discount"
+  - "Discount cannot exceed 20% even with promotions"
+  - "Purchase history must be considered for tier qualification"
+postconditions:
+  - "Discount percentage is returned as decimal (0.0 to 0.20)"
+  - "Discount calculation is logged for audit purposes"
+  - "Customer tier is validated before applying discount"
+source_doc: "business/loyalty-program-rules-v3.1.md"
+spec*/
+function calculateLoyaltyDiscount(customerId: string, purchaseAmount: int, loyaltyTier: string) 
+    uses [Database, Logging] -> Result<float, string> {
+    
+    guard purchaseAmount > 0 else {
+        return Error("Purchase amount must be positive")
+    }
+    
+    guard customerId != "" else {
+        return Error("Customer ID cannot be empty")
+    }
+    
+    // Determine base discount based on loyalty tier
+    let baseDiscount = if loyaltyTier == "Platinum" {
+        0.15
+    } else if loyaltyTier == "Gold" {
+        0.10
+    } else if loyaltyTier == "Silver" {
+        0.05
+    } else {
+        0.0  // New members or unrecognized tier
+    }
+    
+    // Ensure we never exceed maximum discount (business rule)
+    let finalDiscount = if baseDiscount > 0.20 {
+        0.20
+    } else {
+        baseDiscount
+    }
+    
+    // Log the discount calculation for audit trail
+    // logDiscountCalculation(customerId, loyaltyTier, finalDiscount)
+    
+    return Ok(finalDiscount)
+}
+
+/*spec
+intent: "Process payment with comprehensive fraud detection and security validation"
+rules:
+  - "Payment amount must be positive and within daily limits"
+  - "Credit card number must pass Luhn algorithm validation"
+  - "Transaction must be screened for fraud patterns"
+  - "Payment must be processed through secure, PCI-compliant gateway"
+  - "Failed payments must not be retried more than 3 times"
+postconditions:
+  - "Payment is authorized and funds are held"
+  - "Transaction record is created with unique reference number"
+  - "Customer receives payment confirmation"
+  - "Merchant account is credited within 2 business days"
+  - "All payment data is encrypted and securely stored"
+source_doc: "security/payment-processing-requirements.md"
+spec*/
+function processSecurePayment(amount: float, cardNumber: string, customerId: string) 
+    uses [Network, Database, Logging] -> Result<string, string> {
+    
+    guard amount > 0.0 && amount <= 10000.0 else {
+        return Error("Payment amount must be between $0.01 and $10,000")
+    }
+    
+    guard cardNumber != "" else {
+        return Error("Credit card number is required")
+    }
+    
+    guard customerId != "" else {
+        return Error("Customer ID is required")
+    }
+    
+    // In a real implementation, this would:
+    // 1. Validate credit card using Luhn algorithm
+    // 2. Check fraud detection systems
+    // 3. Process through payment gateway
+    // 4. Create transaction record
+    // 5. Send confirmation
+    
+    let transactionId = "TXN" + customerId + "001"
+    return Ok(transactionId)
+}
+
+/*spec
+intent: "Validate and sanitize user input data for secure database storage"
+rules:
+  - "All input strings must be trimmed of whitespace"
+  - "Email addresses must conform to RFC 5322 standard"
+  - "Names cannot contain special characters or numbers"
+  - "Input length must not exceed database field limits"
+  - "SQL injection patterns must be detected and rejected"
+postconditions:
+  - "Clean, validated data ready for database insertion"
+  - "Invalid input is rejected with descriptive error messages"
+  - "Validation results are logged for security monitoring"
+spec*/
+pure function validateUserInput(name: string, email: string) -> Result<string, string> {
+    
+    let trimmedName = name // In real implementation: name.trim()
+    let trimmedEmail = email // In real implementation: email.trim()
+    
+    guard trimmedName != "" else {
+        return Error("Name cannot be empty")
+    }
+    
+    guard trimmedEmail != "" else {
+        return Error("Email cannot be empty")
+    }
+    
+    // Basic email validation (simplified)
+    guard trimmedEmail != "" else { // In real implementation: contains("@") && contains(".")
+        return Error("Email must be valid format")
+    }
+    
+    // Name validation - no numbers or special characters
+    // In real implementation: check for alphanumeric and spaces only
+    
+    return Ok("Validation passed")
+}
+
+/*spec
+intent: "Generate comprehensive user activity report with privacy protection"
+rules:
+  - "Only authorized administrators can generate reports"
+  - "Personal data must be anonymized unless specifically authorized"
+  - "Report must include activity from specified date range only"
+  - "System performance data should be included for optimization"
+  - "Report generation must not impact system performance"
+postconditions:
+  - "Comprehensive activity report is generated in PDF format"
+  - "Report includes user statistics, system metrics, and trends"
+  - "All sensitive data is properly anonymized or redacted"
+  - "Report generation is logged for compliance audit"
+  - "Report is automatically archived after 90 days"
+source_doc: "compliance/data-privacy-reporting.md"
+spec*/
+function generateActivityReport(startDate: string, endDate: string, adminId: string) 
+    uses [Database, FileSystem, Logging] -> Result<string, string> {
+    
+    guard adminId != "" else {
+        return Error("Administrator ID is required")
+    }
+    
+    guard startDate != "" && endDate != "" else {
+        return Error("Start and end dates are required")
+    }
+    
+    // In a real implementation, this would:
+    // 1. Verify admin authorization
+    // 2. Query database for activity in date range
+    // 3. Anonymize sensitive data
+    // 4. Generate PDF report
+    // 5. Archive report with expiration
+    // 6. Log report generation
+    
+    let reportId = "RPT" + adminId + startDate
+    return Ok(reportId)
+}
+
+// Example of a function without specification (for comparison)
+pure function simpleCalculation(a: int, b: int) -> int {
+    return a + b
+}

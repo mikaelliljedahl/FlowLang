@@ -1,7 +1,7 @@
 # Module System Implementation
 
 ## Overview
-Add basic module system to FlowLang with imports, exports, and namespace generation.
+Add basic module system to Cadenza with imports, exports, and namespace generation.
 
 ## Goals
 - Add module declarations and imports
@@ -35,9 +35,9 @@ Add basic module system to FlowLang with imports, exports, and namespace generat
 - Handle module-qualified function calls
 - Generate proper C# class structure
 
-## Example FlowLang Code
-```flowlang
-// math.flow
+## Example Cadenza Code
+```cadenza
+// math.cdz
 module Math {
     export function add(a: int, b: int) -> int {
         return a + b
@@ -52,7 +52,7 @@ module Math {
     }
 }
 
-// main.flow
+// main.cdz
 import Math.{add, multiply}
 import Utils.*
 

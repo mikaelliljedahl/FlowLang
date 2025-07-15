@@ -1,6 +1,6 @@
 # Result Types Examples
 
-This document provides comprehensive examples of FlowLang's Result type system, demonstrating safe error handling without exceptions.
+This document provides comprehensive examples of Cadenza's Result type system, demonstrating safe error handling without exceptions.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ This document provides comprehensive examples of FlowLang's Result type system, 
 
 Result types encapsulate either a success value or an error value:
 
-```flowlang
+```cadenza
 // Result with int success type and string error type
 function divide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
@@ -53,7 +53,7 @@ function isEligible(age: int) -> Result<bool, string> {
 
 ### Success Results (Ok)
 
-```flowlang
+```cadenza
 pure function createSuccessExamples() -> string {
     // You can't actually call these functions that return Results from pure functions
     // This is just to show the syntax
@@ -76,7 +76,7 @@ function successfulBooleanOperation(flag: bool) -> Result<bool, string> {
 
 ### Error Results
 
-```flowlang
+```cadenza
 // Returning error values
 function failedOperation(reason: string) -> Result<int, string> {
     return Error("Operation failed: " + reason)
@@ -97,7 +97,7 @@ function businessLogicError(code: int) -> Result<bool, string> {
 
 The `?` operator automatically propagates errors up the call stack:
 
-```flowlang
+```cadenza
 function safeDivide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")
@@ -123,7 +123,7 @@ function complexCalculation(x: int, y: int, z: int) -> Result<int, string> {
 
 ### Chained Error Propagation
 
-```flowlang
+```cadenza
 function parseNumber(input: string) -> Result<int, string> {
     if input == "" {
         return Error("Empty input")
@@ -152,7 +152,7 @@ function processUserInput(input: string) -> Result<int, string> {
 
 ### Multiple Error Propagation Points
 
-```flowlang
+```cadenza
 function step1(x: int) -> Result<int, string> {
     if x < 0 {
         return Error("Step 1: Input must be positive")
@@ -186,7 +186,7 @@ function pipeline(input: int) -> Result<int, string> {
 
 ### Working with Multiple Results
 
-```flowlang
+```cadenza
 function getUserAge(userId: int) -> Result<int, string> {
     if userId <= 0 {
         return Error("Invalid user ID")
@@ -211,7 +211,7 @@ function getUserProfile(userId: int) -> Result<string, string> {
 
 ### Conditional Result Processing
 
-```flowlang
+```cadenza
 function processOptionalData(data: string, useAdvanced: bool) -> Result<string, string> {
     if data == "" {
         return Error("Data cannot be empty")
@@ -239,7 +239,7 @@ function advancedProcessing(input: string) -> Result<string, string> {
 
 ### Validation Patterns
 
-```flowlang
+```cadenza
 function validateUser(name: string, email: string, age: int) -> Result<string, string> {
     // Validate name
     let validatedName = validateUserName(name)?
@@ -288,7 +288,7 @@ function validateUserAge(age: int) -> Result<int, string> {
 
 ### Resource Management Patterns
 
-```flowlang
+```cadenza
 function openFile(filename: string) -> Result<string, string> {
     if filename == "" {
         return Error("Filename cannot be empty")
@@ -316,7 +316,7 @@ function processFile(filename: string) -> Result<string, string> {
 
 ### Error Recovery Patterns
 
-```flowlang
+```cadenza
 function primaryOperation(input: string) -> Result<string, string> {
     if input == "fail" {
         return Error("Primary operation failed")
@@ -348,7 +348,7 @@ function operationWithFallback(input: string) -> Result<string, string> {
 
 ### User Registration System
 
-```flowlang
+```cadenza
 function registerUser(username: string, email: string, password: string) -> Result<int, string> {
     // Validate all inputs
     let validUsername = validateUsername(username)?
@@ -417,7 +417,7 @@ function createUserAccount(username: string, email: string, password: string) ->
 
 ### Financial Calculation System
 
-```flowlang
+```cadenza
 function calculateLoan(principal: int, rate: int, term: int) -> Result<int, string> {
     let validPrincipal = validatePrincipal(principal)?
     let validRate = validateRate(rate)?
@@ -478,7 +478,7 @@ function computeMonthlyPayment(principal: int, rate: int, term: int) -> Result<i
 
 ### Data Processing Pipeline
 
-```flowlang
+```cadenza
 function processDataFile(filename: string) -> Result<string, string> {
     let rawData = loadDataFile(filename)?
     let cleanedData = cleanData(rawData)?
@@ -530,7 +530,7 @@ function saveProcessedData(data: string) -> Result<string, string> {
 
 ### Configuration Management
 
-```flowlang
+```cadenza
 function loadConfiguration(configPath: string) -> Result<string, string> {
     let configData = readConfigFile(configPath)?
     let parsedConfig = parseConfiguration(configData)?

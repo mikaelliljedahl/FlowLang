@@ -1,6 +1,6 @@
 # Module System Examples
 
-This document provides comprehensive examples of FlowLang's module system, demonstrating how to organize code into reusable modules with explicit imports and exports.
+This document provides comprehensive examples of Cadenza's module system, demonstrating how to organize code into reusable modules with explicit imports and exports.
 
 ## Table of Contents
 
@@ -15,8 +15,8 @@ This document provides comprehensive examples of FlowLang's module system, demon
 
 ### Simple Module Declaration
 
-```flowlang
-// File: math_utils.flow
+```cadenza
+// File: math_utils.cdz
 module MathUtils {
     pure function add(a: int, b: int) -> int {
         return a + b
@@ -42,8 +42,8 @@ module MathUtils {
 
 ### Using Modules
 
-```flowlang
-// File: calculator.flow
+```cadenza
+// File: calculator.cdz
 import MathUtils.{add, multiply}
 
 function calculate(x: int, y: int, z: int) -> int {
@@ -59,7 +59,7 @@ function calculate(x: int, y: int, z: int) -> int {
 
 Import specific functions from a module:
 
-```flowlang
+```cadenza
 // Import only needed functions
 import MathUtils.{add, multiply}
 import StringUtils.{reverse, uppercase}
@@ -77,7 +77,7 @@ function processData(a: int, b: int, text: string) -> string {
 
 Import all exported functions from a module:
 
-```flowlang
+```cadenza
 // Import all functions from modules
 import MathUtils.*
 import StringUtils.*
@@ -98,7 +98,7 @@ function demonstrateWildcard(x: int, y: int, text: string) -> string {
 
 Import the entire module namespace:
 
-```flowlang
+```cadenza
 // Import module for qualified access
 import MathUtils
 import StringUtils
@@ -117,7 +117,7 @@ function demonstrateQualified(x: int, y: int, text: string) -> string {
 
 Combine different import styles in the same file:
 
-```flowlang
+```cadenza
 // Mixed import patterns
 import MathUtils.{add}              // Selective import
 import StringUtils.*                // Wildcard import  
@@ -138,7 +138,7 @@ function mixedImportExample(a: int, b: string, email: string) -> string {
 
 Export only specific functions:
 
-```flowlang
+```cadenza
 module UserService {
     // Public functions
     function createUser(name: string) uses [Database] -> Result<int, string> {
@@ -175,7 +175,7 @@ module UserService {
 
 Export all functions (omit export statement):
 
-```flowlang
+```cadenza
 module Utilities {
     pure function isEven(n: int) -> bool {
         return n % 2 == 0
@@ -203,7 +203,7 @@ module Utilities {
 
 Export different sets of functions based on module configuration:
 
-```flowlang
+```cadenza
 module DatabaseUtils {
     // Core functions always available
     function connect(connectionString: string) uses [Database] -> Result<bool, string> {
@@ -251,8 +251,8 @@ module DatabaseUtils {
 
 Build higher-level modules from lower-level ones:
 
-```flowlang
-// File: string_utils.flow
+```cadenza
+// File: string_utils.cdz
 module StringUtils {
     pure function reverse(s: string) -> string {
         // Implementation would reverse the string
@@ -272,7 +272,7 @@ module StringUtils {
     export {reverse, uppercase, lowercase}
 }
 
-// File: validation_utils.flow
+// File: validation_utils.cdz
 module ValidationUtils {
     import StringUtils.{uppercase, lowercase}
     
@@ -296,7 +296,7 @@ module ValidationUtils {
     export {validateEmail, validatePhoneNumber}
 }
 
-// File: user_service.flow
+// File: user_service.cdz
 module UserService {
     import StringUtils.{uppercase}
     import ValidationUtils.{validateEmail}
@@ -321,8 +321,8 @@ module UserService {
 
 Modules can depend on each other with proper import statements:
 
-```flowlang
-// File: config.flow
+```cadenza
+// File: config.cdz
 module Config {
     pure function getDatabaseUrl() -> string {
         return "localhost:5432/mydb"
@@ -335,7 +335,7 @@ module Config {
     export {getDatabaseUrl, getApiKey}
 }
 
-// File: database.flow
+// File: database.cdz
 module Database {
     import Config.{getDatabaseUrl}
     
@@ -353,7 +353,7 @@ module Database {
     export {connect, query}
 }
 
-// File: api_client.flow
+// File: api_client.cdz
 module ApiClient {
     import Config.{getApiKey}
     
@@ -366,7 +366,7 @@ module ApiClient {
     export {makeRequest}
 }
 
-// File: application.flow
+// File: application.cdz
 module Application {
     import Database.{connect, query}
     import ApiClient.{makeRequest}
@@ -385,8 +385,8 @@ module Application {
 
 ### E-commerce System
 
-```flowlang
-// File: models.flow
+```cadenza
+// File: models.cdz
 module Models {
     // Pure functions for data modeling
     pure function createProduct(id: int, name: string, price: int) -> string {
@@ -404,7 +404,7 @@ module Models {
     export {createProduct, createOrder, createCustomer}
 }
 
-// File: validation.flow
+// File: validation.cdz
 module Validation {
     function validateProductName(name: string) -> Result<string, string> {
         if name == "" {
@@ -439,7 +439,7 @@ module Validation {
     export {validateProductName, validatePrice, validateEmail}
 }
 
-// File: product_service.flow
+// File: product_service.cdz
 module ProductService {
     import Models.{createProduct}
     import Validation.{validateProductName, validatePrice}
@@ -475,7 +475,7 @@ module ProductService {
     export {addProduct, getProduct}
 }
 
-// File: order_service.flow
+// File: order_service.cdz
 module OrderService {
     import Models.{createOrder}
     import ProductService.{getProduct}
@@ -506,7 +506,7 @@ module OrderService {
     export {createOrderWithItems}
 }
 
-// File: main.flow
+// File: main.cdz
 import ProductService.{addProduct}
 import OrderService.{createOrderWithItems}
 
@@ -526,8 +526,8 @@ function processEcommerceOrder(productName: string, price: int, customerId: int)
 
 ### Web API Framework
 
-```flowlang
-// File: http_utils.flow
+```cadenza
+// File: http_utils.cdz
 module HttpUtils {
     pure function createResponse(statusCode: int, body: string) -> string {
         return $"HTTP/{statusCode}: {body}"
@@ -541,7 +541,7 @@ module HttpUtils {
     export {createResponse, parseQueryParam}
 }
 
-// File: middleware.flow
+// File: middleware.cdz
 module Middleware {
     import HttpUtils.{createResponse}
     
@@ -571,7 +571,7 @@ module Middleware {
     export {authenticateRequest, logRequest, validateRateLimit}
 }
 
-// File: user_controller.flow
+// File: user_controller.cdz
 module UserController {
     import HttpUtils.{createResponse, parseQueryParam}
     import Middleware.{authenticateRequest, logRequest, validateRateLimit}
@@ -618,7 +618,7 @@ module UserController {
     export {getUser, createUser}
 }
 
-// File: api_server.flow
+// File: api_server.cdz
 module ApiServer {
     import UserController.{getUser, createUser}
     
@@ -643,8 +643,8 @@ module ApiServer {
 
 ### Data Processing Pipeline
 
-```flowlang
-// File: data_sources.flow
+```cadenza
+// File: data_sources.cdz
 module DataSources {
     function readCsvFile(filename: string) uses [FileSystem] -> Result<string, string> {
         if filename == "" {
@@ -670,7 +670,7 @@ module DataSources {
     export {readCsvFile, readJsonFile, fetchApiData}
 }
 
-// File: data_transformers.flow
+// File: data_transformers.cdz
 module DataTransformers {
     pure function normalizeData(data: string) -> string {
         return "normalized_" + data
@@ -694,7 +694,7 @@ module DataTransformers {
     export {normalizeData, filterData, aggregateData, validateData}
 }
 
-// File: data_sinks.flow
+// File: data_sinks.cdz
 module DataSinks {
     function writeToDatabase(data: string, table: string) 
         uses [Database] 
@@ -729,7 +729,7 @@ module DataSinks {
     export {writeToDatabase, writeToFile, sendToApi}
 }
 
-// File: pipeline.flow
+// File: pipeline.cdz
 module Pipeline {
     import DataSources.{readCsvFile, fetchApiData}
     import DataTransformers.{normalizeData, filterData, validateData}
@@ -768,7 +768,7 @@ module Pipeline {
 
 Group related functionality into domain-specific modules:
 
-```flowlang
+```cadenza
 // Good: Domain-specific organization
 module UserManagement { ... }
 module OrderProcessing { ... }
@@ -784,7 +784,7 @@ module UtilityFunctions { ... }
 
 Choose the right import style for your use case:
 
-```flowlang
+```cadenza
 // Use selective imports for a few specific functions
 import MathUtils.{add, multiply}
 
@@ -804,7 +804,7 @@ function example() -> string {
 
 Export only what consumers need:
 
-```flowlang
+```cadenza
 module UserService {
     // Public API - exported
     function createUser(name: string) -> Result<int, string> { ... }
@@ -822,7 +822,7 @@ module UserService {
 
 Avoid circular dependencies and deep dependency chains:
 
-```flowlang
+```cadenza
 // Good: Clear dependency hierarchy
 // Models <- Validation <- Services <- Controllers
 
@@ -834,7 +834,7 @@ Avoid circular dependencies and deep dependency chains:
 
 Follow consistent naming conventions across modules:
 
-```flowlang
+```cadenza
 // Module names: PascalCase
 module UserService { ... }
 module OrderManagement { ... }
@@ -848,7 +848,7 @@ function processOrder(...) { ... }
 
 Each module should have a clear, single responsibility:
 
-```flowlang
+```cadenza
 // Good: Single responsibility
 module EmailService {
     // Handles all email-related operations
@@ -862,4 +862,4 @@ module UserEmailDatabaseService {
 }
 ```
 
-The module system in FlowLang provides powerful tools for organizing code into maintainable, reusable units. By following these patterns and best practices, you can build well-structured applications with clear separation of concerns and minimal coupling between components.
+The module system in Cadenza provides powerful tools for organizing code into maintainable, reusable units. By following these patterns and best practices, you can build well-structured applications with clear separation of concerns and minimal coupling between components.

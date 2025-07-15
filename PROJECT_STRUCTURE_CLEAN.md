@@ -1,22 +1,22 @@
-# FlowLang Project Structure - Clean Organization
+# Cadenza Project Structure - Clean Organization
 
 ## ✅ **CLEANUP COMPLETE**: Project properly organized!
 
 ### **Final Clean Structure:**
 
 ```
-FlowLang/
+Cadenza/
 ├── src/                               # ALL SOURCE CODE
-│   ├── FlowLang.Core/                # Core transpiler (WORKING VERSION)
-│   │   ├── flowc-core.cs             # Enhanced transpiler with all features
-│   │   ├── FlowLangRuntime.cs        # Enhanced runtime bridge (18KB)
-│   │   ├── flowc-core.csproj         # Project file
+│   ├── Cadenza.Core/                # Core transpiler (WORKING VERSION)
+│   │   ├── cadenzac-core.cs             # Enhanced transpiler with all features
+│   │   ├── CadenzaRuntime.cs        # Enhanced runtime bridge (18KB)
+│   │   ├── cadenzac-core.csproj         # Project file
 │   │   └── TODO.md                   # Development notes
-│   ├── FlowLang.Tools/               # FlowLang tools (self-hosting)
-│   │   ├── dev-server.flow           # Development server in FlowLang
-│   │   ├── linter.flow               # Static analysis tool
-│   │   └── simple-dev-server.flow    # Simple HTTP server
-│   ├── FlowLang.Analysis/            # Static analysis (C#)
+│   ├── Cadenza.Tools/               # Cadenza tools (self-hosting)
+│   │   ├── dev-server.cdz           # Development server in Cadenza
+│   │   ├── linter.cdz               # Static analysis tool
+│   │   └── simple-dev-server.cdz    # Simple HTTP server
+│   ├── Cadenza.Analysis/            # Static analysis (C#)
 │   │   ├── StaticAnalyzer.cs         # Main analyzer
 │   │   ├── LintRuleEngine.cs         # Rule engine
 │   │   ├── EffectAnalyzer.cs         # Effect tracking
@@ -25,30 +25,30 @@ FlowLang/
 │   │   ├── PerformanceAnalyzer.cs    # Performance hints
 │   │   ├── CodeQualityAnalyzer.cs    # Quality metrics
 │   │   └── AnalysisReport.cs         # Reporting
-│   ├── FlowLang.LSP/                 # Language Server Protocol (C#)
-│   │   ├── FlowLangLanguageServer.cs # Main LSP server
+│   ├── Cadenza.LSP/                 # Language Server Protocol (C#)
+│   │   ├── CadenzaLanguageServer.cs # Main LSP server
 │   │   ├── CompletionProvider.cs     # Auto-completion
 │   │   ├── DiagnosticsProvider.cs    # Error detection
 │   │   ├── HoverProvider.cs          # Hover information
 │   │   ├── DefinitionProvider.cs     # Go-to-definition
 │   │   └── DocumentManager.cs        # Document lifecycle
-│   └── FlowLang.Package/             # Package management (C#)
+│   └── Cadenza.Package/             # Package management (C#)
 │       ├── PackageManager.cs         # Main package manager
 │       ├── DependencyResolver.cs     # Dependency resolution
 │       ├── SecurityScanner.cs        # Vulnerability scanning
 │       ├── NuGetIntegration.cs       # .NET ecosystem integration
 │       ├── ProjectConfig.cs          # Configuration handling
-│       └── FlowLangRegistry.cs       # Package registry
-├── examples/                         # FlowLang example programs
-│   ├── basic-test.flow              # Basic language features
-│   ├── test_app.flow                # Application examples
-│   ├── Gemini/hello.flow            # Sample programs
-│   └── ... (all .flow examples)
+│       └── CadenzaRegistry.cs       # Package registry
+├── examples/                         # Cadenza example programs
+│   ├── basic-test.cdz              # Basic language features
+│   ├── test_app.cdz                # Application examples
+│   ├── Gemini/hello.cdz            # Sample programs
+│   └── ... (all .cdz examples)
 ├── tests/                           # Test suite
 │   ├── test_*.cs                    # C# test files
-│   ├── test_*.flow                  # FlowLang test files
+│   ├── test_*.cdz                  # Cadenza test files
 │   ├── test_result/                 # Test results
-│   └── FlowLang.Tests.csproj        # Test project
+│   └── Cadenza.Tests.csproj        # Test project
 ├── docs/                            # Documentation
 └── *.md                            # Project documentation files
 ```
@@ -56,8 +56,8 @@ FlowLang/
 ## **What Was Cleaned Up:**
 
 ### **Removed Obsolete Files:**
-- ❌ `src/flowc.cs` (broken original compiler)
-- ❌ `src/flowc.csproj` (broken project file)
+- ❌ `src/cadenzac.cs` (broken original compiler)
+- ❌ `src/cadenzac.csproj` (broken project file)
 - ❌ `core/` directory (original basic version)
 - ❌ `tools/` directory (duplicate)
 - ❌ Duplicate directories in `src/` (analysis/, lsp/, package/, etc.)
@@ -65,11 +65,11 @@ FlowLang/
 - ❌ Generated `.cs` files from root directory
 
 ### **Kept Working Versions:**
-- ✅ `src/FlowLang.Core/` (enhanced transpiler with 18KB FlowLangRuntime.cs)
-- ✅ `src/FlowLang.Tools/` (FlowLang self-hosting tools)
-- ✅ `src/FlowLang.Analysis/` (working static analysis C# code)
-- ✅ `src/FlowLang.LSP/` (working language server C# code)
-- ✅ `src/FlowLang.Package/` (working package manager C# code)
+- ✅ `src/Cadenza.Core/` (enhanced transpiler with 18KB CadenzaRuntime.cs)
+- ✅ `src/Cadenza.Tools/` (Cadenza self-hosting tools)
+- ✅ `src/Cadenza.Analysis/` (working static analysis C# code)
+- ✅ `src/Cadenza.LSP/` (working language server C# code)
+- ✅ `src/Cadenza.Package/` (working package manager C# code)
 
 ### **Organized Properly:**
 - ✅ All examples moved to `examples/`
@@ -81,11 +81,11 @@ FlowLang/
 
 ### **Core Transpiler Working:**
 ```bash
-$ dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --version
-FlowLang Core Compiler v1.0.0
+$ dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --version
+Cadenza Core Compiler v1.0.0
 
-$ dotnet run --project src/FlowLang.Core/flowc-core.csproj -- src/FlowLang.Tools/simple-dev-server.flow output.cs
-Successfully compiled src/FlowLang.Tools/simple-dev-server.flow -> output.cs
+$ dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- src/Cadenza.Tools/simple-dev-server.cdz output.cs
+Successfully compiled src/Cadenza.Tools/simple-dev-server.cdz -> output.cs
 ```
 
 ### **Enhanced Features Available:**
@@ -96,48 +96,48 @@ Successfully compiled src/FlowLang.Tools/simple-dev-server.flow -> output.cs
 - ✅ **Effect system**: Proper effect tracking and documentation
 - ✅ **Module system**: Export functions and namespace generation
 - ✅ **Specification blocks**: Intent preservation in generated docs
-- ✅ **Runtime bridge**: 18KB FlowLangRuntime.cs with comprehensive system integration
+- ✅ **Runtime bridge**: 18KB CadenzaRuntime.cs with comprehensive system integration
 
 ### **Self-Hosting Confirmed:**
-- ✅ **FlowLang tools written in FlowLang**: All `.flow` files in `src/FlowLang.Tools/`
-- ✅ **Successfully compiled**: FlowLang → C# transpilation working
+- ✅ **Cadenza tools written in Cadenza**: All `.cdz` files in `src/Cadenza.Tools/`
+- ✅ **Successfully compiled**: Cadenza → C# transpilation working
 - ✅ **Runtime bridge integration**: Tools can call .NET system functions
 - ✅ **Advanced language features**: Guards, match, effects all working
 
 ## **Development Workflow:**
 
-### **Compile FlowLang Tools:**
+### **Compile Cadenza Tools:**
 ```bash
 # Compile development server
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- \
-  src/FlowLang.Tools/dev-server.flow \
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- \
+  src/Cadenza.Tools/dev-server.cdz \
   dev-server.cs
 
 # Compile linter  
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- \
-  src/FlowLang.Tools/linter.flow \
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- \
+  src/Cadenza.Tools/linter.cdz \
   linter.cs
 ```
 
 ### **Use Advanced C# Tooling:**
 ```bash
 # Static analysis (when available)
-dotnet run --project src/FlowLang.Analysis/
+dotnet run --project src/Cadenza.Analysis/
 
 # Language server (when available)  
-dotnet run --project src/FlowLang.LSP/
+dotnet run --project src/Cadenza.LSP/
 
 # Package manager (when available)
-dotnet run --project src/FlowLang.Package/
+dotnet run --project src/Cadenza.Package/
 ```
 
 ## **Next Development Steps:**
 
-1. **Enhance FlowLang Tools**: Add actual HTTP/WebSocket functionality to dev-server.flow
-2. **Integrate C# Tooling**: Connect FlowLang.Analysis with FlowLang.Tools
+1. **Enhance Cadenza Tools**: Add actual HTTP/WebSocket functionality to dev-server.cdz
+2. **Integrate C# Tooling**: Connect Cadenza.Analysis with Cadenza.Tools
 3. **Complete Language Features**: Add missing string methods, iteration, etc.
 4. **Production Deployment**: Create proper build and distribution pipeline
 
 ---
 
-**FlowLang now has a clean, organized project structure with working self-hosting capabilities!** 🎉
+**Cadenza now has a clean, organized project structure with working self-hosting capabilities!** 🎉

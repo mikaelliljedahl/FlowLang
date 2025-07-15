@@ -3,16 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FlowLang.Tests.Unit
+namespace Cadenza.Tests.Unit
 {
     [TestFixture]
     public class ParserTests
     {
-        private FlowLangParser CreateParser(string source)
+        private CadenzaParser CreateParser(string source)
         {
-            var lexer = new FlowLangLexer(source);
+            var lexer = new CadenzaLexer(source);
             var tokens = lexer.Tokenize();
-            return new FlowLangParser(tokens);
+            return new CadenzaParser(tokens);
         }
 
         [Test]

@@ -57,7 +57,7 @@
   
   "exclude": [
     "generated/",
-    "*.test.flow",
+    "*.test.cdz",
     "temp_*",
     "build/",
     "node_modules/"

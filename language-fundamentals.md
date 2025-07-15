@@ -1,4 +1,4 @@
-# FlowLang Language Fundamentals
+# Cadenza Language Fundamentals
 
 ## Table of Contents
 1. [Primitive Types](#primitive-types)
@@ -15,7 +15,7 @@
 ## Primitive Types
 
 ### Basic Types
-```flowlang
+```cadenza
 // Numeric types
 Int8, Int16, Int32, Int64
 UInt8, UInt16, UInt32, UInt64
@@ -36,7 +36,7 @@ Never     // For functions that never return
 ```
 
 ### Container Types
-```flowlang
+```cadenza
 // Collections
 List<T>          // Immutable list
 Array<T>         // Mutable array  
@@ -51,7 +51,7 @@ Result<T, E>     // Ok(value) or Error(error)
 ```
 
 ### Domain-Specific Types
-```flowlang
+```cadenza
 // Built-in domain types
 Email            // Validated email address
 Url              // Validated URL
@@ -64,7 +64,7 @@ Xml              // XML document
 ```
 
 ### Custom Types
-```flowlang
+```cadenza
 // Type aliases
 type UserId = UUID
 type ProductPrice = Money
@@ -97,8 +97,8 @@ type StrongPassword = String
 ## Module System
 
 ### Module Declaration
-```flowlang
-// File: user_service.flow
+```cadenza
+// File: user_service.cdz
 module UserService {
     // Module-level configuration
     config {
@@ -129,7 +129,7 @@ module UserService {
 ```
 
 ### Import System
-```flowlang
+```cadenza
 // Explicit imports
 import UserService.{User, create_user}
 import OrderService.* // Import all public items
@@ -141,7 +141,7 @@ import MetricsService when production_mode
 ```
 
 ### Module Composition
-```flowlang
+```cadenza
 // Composite modules
 module ECommerceApi {
     compose {
@@ -162,7 +162,7 @@ module ECommerceApi {
 ## Functions
 
 ### Function Declaration
-```flowlang
+```cadenza
 // Pure function (no side effects)
 pure function calculate_tax(amount: Money, rate: Decimal) -> Money {
     return amount * rate
@@ -189,15 +189,15 @@ async function fetch_user_data(id: UserId)
 ```
 
 ### Function Overloading
-```flowlang
-// FlowLang uses explicit naming instead of overloading
+```cadenza
+// Cadenza uses explicit naming instead of overloading
 function create_user_with_email(email: Email) -> Result<User, UserError>
 function create_user_with_credentials(email: Email, password: String) -> Result<User, UserError>
 function create_user_from_oauth(oauth_token: OAuthToken) -> Result<User, UserError>
 ```
 
 ### Higher-Order Functions
-```flowlang
+```cadenza
 // Function types
 type UserValidator = (User) -> Result<Unit, ValidationError>
 type UserTransformer<T> = (User) -> T
@@ -218,7 +218,7 @@ let transform_users = users.map(user => user.name.to_uppercase())
 ## Effect System
 
 ### Effect Types
-```flowlang
+```cadenza
 // Built-in effects
 Database         // Database operations
 Network          // Network calls
@@ -231,7 +231,7 @@ Environment      // Environment variable access
 ```
 
 ### Effect Tracking
-```flowlang
+```cadenza
 // Function signature declares all effects
 function process_order(order: Order) 
     uses [Database, Network, Logging] 
@@ -259,7 +259,7 @@ function complex_operation()
 ```
 
 ### Effect Isolation
-```flowlang
+```cadenza
 // Effect boundaries
 isolated function unsafe_operation() 
     uses [FileSystem, Network] 
@@ -282,7 +282,7 @@ pure function safe_caller() -> Result<SafeResult, SafeError> {
 ## Error Handling
 
 ### Result Type
-```flowlang
+```cadenza
 // All functions that can fail return Result
 function divide(a: Float64, b: Float64) -> Result<Float64, MathError> {
     if b == 0.0 {
@@ -300,7 +300,7 @@ function complex_calculation(x: Float64, y: Float64) -> Result<Float64, MathErro
 ```
 
 ### Error Types
-```flowlang
+```cadenza
 // Custom error types
 enum UserError {
     NotFound(UserId),
@@ -328,7 +328,7 @@ function save_user(user: User) -> Result<UserId, UserError> {
 ```
 
 ### Panic Prevention
-```flowlang
+```cadenza
 // No panic! or unwrap() - all errors must be handled
 function get_user_name(id: UserId) -> String {
     let user = get_user(id)
@@ -350,7 +350,7 @@ function get_user_name(id: UserId) -> String {
 ## Inter-Module Communication
 
 ### Module Interfaces
-```flowlang
+```cadenza
 // Interface definition
 interface UserRepository {
     function get_user(id: UserId) -> Result<User, RepositoryError>
@@ -375,7 +375,7 @@ module SqlUserRepository implements UserRepository {
 ```
 
 ### Dependency Injection
-```flowlang
+```cadenza
 // Service definition with dependencies
 module UserService {
     dependencies {
@@ -404,7 +404,7 @@ module Application {
 ```
 
 ### Message Passing
-```flowlang
+```cadenza
 // Event definition
 record UserCreated {
     user_id: UserId,
@@ -441,7 +441,7 @@ module EmailService {
 ## External Dependencies
 
 ### NuGet Integration
-```flowlang
+```cadenza
 // Package specification
 dependencies {
     "Newtonsoft.Json": "13.0.3",
@@ -462,7 +462,7 @@ foreign import "Newtonsoft.Json" {
 ```
 
 ### FFI Usage
-```flowlang
+```cadenza
 // Safe wrapper around external library
 function serialize_user(user: User) -> Result<String, SerializationError> {
     try {
@@ -485,7 +485,7 @@ function save_user_as_json(user: User)
 ```
 
 ### External Service Integration
-```flowlang
+```cadenza
 // HTTP client integration
 foreign import "Microsoft.Extensions.Http" {
     interface HttpClient {
@@ -522,7 +522,7 @@ module ExternalApiService {
 ## API Endpoints
 
 ### REST API Definition
-```flowlang
+```cadenza
 // API module
 module UserApi {
     // Base configuration
@@ -581,7 +581,7 @@ module UserApi {
 ```
 
 ### Handler Implementation
-```flowlang
+```cadenza
 // Handler functions
 function get_users(request: GetUsersRequest) 
     uses [Database, Logging] 
@@ -624,7 +624,7 @@ function create_user(request: CreateUserRequest)
 ```
 
 ### Middleware Support
-```flowlang
+```cadenza
 // Custom middleware
 module AuthenticationMiddleware {
     function authenticate(request: HttpRequest) -> Result<AuthenticatedRequest, AuthError> {
@@ -657,7 +657,7 @@ endpoint GET "/profile" {
 ## Data Structures
 
 ### Records (Immutable)
-```flowlang
+```cadenza
 // Simple record
 record Point {
     x: Float64,
@@ -692,7 +692,7 @@ record CreateUserRequest {
 ```
 
 ### Unions (Sum Types)
-```flowlang
+```cadenza
 // Simple union
 union PaymentMethod {
     CreditCard { number: String, expiry: String },
@@ -724,7 +724,7 @@ function handle_payment(method: PaymentMethod) -> Result<PaymentResult, PaymentE
 ```
 
 ### Generics
-```flowlang
+```cadenza
 // Generic functions
 function map<T, U>(items: List<T>, transform: (T) -> U) -> List<U> {
     let result = List.empty<U>()
@@ -756,7 +756,7 @@ function serialize_entity<T>(entity: T) -> Result<String, SerializationError>
 ## Control Flow
 
 ### Conditional Expressions
-```flowlang
+```cadenza
 // If expressions (not statements)
 let status = if user.is_active() {
     "Active"
@@ -786,7 +786,7 @@ function process_user(user: User) -> Result<ProcessedUser, ProcessingError> {
 ```
 
 ### Loops
-```flowlang
+```cadenza
 // For loops
 let squared_numbers = List.empty<Int32>()
 for number in 1..10 {
@@ -812,7 +812,7 @@ for item in items {
 ```
 
 ### Pipeline Operations
-```flowlang
+```cadenza
 // Pipeline syntax
 let result = input_data
     |> validate_input
@@ -837,4 +837,4 @@ let result = data
     |> format_output
 ```
 
-This comprehensive specification provides all the fundamental building blocks for FlowLang, emphasizing safety, explicitness, and LLM-friendly design patterns.
+This comprehensive specification provides all the fundamental building blocks for Cadenza, emphasizing safety, explicitness, and LLM-friendly design patterns.

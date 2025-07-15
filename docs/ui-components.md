@@ -1,6 +1,6 @@
-# FlowLang UI Components - LLM Developer Guide 🤖
+# Cadenza UI Components - LLM Developer Guide 🤖
 
-**FlowLang UI components are designed specifically for LLM developers with maximum explicitness, predictability, and zero ambiguity.**
+**Cadenza UI components are designed specifically for LLM developers with maximum explicitness, predictability, and zero ambiguity.**
 
 ## Core Principles for LLM Development
 
@@ -20,7 +20,7 @@ Consistent syntax across all components ensures LLMs can reliably generate corre
 
 ### Basic Component Structure
 
-```flowlang
+```cadenza
 component ComponentName(parameters) 
     uses [effects] 
     state [state_variables]
@@ -49,7 +49,7 @@ component ComponentName(parameters)
 
 ### Complete Example - User Profile Component
 
-```flowlang
+```cadenza
 // Every aspect is explicitly declared for maximum LLM clarity
 component UserProfileCard(user_id: string) 
     uses [Network, LocalStorage, DOM] 
@@ -142,7 +142,7 @@ component UserProfileCard(user_id: string)
 
 ### App-Level State Declaration
 
-```flowlang
+```cadenza
 // Global application state with explicit shape and mutations
 app_state AppState uses [LocalStorage, Network] {
     // Explicit state shape - LLMs can see everything
@@ -230,7 +230,7 @@ app_state AppState uses [LocalStorage, Network] {
 
 ### Backend Service Definition
 
-```flowlang
+```cadenza
 // Backend service definition - will auto-generate frontend client
 service UserService uses [Database, Logging] {
     endpoint get_user(id: string) -> Result<User, UserError>
@@ -249,7 +249,7 @@ service ProductService uses [Database, Search, Logging] {
 
 ### Auto-Generated Frontend API Client
 
-```flowlang
+```cadenza
 // Auto-generated from backend services - completely predictable for LLMs
 api_client UserApi from UserService {
     base_url: "https://api.myapp.com"
@@ -281,7 +281,7 @@ api_client ProductApi from ProductService {
 
 ### Container Elements
 
-```flowlang
+```cadenza
 // Basic container with explicit styling
 container(class: "my-container", id: "main") {
     // Child elements
@@ -300,7 +300,7 @@ flex_container(direction: "row", justify: "space-between") {
 
 ### Form Elements
 
-```flowlang
+```cadenza
 // Input field with explicit validation
 text_input(
     value: form_data.username,
@@ -329,7 +329,7 @@ select_dropdown(
 
 ### Display Elements
 
-```flowlang
+```cadenza
 // Text display with explicit formatting
 text(content: user.name, style: "heading-large")
 
@@ -354,7 +354,7 @@ list(items: user_list) { user ->
 
 ### Explicit Event Declaration
 
-```flowlang
+```cadenza
 // Every event handler must be explicitly declared
 event_handler handle_form_submit(form_data: FormData) uses [Network, DOM] {
     // Explicit validation
@@ -404,7 +404,7 @@ event_handler handle_key_press(key: KeyEvent) uses [DOM] {
 
 ### Explicit Conditional Logic
 
-```flowlang
+```cadenza
 render {
     container(class: "app-container") {
         // Explicit loading state
@@ -430,7 +430,7 @@ render {
 
 ### List Rendering with Explicit Iteration
 
-```flowlang
+```cadenza
 render {
     container(class: "product-grid") {
         if product_list.is_empty() {
@@ -457,7 +457,7 @@ render {
 
 ### Frontend Effects
 
-```flowlang
+```cadenza
 // All frontend effects are explicitly tracked
 component ShoppingCart() uses [LocalStorage, Network, DOM] -> UIComponent {
     declare_state cart_items: List<CartItem> = []
@@ -511,8 +511,8 @@ component ShoppingCart() uses [LocalStorage, Network, DOM] -> UIComponent {
 
 ### Shared Type Definitions
 
-```flowlang
-// types/User.flow - shared between backend and frontend
+```cadenza
+// types/User.cdz - shared between backend and frontend
 type User {
     id: string
     username: string
@@ -550,7 +550,7 @@ type UserError {
 ### Generated TypeScript Definitions
 
 ```typescript
-// Auto-generated from FlowLang types - perfect for editor support
+// Auto-generated from Cadenza types - perfect for editor support
 export interface User {
     id: string;
     username: string;
@@ -582,35 +582,35 @@ export enum UserSortOption {
 ### Project Structure
 
 ```
-my-flowlang-app/
-├── flowc.json                      # Single configuration file
+my-cadenza-app/
+├── cadenzac.json                      # Single configuration file
 ├── types/                          # Shared types (backend + frontend)
-│   ├── User.flow
-│   ├── Product.flow
-│   ├── ApiResponses.flow
-│   └── Errors.flow
+│   ├── User.cdz
+│   ├── Product.cdz
+│   ├── ApiResponses.cdz
+│   └── Errors.cdz
 ├── backend/
 │   ├── services/                   # Business logic services
-│   │   ├── UserService.flow
-│   │   ├── ProductService.flow
-│   │   └── AuthService.flow
+│   │   ├── UserService.cdz
+│   │   ├── ProductService.cdz
+│   │   └── AuthService.cdz
 │   ├── data/                       # Database layer
-│   │   ├── UserRepository.flow
-│   │   └── ProductRepository.flow
-│   └── main.flow                   # Backend entry point
+│   │   ├── UserRepository.cdz
+│   │   └── ProductRepository.cdz
+│   └── main.cdz                   # Backend entry point
 ├── frontend/
 │   ├── components/                 # UI components
-│   │   ├── UserProfileCard.flow
-│   │   ├── ProductList.flow
-│   │   ├── ShoppingCart.flow
-│   │   └── LoginForm.flow
+│   │   ├── UserProfileCard.cdz
+│   │   ├── ProductList.cdz
+│   │   ├── ShoppingCart.cdz
+│   │   └── LoginForm.cdz
 │   ├── state/                      # State management
-│   │   ├── AppState.flow
-│   │   ├── UserState.flow
-│   │   └── CartState.flow
+│   │   ├── AppState.cdz
+│   │   ├── UserState.cdz
+│   │   └── CartState.cdz
 │   ├── api/                        # Auto-generated API clients
-│   │   └── generated_clients.flow
-│   └── main.flow                   # Frontend entry point
+│   │   └── generated_clients.cdz
+│   └── main.cdz                   # Frontend entry point
 └── docs/
     └── generated_api_docs.md       # Auto-generated documentation
 ```
@@ -619,10 +619,10 @@ my-flowlang-app/
 
 ```bash
 # Create new full-stack project with LLM-optimized structure
-flowc new --template fullstack-llm my-app
+cadenzac new --template fullstack-llm my-app
 
 # Development mode with hot reload and effect tracking
-flowc dev --watch --verbose-effects
+cadenzac dev --watch --verbose-effects
 # Starts:
 # - Backend server (C#/.NET) on :8080 
 # - Frontend dev server (Vite/React) on :3000
@@ -631,7 +631,7 @@ flowc dev --watch --verbose-effects
 # - Auto-restart on file changes
 
 # Build for production with optimization
-flowc build --target production --optimize
+cadenzac build --target production --optimize
 # Generates:
 # - C# backend optimized for deployment
 # - JavaScript frontend bundle
@@ -639,14 +639,14 @@ flowc build --target production --optimize
 # - API documentation
 
 # Type checking across entire stack
-flowc check --full-stack
+cadenzac check --full-stack
 # Validates:
 # - Type consistency between backend and frontend
 # - API contract compliance
 # - Effect system integrity
 
 # Generate API documentation
-flowc docs --generate-api
+cadenzac docs --generate-api
 # Creates:
 # - API endpoint documentation
 # - Type definitions
@@ -658,7 +658,7 @@ flowc docs --generate-api
 
 ### 1. **Always Declare Everything Explicitly**
 
-```flowlang
+```cadenza
 // ✅ GOOD - LLM can see all component aspects
 component ProductCard(product: Product) 
     uses [Network, LocalStorage] 
@@ -672,7 +672,7 @@ component ProductCard(product: Product) -> UIComponent
 
 ### 2. **Use Predictable Naming Patterns**
 
-```flowlang
+```cadenza
 // ✅ GOOD - Consistent naming LLMs can predict
 event_handler handle_user_login(credentials: LoginCredentials)
 event_handler handle_form_submit(form_data: FormData)
@@ -686,7 +686,7 @@ event_handler clickItem(item: ListItem)
 
 ### 3. **Explicit Error Handling**
 
-```flowlang
+```cadenza
 // ✅ GOOD - Every error case is explicitly handled
 let api_result = api_get_user(user_id)
 match api_result {
@@ -717,7 +717,7 @@ if api_result.is_error() {
 
 ### 4. **State Updates Are Always Explicit**
 
-```flowlang
+```cadenza
 // ✅ GOOD - Every state change is visible and intentional
 event_handler handle_login_success(user: User) uses [LocalStorage] {
     set_state(current_user, Some(user))
@@ -735,14 +735,14 @@ event_handler handle_login_success(user: User) {
 
 ## Generated JavaScript Output
 
-The FlowLang UI component above generates clean, predictable JavaScript:
+The Cadenza UI component above generates clean, predictable JavaScript:
 
 ```javascript
-// FlowLang Generated JavaScript - LLM Optimized
+// Cadenza Generated JavaScript - LLM Optimized
 import { createElement, useState, useEffect } from 'react';
-import { FlowLangRuntime, Result } from '@flowlang/runtime';
+import { CadenzaRuntime, Result } from '@cadenza/runtime';
 
-// FlowLang Component: UserProfileCard
+// Cadenza Component: UserProfileCard
 // Effects: [Network, LocalStorage, DOM]
 // State: [loading, user_data, edit_mode, error_message]
 // Events: [on_edit_click, on_save_click, on_cancel_click]
@@ -820,4 +820,4 @@ export function UserProfileCard({user_id}) {
 }
 ```
 
-This documentation ensures LLMs can reliably understand and generate FlowLang UI components with complete predictability and explicit behavior at every level.
+This documentation ensures LLMs can reliably understand and generate Cadenza UI components with complete predictability and explicit behavior at every level.

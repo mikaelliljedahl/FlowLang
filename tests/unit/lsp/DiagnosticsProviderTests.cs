@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Xunit;
-using FlowLang.LSP;
+using Cadenza.LSP;
 
-namespace FlowLang.Tests.Unit.LSP
+namespace Cadenza.Tests.Unit.LSP
 {
     /// <summary>
     /// Tests for DiagnosticsProvider functionality
@@ -156,7 +156,7 @@ namespace FlowLang.Tests.Unit.LSP
         {
             var document = new ManagedDocument
             {
-                Uri = "file:///test.flow",
+                Uri = "file:///test.cdz",
                 Content = content,
                 Version = 1
             };
@@ -164,10 +164,10 @@ namespace FlowLang.Tests.Unit.LSP
             // Parse the document
             try
             {
-                var lexer = new FlowLangLexer(content);
+                var lexer = new CadenzaLexer(content);
                 document.Tokens = lexer.Tokenize();
 
-                var parser = new FlowLangParser(document.Tokens);
+                var parser = new CadenzaParser(document.Tokens);
                 document.AST = parser.Parse();
             }
             catch (Exception ex)

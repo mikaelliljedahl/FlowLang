@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Diagnostics;
 
-namespace FlowLang.Tests.Reporting
+namespace Cadenza.Tests.Reporting
 {
     [TestFixture]
     public class TestReportingTests
@@ -316,7 +316,7 @@ namespace FlowLang.Tests.Reporting
             html.AppendLine("<!DOCTYPE html>");
             html.AppendLine("<html>");
             html.AppendLine("<head>");
-            html.AppendLine("<title>FlowLang Test Report</title>");
+            html.AppendLine("<title>Cadenza Test Report</title>");
             html.AppendLine("<style>");
             html.AppendLine(GetCssStyles());
             html.AppendLine("</style>");
@@ -324,7 +324,7 @@ namespace FlowLang.Tests.Reporting
             html.AppendLine("<body>");
             
             // Header
-            html.AppendLine("<h1>FlowLang Test Report</h1>");
+            html.AppendLine("<h1>Cadenza Test Report</h1>");
             html.AppendLine($"<p>Generated: {report.GeneratedAt:yyyy-MM-dd HH:mm:ss} UTC</p>");
             html.AppendLine($"<p>Version: {report.Version}</p>");
             

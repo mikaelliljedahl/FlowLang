@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Current programming languages were designed for human developers, not AI assistants. As LLM-powered development tools like Claude Code, GitHub Copilot, and ChatGPT become mainstream, we're hitting fundamental limitations in how these tools can effectively generate, understand, and maintain code. FlowLang addresses this by creating the first programming language designed from the ground up for AI-assisted development.
+Current programming languages were designed for human developers, not AI assistants. As LLM-powered development tools like Claude Code, GitHub Copilot, and ChatGPT become mainstream, we're hitting fundamental limitations in how these tools can effectively generate, understand, and maintain code. Cadenza addresses this by creating the first programming language designed from the ground up for AI-assisted development.
 
 ## The Core Problem
 
@@ -137,19 +137,19 @@ Kubernetes manifests
 
 ### Development Velocity
 - **Current State:** Developers spend 40-60% of time debugging and fixing LLM-generated code
-- **With FlowLang:** LLMs generate correct code on first try 90%+ of the time
+- **With Cadenza:** LLMs generate correct code on first try 90%+ of the time
 
 ### Code Quality
 - **Current State:** LLM-generated code often lacks proper error handling, testing, and documentation
-- **With FlowLang:** Every function is self-documenting with explicit contracts
+- **With Cadenza:** Every function is self-documenting with explicit contracts
 
 ### Maintenance Burden
 - **Current State:** Understanding legacy code requires deep investigation and tribal knowledge
-- **With FlowLang:** Code is self-explanatory through explicit declarations
+- **With Cadenza:** Code is self-explanatory through explicit declarations
 
 ### Testing Complexity
 - **Current State:** Unit testing requires complex mocking and setup
-- **With FlowLang:** Pure functions are testable without mocks, effectful functions have clear boundaries
+- **With Cadenza:** Pure functions are testable without mocks, effectful functions have clear boundaries
 
 ## Case Study: E-commerce Order Processing
 
@@ -175,8 +175,8 @@ public class OrderService {
 - No logging or observability
 - Configuration dependencies are hidden
 
-### FlowLang Implementation (AI-Optimized)
-```flowlang
+### Cadenza Implementation (AI-Optimized)
+```cadenza
 function process_order(request: CreateOrderRequest) 
     uses [Database, Network, Logging] 
     -> Result<Order, OrderError> {
@@ -239,7 +239,7 @@ function process_order(request: CreateOrderRequest)
 
 ## The Path Forward
 
-FlowLang represents a fundamental shift in how we think about programming languages. Instead of optimizing for human expression and flexibility, we optimize for:
+Cadenza represents a fundamental shift in how we think about programming languages. Instead of optimizing for human expression and flexibility, we optimize for:
 
 1. **Predictability:** One clear way to do each task
 2. **Explicitness:** All effects, errors, and dependencies are visible
@@ -251,7 +251,7 @@ This isn't just about making LLMs better at generating code—it's about making 
 
 ## Why Now?
 
-The convergence of several trends makes this the perfect time for FlowLang:
+The convergence of several trends makes this the perfect time for Cadenza:
 
 1. **AI-First Development:** LLM-powered tools are becoming primary development interfaces
 2. **Microservices Complexity:** Modern distributed systems need explicit dependency management
@@ -259,11 +259,11 @@ The convergence of several trends makes this the perfect time for FlowLang:
 4. **Reliability Requirements:** Mission-critical systems need predictable behavior
 5. **Developer Experience:** Teams want simpler, more maintainable code
 
-FlowLang addresses all these needs while providing a smooth migration path from existing languages through transpilation and FFI.
+Cadenza addresses all these needs while providing a smooth migration path from existing languages through transpilation and FFI.
 
 ## Success Metrics
 
-We'll know FlowLang is successful when:
+We'll know Cadenza is successful when:
 
 - **LLM Accuracy:** 90%+ of generated code works correctly on first try
 - **Developer Productivity:** 50% reduction in debugging time
@@ -271,4 +271,4 @@ We'll know FlowLang is successful when:
 - **Maintenance Speed:** Understanding unfamiliar code takes minutes, not hours
 - **System Reliability:** Runtime errors become rare due to compile-time guarantees
 
-The problem is clear, the solution is achievable, and the time is now. FlowLang represents the future of programming in an AI-driven world.
+The problem is clear, the solution is achievable, and the time is now. Cadenza represents the future of programming in an AI-driven world.

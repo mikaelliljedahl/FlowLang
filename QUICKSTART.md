@@ -1,35 +1,35 @@
-# FlowLang Quick Start Examples 🚀
+# Cadenza Quick Start Examples 🚀
 
-**Copy, paste, and run these examples to learn FlowLang in 5 minutes!**
+**Copy, paste, and run these examples to learn Cadenza in 5 minutes!**
 
 ## ⚡ Super Quick Setup
 
 1. **Install .NET 8.0+**: https://dotnet.microsoft.com/download
 2. **Clone and build**:
    ```bash
-   git clone https://github.com/mikaelliljedahl/FlowLang.git
-   cd FlowLang
+   git clone https://github.com/mikaelliljedahl/Cadenza.git
+   cd Cadenza
    bash setup.sh  # Easy setup script
    ```
-3. **Ready!** Use `flowc` commands below.
+3. **Ready!** Use `cadenzac` commands below.
 
 ## 📝 Copy-Paste Examples
 
 ### 1. Hello World
-**File: `hello.flow`**
-```flowlang
+**File: `hello.cdz`**
+```cadenza
 function main() -> string {
-    return "Hello, FlowLang!"
+    return "Hello, Cadenza!"
 }
 ```
 **Run:**
 ```bash
-flowc run hello.flow
+cadenzac run hello.cdz
 ```
 
 ### 2. String Interpolation
-**File: `greet.flow`**
-```flowlang
+**File: `greet.cdz`**
+```cadenza
 pure function greet(name: string, age: int) -> string {
     return $"Hello {name}! You are {age} years old."
 }
@@ -40,12 +40,12 @@ function main() -> string {
 ```
 **Run:**
 ```bash
-flowc run greet.flow
+cadenzac run greet.cdz
 ```
 
 ### 3. Safe Math with Result Types
-**File: `math.flow`**
-```flowlang
+**File: `math.cdz`**
+```cadenza
 function safeDivide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Cannot divide by zero")
@@ -69,12 +69,12 @@ function main() -> string {
 ```
 **Run:**
 ```bash
-flowc run math.flow
+cadenzac run math.cdz
 ```
 
 ### 4. Effect System Example
-**File: `effects.flow`**
-```flowlang
+**File: `effects.cdz`**
+```cadenza
 // Pure function - no side effects allowed
 pure function add(a: int, b: int) -> int {
     return a + b
@@ -106,12 +106,12 @@ function main() -> string {
 ```
 **Run:**
 ```bash
-flowc run effects.flow
+cadenzac run effects.cdz
 ```
 
 ### 5. Guard Clauses for Validation
-**File: `validate.flow`**
-```flowlang
+**File: `validate.cdz`**
+```cadenza
 function validateEmail(email: string) -> Result<string, string> {
     guard email != "" else {
         return Error("Email cannot be empty")
@@ -149,12 +149,12 @@ function main() -> string {
 ```
 **Run:**
 ```bash
-flowc run validate.flow
+cadenzac run validate.cdz
 ```
 
 ### 6. Module System (Multi-Module Projects)
-**File: `math.flow`**
-```flowlang
+**File: `math.cdz`**
+```cadenza
 module Math {
     pure function add(a: int, b: int) -> int {
         return a + b
@@ -168,8 +168,8 @@ module Math {
 }
 ```
 
-**File: `main.flow`**
-```flowlang
+**File: `main.cdz`**
+```cadenza
 // Import specific functions (recommended)
 import Math.{add, multiply}
 
@@ -181,8 +181,8 @@ function main() -> int {
 ```
 
 **Alternative: Qualified calls (explicit namespacing)**
-```flowlang
-// File: main_qualified.flow
+```cadenza
+// File: main_qualified.cdz
 import Math.*
 
 function main() -> int {
@@ -195,12 +195,12 @@ function main() -> int {
 **Run:**
 ```bash
 # Compile both files together
-flowc run math.flow main.flow
+cadenzac run math.cdz main.cdz
 ```
 
 ### 7. Complex Control Flow
-**File: `control.flow`**
-```flowlang
+**File: `control.cdz`**
+```cadenza
 function grade(score: int) -> string {
     if score >= 90 {
         return "A"
@@ -241,42 +241,42 @@ function main() -> string {
 ```
 **Run:**
 ```bash
-flowc run control.flow
+cadenzac run control.cdz
 ```
 
 ## 🎯 Quick Commands Cheat Sheet
 
 ```bash
 # Run a single file (shows generated C#)
-flowc run myfile.flow
+cadenzac run myfile.cdz
 
 # Create a new project
-flowc new my-project
+cadenzac new my-project
 cd my-project
 
 # Build entire project
-flowc build
+cadenzac build
 
 # Run tests
-flowc test
+cadenzac test
 
 # Static analysis
-flowc lint
+cadenzac lint
 
 # Security audit
-flowc audit
+cadenzac audit
 
 # Start Language Server (for IDE integration)
-flowc lsp
+cadenzac lsp
 
 # Get help
-flowc --help
-flowc help <command>
+cadenzac --help
+cadenzac help <command>
 ```
 
 ## 🔥 Pro Tips
 
-1. **File Extension**: Always use `.flow` for FlowLang files
+1. **File Extension**: Always use `.cdz` for Cadenza files
 2. **Main Function**: Use `function main() -> string` as your entry point
 3. **Pure Functions**: Mark pure functions with `pure` keyword
 4. **Effect Tracking**: Declare side effects with `uses [Effect1, Effect2]`
@@ -287,8 +287,8 @@ flowc help <command>
 
 **Build errors?**
 ```bash
-# Make sure you're in the FlowLang root directory
-cd /path/to/flowlang
+# Make sure you're in the Cadenza root directory
+cd /path/to/cadenza
 
 # Check .NET version
 dotnet --version  # Should be 8.0+
@@ -300,11 +300,11 @@ cd src && dotnet build
 **Command not found?**
 ```bash
 # Use the core transpiler directly
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- myfile.flow myfile.cs
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- myfile.cdz myfile.cs
 dotnet run myfile.cs
 
-# Or use the simple flowc script:
-./flowc myfile.flow
+# Or use the simple cadenzac script:
+./cadenzac myfile.cdz
 ```
 
 ## 📚 Next Steps
@@ -314,4 +314,4 @@ dotnet run myfile.cs
 3. **More examples**: [docs/examples/](docs/examples/)
 4. **IDE setup**: [docs/lsp-integration.md](docs/lsp-integration.md)
 
-**Happy coding with FlowLang!** 🎉
+**Happy coding with Cadenza!** 🎉

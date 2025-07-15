@@ -1,4 +1,4 @@
-# FlowLang Phase 4B Integration Test Plan
+# Cadenza Phase 4B Integration Test Plan
 
 ## Overview
 Comprehensive testing strategy for Phase 4B features: Development Server with Hot Reload and Advanced Parser Features (conditionals, loops, complex expressions in UI components).
@@ -38,7 +38,7 @@ The project currently has significant compilation errors preventing full testing
 
 ## Test Artifacts Created
 
-### 1. Comprehensive E-Commerce Component (`e_commerce_integration_test.flow`)
+### 1. Comprehensive E-Commerce Component (`e_commerce_integration_test.cdz`)
 - **Lines of Code**: 856 lines
 - **Features Tested**: All Phase 4B advanced parser features
 - **Complexity**: Production-level component with 15+ state variables
@@ -50,12 +50,12 @@ The project currently has significant compilation errors preventing full testing
   - Component composition and nested render blocks
   - Effect tracking across multiple handlers
 
-### 2. Basic Parser Validation (`phase4b_basic_test.flow`)
+### 2. Basic Parser Validation (`phase4b_basic_test.cdz`)
 - **Purpose**: Minimal test for core parser features
 - **Features**: Basic conditionals, loops, expressions
 - **Target**: Quick validation after compilation fixes
 
-### 3. Parser Feature Validation (`parser_validation_test.flow`)
+### 3. Parser Feature Validation (`parser_validation_test.cdz`)
 - **Purpose**: Systematic testing of each parser feature
 - **Coverage**: Conditionals, loops, expressions, nesting
 - **Design**: Modular test cases for isolated feature testing
@@ -63,7 +63,7 @@ The project currently has significant compilation errors preventing full testing
 ## Advanced Parser Features Validated
 
 ### 1. Conditional Rendering
-```flowlang
+```cadenza
 // Complex nested conditionals
 if is_loading {
     loading_spinner(message: $"Loading {products.length} products...")
@@ -80,7 +80,7 @@ if is_loading {
 ```
 
 ### 2. Loop Rendering with Filtering
-```flowlang
+```cadenza
 // Complex loops with where clauses
 for product in filtered_products where passes_filters(product, filters) {
     product_card(
@@ -92,7 +92,7 @@ for product in filtered_products where passes_filters(product, filters) {
 ```
 
 ### 3. Complex Expressions
-```flowlang
+```cadenza
 // Multi-level ternary and arithmetic expressions
 class: [
     "product-card",
@@ -104,7 +104,7 @@ class: [
 ```
 
 ### 4. String Interpolation
-```flowlang
+```cadenza
 // Complex string interpolation with formatting
 $"${product.price / 100}.{product.price % 100:00}"
 $"Loading {products.length} products..."
@@ -114,7 +114,7 @@ $"You have {count} item{count == 1 ? "" : "s"}"
 ## Development Server Features Implemented
 
 ### Core Functionality
-- **File Watching**: FileSystemWatcher for .flow files
+- **File Watching**: FileSystemWatcher for .cdz files
 - **HTTP Server**: Static file serving on configurable port (default 8080)
 - **WebSocket Integration**: Real-time hot reload communication
 - **Error Overlay**: Compilation error display in browser
@@ -122,7 +122,7 @@ $"You have {count} item{count == 1 ? "" : "s"}"
 
 ### Commands
 ```bash
-flowc dev --port 3000 --verbose --watch ./src
+cadenzac dev --port 3000 --verbose --watch ./src
 ```
 
 ### Architecture
@@ -168,13 +168,13 @@ File Change → FileSystemWatcher → Compilation → WebSocket Broadcast → Br
 ### Phase 2: Basic Functionality Testing
 1. **Compile Simple Examples**
    ```bash
-   flowc compile examples/simple.flow
-   flowc compile examples/phase4b_basic_test.flow
+   cadenzac compile examples/simple.cdz
+   cadenzac compile examples/phase4b_basic_test.cdz
    ```
 
 2. **Test Advanced Parser Features**
    ```bash
-   flowc compile examples/parser_validation_test.flow
+   cadenzac compile examples/parser_validation_test.cdz
    ```
 
 3. **Validate Generated Code**
@@ -185,11 +185,11 @@ File Change → FileSystemWatcher → Compilation → WebSocket Broadcast → Br
 ### Phase 3: Development Server Testing
 1. **Start Development Server**
    ```bash
-   flowc dev --port 3001 --verbose
+   cadenzac dev --port 3001 --verbose
    ```
 
 2. **Test Hot Reload Workflow**
-   - Modify .flow file
+   - Modify .cdz file
    - Verify automatic recompilation
    - Check WebSocket communication
    - Validate browser updates
@@ -230,7 +230,7 @@ File Change → FileSystemWatcher → Compilation → WebSocket Broadcast → Br
 
 ### React Component Structure
 ```javascript
-// Expected output for FlowLang component
+// Expected output for Cadenza component
 function ProductCard({ product, selected, onSelect }) {
   const [expanded, setExpanded] = useState(false);
   
@@ -300,7 +300,7 @@ function ProductCard({ product, selected, onSelect }) {
 ## Next Steps
 
 1. **IMMEDIATE (Priority 1)**
-   - Fix the 63 compilation errors in src/flowc.csproj
+   - Fix the 63 compilation errors in src/cadenzac.csproj
    - Focus on LSP type conflicts and protected member access issues
    - Update package dependencies to compatible versions
 
@@ -333,4 +333,4 @@ function ProductCard({ product, selected, onSelect }) {
 - **Performance monitoring tools** for benchmarking
 - **WebSocket testing tools** for connectivity validation
 
-This comprehensive test plan provides a roadmap for validating FlowLang Phase 4B implementation once the compilation issues are resolved. The created test files demonstrate the advanced parser capabilities and provide realistic scenarios for production validation.
+This comprehensive test plan provides a roadmap for validating Cadenza Phase 4B implementation once the compilation issues are resolved. The created test files demonstrate the advanced parser capabilities and provide realistic scenarios for production validation.

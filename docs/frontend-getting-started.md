@@ -1,6 +1,6 @@
-# FlowLang Frontend Development - Getting Started 🚀
+# Cadenza Frontend Development - Getting Started 🚀
 
-**Build full-stack applications with FlowLang's LLM-optimized UI component system. Write both backend services and frontend components in the same language with complete type safety.**
+**Build full-stack applications with Cadenza's LLM-optimized UI component system. Write both backend services and frontend components in the same language with complete type safety.**
 
 ## Quick Start
 
@@ -8,21 +8,21 @@
 
 ```bash
 # Create a new UI project
-flowc new --template ui my-ui-app
+cadenzac new --template ui my-ui-app
 cd my-ui-app
 
 # Project structure:
 my-ui-app/
-├── flowc.json          # Project configuration  
-├── main.flow           # Main UI component
+├── cadenzac.json          # Project configuration  
+├── main.cdz           # Main UI component
 ├── components/         # UI components directory
 └── state/             # State management directory
 ```
 
 ### 2. Your First UI Component
 
-**main.flow:**
-```flowlang
+**main.cdz:**
+```cadenza
 // Simple counter application - LLM-friendly structure
 component CounterApp() 
     uses [DOM] 
@@ -53,7 +53,7 @@ component CounterApp()
     // Explicit render logic - no hidden behavior
     render {
         container(class: "counter-app") {
-            heading(level: 1, text: "FlowLang Counter")
+            heading(level: 1, text: "Cadenza Counter")
             text(content: message, class: "message")
             
             button_group(class: "controls") {
@@ -80,13 +80,13 @@ component CounterApp()
 
 ```bash
 # Compile UI component to JavaScript/React
-flowc compile main.flow
+cadenzac compile main.cdz
 
 # Generated files:
 main.js              # React component
 package.json         # npm configuration
 index.html          # HTML template
-flowlang-runtime.js  # FlowLang runtime
+cadenza-runtime.js  # Cadenza runtime
 ```
 
 ### 4. Run Your UI Application
@@ -101,9 +101,9 @@ npm run dev
 
 ### 🎯 **Explicit Component Structure**
 
-Every FlowLang UI component follows the same predictable pattern:
+Every Cadenza UI component follows the same predictable pattern:
 
-```flowlang
+```cadenza
 component ComponentName(parameters) 
     uses [effects]           // Side effects used
     state [state_vars]       // State variables  
@@ -130,7 +130,7 @@ component ComponentName(parameters)
 
 ### 🔒 **Type-Safe State Management**
 
-```flowlang
+```cadenza
 // Global application state with explicit mutations
 app_state TodoAppState uses [LocalStorage] {
     // Explicit state shape
@@ -180,7 +180,7 @@ app_state TodoAppState uses [LocalStorage] {
 
 ### 🌐 **API Integration**
 
-```flowlang
+```cadenza
 // Backend service definition
 service TodoService uses [Database] {
     endpoint get_todos() -> Result<List<Todo>, ApiError>
@@ -233,7 +233,7 @@ component TodoList() uses [Network] -> UIComponent {
 
 ### 🔄 **Conditional Rendering**
 
-```flowlang
+```cadenza
 render {
     container(class: "todo-app") {
         if loading {
@@ -257,7 +257,7 @@ render {
 
 ### 📋 **List Rendering**
 
-```flowlang
+```cadenza
 render {
     todo_list_container {
         for todo in todos {
@@ -274,7 +274,7 @@ render {
 
 ### 🎨 **Styling and CSS Classes**
 
-```flowlang
+```cadenza
 render {
     container(
         class: build_classes("todo-item", todo.completed ? "completed" : "pending"),
@@ -319,31 +319,31 @@ pure function build_classes(base: string, modifier: string) -> string {
 
 ```
 my-fullstack-app/
-├── flowc.json
+├── cadenzac.json
 ├── shared/
 │   └── types/
-│       ├── User.flow
-│       ├── Todo.flow
-│       └── ApiErrors.flow
+│       ├── User.cdz
+│       ├── Todo.cdz
+│       └── ApiErrors.cdz
 ├── backend/
 │   ├── services/
-│   │   ├── UserService.flow
-│   │   └── TodoService.flow
-│   └── main.flow
+│   │   ├── UserService.cdz
+│   │   └── TodoService.cdz
+│   └── main.cdz
 ├── frontend/
 │   ├── components/
-│   │   ├── TodoApp.flow
-│   │   ├── TodoList.flow
-│   │   └── TodoItem.flow
+│   │   ├── TodoApp.cdz
+│   │   ├── TodoList.cdz
+│   │   └── TodoItem.cdz
 │   ├── state/
-│   │   └── AppState.flow
-│   └── main.flow
+│   │   └── AppState.cdz
+│   └── main.cdz
 ```
 
 ### Shared Types
 
-**shared/types/Todo.flow:**
-```flowlang
+**shared/types/Todo.cdz:**
+```cadenza
 type Todo {
     id: string
     text: string
@@ -361,8 +361,8 @@ type TodoFilter {
 
 ### Backend Service
 
-**backend/services/TodoService.flow:**
-```flowlang
+**backend/services/TodoService.cdz:**
+```cadenza
 service TodoService uses [Database, Logging] {
     endpoint get_todos(user_id: string) -> Result<List<Todo>, ApiError>
     endpoint create_todo(user_id: string, text: string) -> Result<Todo, ApiError>
@@ -389,8 +389,8 @@ function get_todos(user_id: string) uses [Database, Logging] -> Result<List<Todo
 
 ### Frontend Components
 
-**frontend/components/TodoApp.flow:**
-```flowlang
+**frontend/components/TodoApp.cdz:**
+```cadenza
 component TodoApp(user_id: string) 
     uses [Network, LocalStorage, DOM] 
     state [todos, filter, loading, error_message]
@@ -439,7 +439,7 @@ component TodoApp(user_id: string)
     render {
         todo_app_container(class: "todo-app") {
             app_header {
-                heading(level: 1, text: "FlowLang Todo App")
+                heading(level: 1, text: "Cadenza Todo App")
                 todo_filter(
                     current_filter: filter,
                     on_change: (new_filter) -> set_state(filter, new_filter)
@@ -483,18 +483,18 @@ component TodoApp(user_id: string)
 
 ```bash
 # Create new projects
-flowc new --template ui my-ui-app
-flowc new --template fullstack my-fullstack-app
+cadenzac new --template ui my-ui-app
+cadenzac new --template fullstack my-fullstack-app
 
 # Compile to different targets
-flowc compile --target javascript frontend/main.flow
-flowc compile --target csharp backend/main.flow
+cadenzac compile --target javascript frontend/main.cdz
+cadenzac compile --target csharp backend/main.cdz
 
 # List available targets
-flowc targets
+cadenzac targets
 
 # Development server (coming soon)
-flowc dev --watch
+cadenzac dev --watch
 ```
 
 ### Project Templates
@@ -514,7 +514,7 @@ flowc dev --watch
 
 ### 1. **Always Declare Everything Explicitly**
 
-```flowlang
+```cadenza
 // ✅ GOOD - LLM can see all aspects
 component UserProfile(user_id: string) 
     uses [Network, LocalStorage] 
@@ -528,7 +528,7 @@ component UserProfile(user_id: string) -> UIComponent
 
 ### 2. **Predictable Event Handler Naming**
 
-```flowlang
+```cadenza
 // ✅ GOOD - Consistent patterns LLMs can predict
 event_handler handle_user_login(credentials: LoginCredentials)
 event_handler handle_form_submit(form_data: FormData)
@@ -542,7 +542,7 @@ event_handler clickBtn(id: string)
 
 ### 3. **Explicit Error Handling**
 
-```flowlang
+```cadenza
 // ✅ GOOD - Every error case handled explicitly
 let api_result = TodoApi.create_todo(text)
 match api_result {
@@ -570,7 +570,7 @@ if result.is_error() {
 
 ### 4. **State Updates Are Always Explicit**
 
-```flowlang
+```cadenza
 // ✅ GOOD - Every state change is visible
 event_handler handle_login_success(user: User) uses [LocalStorage] {
     set_state(current_user, Some(user))
@@ -591,7 +591,7 @@ event_handler handle_login_success(user: User) {
 1. **Try the Examples**: Start with the simple counter example
 2. **Build a Todo App**: Follow the full-stack todo example
 3. **Explore API Integration**: Connect your frontend to backend services
-4. **Read the Language Reference**: Deep dive into FlowLang UI syntax
-5. **Join the Community**: Get help from other FlowLang developers
+4. **Read the Language Reference**: Deep dive into Cadenza UI syntax
+5. **Join the Community**: Get help from other Cadenza developers
 
-FlowLang UI components make frontend development predictable, type-safe, and LLM-friendly. Every aspect of your application is explicit and traceable, making it perfect for AI-assisted development! 🎉
+Cadenza UI components make frontend development predictable, type-safe, and LLM-friendly. Every aspect of your application is explicit and traceable, making it perfect for AI-assisted development! 🎉

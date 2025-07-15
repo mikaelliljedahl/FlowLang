@@ -6,19 +6,19 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace FlowLang.Tests.Golden
+namespace Cadenza.Tests.Golden
 {
     [TestFixture]
     public class GoldenFileTests
     {
-        private FlowLangTranspiler _transpiler;
+        private CadenzaTranspiler _transpiler;
         private string _goldenInputsPath;
         private string _goldenExpectedPath;
 
         [SetUp]
         public void SetUp()
         {
-            _transpiler = new FlowLangTranspiler();
+            _transpiler = new CadenzaTranspiler();
             _goldenInputsPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "golden", "inputs");
             _goldenExpectedPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "golden", "expected");
         }
@@ -68,7 +68,7 @@ namespace FlowLang.Tests.Golden
         private void ExecuteGoldenFileTest(string testName)
         {
             // Arrange
-            var inputFile = Path.Combine(_goldenInputsPath, $"{testName}.flow");
+            var inputFile = Path.Combine(_goldenInputsPath, $"{testName}.cdz");
             var expectedFile = Path.Combine(_goldenExpectedPath, $"{testName}.cs");
 
             Assert.That(File.Exists(inputFile), $"Input file not found: {inputFile}");
@@ -146,7 +146,7 @@ namespace FlowLang.Tests.Golden
         public void GoldenFile_AllInputsHaveExpectedOutputs()
         {
             // Verify that every input file has a corresponding expected output file
-            var inputFiles = Directory.GetFiles(_goldenInputsPath, "*.flow");
+            var inputFiles = Directory.GetFiles(_goldenInputsPath, "*.cdz");
             var missingOutputs = new List<string>();
 
             foreach (var inputFile in inputFiles)
@@ -174,7 +174,7 @@ namespace FlowLang.Tests.Golden
             foreach (var outputFile in outputFiles)
             {
                 var testName = Path.GetFileNameWithoutExtension(outputFile);
-                var inputFile = Path.Combine(_goldenInputsPath, $"{testName}.flow");
+                var inputFile = Path.Combine(_goldenInputsPath, $"{testName}.cdz");
                 
                 if (!File.Exists(inputFile))
                 {
@@ -216,7 +216,7 @@ namespace FlowLang.Tests.Golden
         public void GoldenFile_TestCoverageAnalysis()
         {
             // Analyze what language features are covered by golden tests
-            var inputFiles = Directory.GetFiles(_goldenInputsPath, "*.flow");
+            var inputFiles = Directory.GetFiles(_goldenInputsPath, "*.cdz");
             var features = new Dictionary<string, List<string>>();
 
             foreach (var inputFile in inputFiles)

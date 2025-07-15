@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using FlowLang.Package;
+using Cadenza.Package;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace FlowLang.Tests.Unit.Package;
+namespace Cadenza.Tests.Unit.Package;
 
 [TestClass]
 public class PackageManagerTests
@@ -20,7 +20,7 @@ public class PackageManagerTests
         Directory.CreateDirectory(_tempDir);
         Directory.SetCurrentDirectory(_tempDir);
         
-        // Create a basic flowc.json
+        // Create a basic cadenzac.json
         var config = new EnhancedFlowcConfig(
             Name: "test-project",
             Version: "1.0.0",
@@ -371,7 +371,7 @@ public class ConfigurationManagerTests
         Directory.CreateDirectory(project1Dir);
         
         var project1Config = new EnhancedFlowcConfig(Name: "project1");
-        await ConfigurationManager.SaveConfigAsync(project1Config, Path.Combine(project1Dir, "flowc.json"));
+        await ConfigurationManager.SaveConfigAsync(project1Config, Path.Combine(project1Dir, "cadenzac.json"));
         
         // Act
         var projects = await ConfigurationManager.DiscoverWorkspaceProjectsAsync();

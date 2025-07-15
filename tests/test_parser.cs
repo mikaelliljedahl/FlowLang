@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using FlowLang.Compiler;
+using Cadenza.Compiler;
 
 class Program
 {
@@ -8,10 +8,10 @@ class Program
     {
         try
         {
-            var sourceCode = File.ReadAllText("test_minimal.flow");
+            var sourceCode = File.ReadAllText("test_minimal.cdz");
             
             // Test lexer
-            var lexer = new FlowLangLexer(sourceCode);
+            var lexer = new CadenzaLexer(sourceCode);
             var tokens = lexer.Tokenize();
             
             Console.WriteLine($"Lexed {tokens.Count} tokens successfully");
@@ -24,7 +24,7 @@ class Program
             
             // Test parser
             Console.WriteLine("Starting parser...");
-            var parser = new FlowLangParser(tokens);
+            var parser = new CadenzaParser(tokens);
             Console.WriteLine("Created parser, calling Parse()...");
             var ast = parser.Parse();
             Console.WriteLine("Parse completed");

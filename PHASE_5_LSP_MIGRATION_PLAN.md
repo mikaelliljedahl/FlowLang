@@ -1,16 +1,16 @@
 # Phase 5 - LSP Server Migration Plan
 
 ## Overview
-Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C# to working .flow implementation for IDE integration.
+Migrate Cadenza LSP (Language Server Protocol) implementation from incomplete C# to working .cdz implementation for IDE integration.
 
 ## Current State
 **Existing C# files** (incomplete, no .csproj, untested):
-- `src/FlowLang.LSP/FlowLangLanguageServer.cs`
-- `src/FlowLang.LSP/CompletionProvider.cs`
-- `src/FlowLang.LSP/DiagnosticsProvider.cs`
-- `src/FlowLang.LSP/HoverProvider.cs`
-- `src/FlowLang.LSP/DefinitionProvider.cs`
-- `src/FlowLang.LSP/DocumentManager.cs`
+- `src/Cadenza.LSP/CadenzaLanguageServer.cs`
+- `src/Cadenza.LSP/CompletionProvider.cs`
+- `src/Cadenza.LSP/DiagnosticsProvider.cs`
+- `src/Cadenza.LSP/HoverProvider.cs`
+- `src/Cadenza.LSP/DefinitionProvider.cs`
+- `src/Cadenza.LSP/DocumentManager.cs`
 
 ## LSP Features to Implement
 - **Diagnostics**: Real-time error detection and reporting
@@ -24,8 +24,8 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 
 ### Task 1: LSP Foundation
 **Main Language Server**:
-- File: `src/FlowLang.Tools/lsp/language-server.flow`
-- Replace: `FlowLangLanguageServer.cs`
+- File: `src/Cadenza.Tools/lsp/language-server.cdz`
+- Replace: `CadenzaLanguageServer.cs`
 - Functionality:
   - LSP protocol message handling
   - Client capability negotiation
@@ -34,7 +34,7 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 
 ### Task 2: Document Management
 **Document Lifecycle**:
-- File: `src/FlowLang.Tools/lsp/document-manager.flow`
+- File: `src/Cadenza.Tools/lsp/document-manager.cdz`
 - Replace: `DocumentManager.cs`
 - Functionality:
   - Track open documents
@@ -44,7 +44,7 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 
 ### Task 3: Diagnostics Provider
 **Real-time Error Detection**:
-- File: `src/FlowLang.Tools/lsp/diagnostics-provider.flow`
+- File: `src/Cadenza.Tools/lsp/diagnostics-provider.cdz`
 - Replace: `DiagnosticsProvider.cs`
 - Functionality:
   - Syntax error detection
@@ -54,7 +54,7 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 
 ### Task 4: Completion Provider
 **Auto-completion**:
-- File: `src/FlowLang.Tools/lsp/completion-provider.flow`
+- File: `src/Cadenza.Tools/lsp/completion-provider.cdz`
 - Replace: `CompletionProvider.cs`
 - Functionality:
   - Keyword completion (`function`, `pure`, `uses`, etc.)
@@ -65,7 +65,7 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 
 ### Task 5: Hover Provider
 **Type Information**:
-- File: `src/FlowLang.Tools/lsp/hover-provider.flow`
+- File: `src/Cadenza.Tools/lsp/hover-provider.cdz`
 - Replace: `HoverProvider.cs`
 - Functionality:
   - Type information display
@@ -76,7 +76,7 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 
 ### Task 6: Definition Provider
 **Go-to-Definition**:
-- File: `src/FlowLang.Tools/lsp/definition-provider.flow`
+- File: `src/Cadenza.Tools/lsp/definition-provider.cdz`
 - Replace: `DefinitionProvider.cs`
 - Functionality:
   - Function definition lookup
@@ -87,7 +87,7 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 
 ### Task 7: Symbol Providers
 **Symbol Information**:
-- File: `src/FlowLang.Tools/lsp/symbol-provider.flow`
+- File: `src/Cadenza.Tools/lsp/symbol-provider.cdz`
 - Functionality:
   - Document symbols (functions, types in current file)
   - Workspace symbols (project-wide symbol search)
@@ -127,7 +127,7 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 - Emacs LSP integration
 
 ## Expected Outcomes
-- Full LSP server implementation in FlowLang
+- Full LSP server implementation in Cadenza
 - Real-time IDE integration
 - Comprehensive developer experience
 - Multi-IDE support
@@ -143,7 +143,7 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 - [ ] Multiple IDEs supported
 
 ## Dependencies
-- **Runtime Bridge Fixes**: Need working .flow tools for JSON-RPC
+- **Runtime Bridge Fixes**: Need working .cdz tools for JSON-RPC
 - **Analysis Tools**: Need working analysis for diagnostics
 
 ## Priority
@@ -151,15 +151,15 @@ Migrate FlowLang LSP (Language Server Protocol) implementation from incomplete C
 
 ## File Structure
 ```
-src/FlowLang.Tools/lsp/
-├── language-server.flow      # Main LSP server
-├── document-manager.flow     # Document lifecycle
-├── diagnostics-provider.flow # Error detection
-├── completion-provider.flow  # Auto-completion
-├── hover-provider.flow       # Type information
-├── definition-provider.flow  # Go-to-definition
-├── symbol-provider.flow      # Symbol information
-└── protocol-handler.flow     # LSP protocol support
+src/Cadenza.Tools/lsp/
+├── language-server.cdz      # Main LSP server
+├── document-manager.cdz     # Document lifecycle
+├── diagnostics-provider.cdz # Error detection
+├── completion-provider.cdz  # Auto-completion
+├── hover-provider.cdz       # Type information
+├── definition-provider.cdz  # Go-to-definition
+├── symbol-provider.cdz      # Symbol information
+└── protocol-handler.cdz     # LSP protocol support
 ```
 
 ## VS Code Extension Structure
@@ -169,6 +169,6 @@ extensions/vscode/
 ├── src/
 │   └── extension.ts        # Extension entry point
 ├── syntaxes/
-│   └── flowlang.tmGrammar.json # Syntax highlighting
+│   └── cadenza.tmGrammar.json # Syntax highlighting
 └── README.md               # Extension documentation
 ```

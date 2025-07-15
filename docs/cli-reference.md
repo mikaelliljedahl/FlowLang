@@ -1,6 +1,6 @@
-# FlowLang CLI Reference
+# Cadenza CLI Reference
 
-The FlowLang CLI (`flowc`) provides a comprehensive set of commands for creating, building, and managing FlowLang projects. This reference documents all available commands, options, and usage patterns.
+The Cadenza CLI (`cadenzac`) provides a comprehensive set of commands for creating, building, and managing Cadenza projects. This reference documents all available commands, options, and usage patterns.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ The FlowLang CLI (`flowc`) provides a comprehensive set of commands for creating
 ### Prerequisites
 
 - .NET 8.0 SDK or later
-- FlowLang source code (cloned repository)
+- Cadenza source code (cloned repository)
 
 ### Building the CLI
 
@@ -27,10 +27,10 @@ cd src
 dotnet build
 
 # Create standalone executable
-dotnet publish src/FlowLang.Core/flowc-core.csproj -c Release -o bin/release --self-contained false
+dotnet publish src/Cadenza.Core/cadenzac-core.csproj -c Release -o bin/release --self-contained false
 ```
 
-The standalone executable will be available at `bin/release/flowc-core`.
+The standalone executable will be available at `bin/release/cadenzac-core`.
 
 ### Running Commands
 
@@ -38,33 +38,33 @@ Commands can be run through the .NET CLI or using the standalone executable:
 
 ```bash
 # Using dotnet run (development)
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- <inputfile.flow> <outputfile.cs>
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --compile <inputfile.flow>
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run <inputfile.flow>
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- <inputfile.cdz> <outputfile.cs>
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --compile <inputfile.cdz>
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run <inputfile.cdz>
 
 # Using standalone executable (recommended)
-./bin/release/flowc-core <inputfile.flow> <outputfile.cs>
-./bin/release/flowc-core --compile <inputfile.flow>
-./bin/release/flowc-core --run <inputfile.flow>
+./bin/release/cadenzac-core <inputfile.cdz> <outputfile.cs>
+./bin/release/cadenzac-core --compile <inputfile.cdz>
+./bin/release/cadenzac-core --run <inputfile.cdz>
 
 # Or use the simple wrapper script
-./flowc <inputfile.flow>
+./cadenzac <inputfile.cdz>
 ```
 
 For convenience, you can create an alias:
 
 ```bash
 # Linux/macOS (using standalone executable)
-alias flowc="/path/to/flowlang/bin/release/flowc-core"
+alias cadenzac="/path/to/cadenza/bin/release/cadenzac-core"
 
 # Linux/macOS (using dotnet run)
-alias flowc="dotnet run --project /path/to/flowlang/src/FlowLang.Core/flowc-core.csproj --"
+alias cadenzac="dotnet run --project /path/to/cadenza/src/Cadenza.Core/cadenzac-core.csproj --"
 
 # Windows (PowerShell - using standalone executable)
-function flowc { C:\path\to\flowlang\bin\release\flowc-core.exe $args }
+function cadenzac { C:\path\to\cadenza\bin\release\cadenzac-core.exe $args }
 
 # Windows (PowerShell - using dotnet run)
-function flowc { dotnet run --project C:\path\to\flowlang\src\FlowLang.Core\flowc-core.csproj -- $args }
+function cadenzac { dotnet run --project C:\path\to\cadenza\src\Cadenza.Core\cadenzac-core.csproj -- $args }
 ```
 
 ## Global Options
@@ -80,22 +80,22 @@ These options are available for all commands:
 
 ```bash
 # Show general help
-flowc --help
+cadenzac --help
 
 # Show version
-flowc --version
+cadenzac --version
 
 # Show help for specific command
-flowc help new
+cadenzac help new
 ```
 
 ## Commands Overview
 
 | Command | Status | Description | Purpose |
 |---------|--------|-------------|---------|
-| [`compile`](#compile-command) | ✅ **WORKING** | Compile FlowLang to target language | Multi-target compilation |
+| [`compile`](#compile-command) | ✅ **WORKING** | Compile Cadenza to target language | Multi-target compilation |
 | [`run`](#run-command) | ✅ **WORKING** | Transpile and display a single file | Development and testing |
-| [`new`](#new-command) | ❌ **Phase 5** | Create a new FlowLang project | Project initialization |
+| [`new`](#new-command) | ❌ **Phase 5** | Create a new Cadenza project | Project initialization |
 | [`targets`](#targets-command) | ❌ **Phase 5** | List available compilation targets | Target information |
 | [`build`](#build-command) | ❌ **Phase 5** | Build the current project | Transpile all source files |
 | [`dev`](#dev-command) | ❌ **Phase 5** | Start development server | UI development |
@@ -112,26 +112,26 @@ flowc help new
 
 ### `compile` Command ✅ **WORKING** (July 2025)
 
-Compiles FlowLang source code directly to executable files or transpiles to target languages.
+Compiles Cadenza source code directly to executable files or transpiles to target languages.
 
 #### Syntax
 
 ```bash
 # Direct compilation to executable (WORKING)
-./bin/release/flowc-core --compile <input-file> [--output <output-file>]
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --compile <input-file>
+./bin/release/cadenzac-core --compile <input-file> [--output <output-file>]
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --compile <input-file>
 
 # Transpilation to target language (WORKING)
-./bin/release/flowc-core <input-file> <output-file> [--target <target>]
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- <input-file> <output-file>
+./bin/release/cadenzac-core <input-file> <output-file> [--target <target>]
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- <input-file> <output-file>
 
 # Compile and run immediately (WORKING)
-./bin/release/flowc-core --run <input-file>
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run <input-file>
+./bin/release/cadenzac-core --run <input-file>
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run <input-file>
 
 # Generate library (WORKING)
-./bin/release/flowc-core --library <input-file> [--output <output-file>]
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --library <input-file>
+./bin/release/cadenzac-core --library <input-file> [--output <output-file>]
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --library <input-file>
 ```
 
 #### Options
@@ -145,11 +145,11 @@ dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --library <input-fil
 
 #### Parameters
 
-- `<input-file>` (required): FlowLang source file to compile
+- `<input-file>` (required): Cadenza source file to compile
 
 #### Description
 
-The `compile` command transpiles FlowLang source to various target platforms:
+The `compile` command transpiles Cadenza source to various target platforms:
 
 - **C#**: Full .NET compatibility with async/await, LINQ support
 - **Java**: JVM compatibility with streams and concurrent operations  
@@ -161,25 +161,25 @@ The `compile` command transpiles FlowLang source to various target platforms:
 
 ```bash
 # Transpile to C# (default) - WORKING
-./bin/release/flowc-core backend/UserService.flow backend/UserService.cs
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- backend/UserService.flow backend/UserService.cs
+./bin/release/cadenzac-core backend/UserService.cdz backend/UserService.cs
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- backend/UserService.cdz backend/UserService.cs
 
 # Direct compilation to executable - WORKING
-./bin/release/flowc-core --compile backend/UserService.flow
-./bin/release/flowc-core --compile backend/UserService.flow --output UserService.exe
+./bin/release/cadenzac-core --compile backend/UserService.cdz
+./bin/release/cadenzac-core --compile backend/UserService.cdz --output UserService.exe
 
 # Compile and run immediately - WORKING
-./bin/release/flowc-core --run backend/UserService.flow
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run backend/UserService.flow
+./bin/release/cadenzac-core --run backend/UserService.cdz
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run backend/UserService.cdz
 
 # Generate library - WORKING
-./bin/release/flowc-core --library shared/Utils.flow --output shared/Utils.dll
+./bin/release/cadenzac-core --library shared/Utils.cdz --output shared/Utils.dll
 
 # Transpile to JavaScript - BASIC SUPPORT
-./bin/release/flowc-core frontend/TodoApp.flow frontend/TodoApp.js --target javascript
+./bin/release/cadenzac-core frontend/TodoApp.cdz frontend/TodoApp.js --target javascript
 
 # Transpile to Blazor - NEW IN JULY 2025
-./bin/release/flowc-core --target blazor ui-component.flow
+./bin/release/cadenzac-core --target blazor ui-component.cdz
 ```
 
 #### Target-Specific Features
@@ -210,9 +210,9 @@ dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run backend/UserSe
 
 #### Auto-Target Detection
 
-FlowLang automatically detects the appropriate target based on source code:
+Cadenza automatically detects the appropriate target based on source code:
 
-```flowlang
+```cadenza
 // Auto-detects JavaScript target (UI components)
 component UserProfile() uses [DOM] -> UIComponent { ... }
 
@@ -227,7 +227,7 @@ Lists all available compilation targets and their capabilities.
 #### Syntax
 
 ```bash
-flowc targets [options]
+cadenzac targets [options]
 ```
 
 #### Options
@@ -237,25 +237,25 @@ flowc targets [options]
 
 #### Description
 
-Displays information about FlowLang compilation targets including supported features, limitations, and use cases.
+Displays information about Cadenza compilation targets including supported features, limitations, and use cases.
 
 #### Examples
 
 ```bash
 # List all targets
-flowc targets
+cadenzac targets
 
 # Show detailed information
-flowc targets --verbose
+cadenzac targets --verbose
 
 # Show feature capabilities
-flowc targets --capabilities
+cadenzac targets --capabilities
 ```
 
 #### Output Example
 
 ```
-🎯 Available FlowLang compilation targets:
+🎯 Available Cadenza compilation targets:
 
 Backend Targets:
   csharp, cs     - C# (.NET) - Full feature support
@@ -267,8 +267,8 @@ Frontend Targets:
   wasm           - WebAssembly - Browser/edge computing
 
 Example usage:
-  flowc compile --target javascript ui_app.flow
-  flowc compile --target csharp backend_service.flow
+  cadenzac compile --target javascript ui_app.cdz
+  cadenzac compile --target csharp backend_service.cdz
 ```
 
 ### `dev` Command
@@ -278,7 +278,7 @@ Starts a development server for UI projects with hot reload and real-time compil
 #### Syntax
 
 ```bash
-flowc dev [options]
+cadenzac dev [options]
 ```
 
 #### Options
@@ -289,7 +289,7 @@ flowc dev [options]
 
 #### Description
 
-The `dev` command provides a development environment for FlowLang UI applications:
+The `dev` command provides a development environment for Cadenza UI applications:
 
 - Hot reload on file changes
 - Real-time compilation feedback
@@ -300,32 +300,32 @@ The `dev` command provides a development environment for FlowLang UI application
 
 ```bash
 # Start development server
-flowc dev
+cadenzac dev
 
 # Start on custom port with verbose output
-flowc dev --port 8080 --verbose
+cadenzac dev --port 8080 --verbose
 
 # Development with file watching
-flowc dev --watch
+cadenzac dev --watch
 ```
 
 #### Development Workflow
 
-1. Run `flowc dev` in your UI project directory
+1. Run `cadenzac dev` in your UI project directory
 2. Open browser at `http://localhost:3000`
-3. Edit FlowLang UI components
+3. Edit Cadenza UI components
 4. See changes reflected immediately
 
 ### `new` Command ❌ **Phase 5 - Self-hosting migration**
 
-**STATUS**: Not yet implemented. The `new` command will be available after the .flow tools are tested and fixed in Phase 5.
+**STATUS**: Not yet implemented. The `new` command will be available after the .cdz tools are tested and fixed in Phase 5.
 
-Creates a new FlowLang project with a complete directory structure.
+Creates a new Cadenza project with a complete directory structure.
 
 #### Syntax
 
 ```bash
-flowc new [--template <template>] <project-name>
+cadenzac new [--template <template>] <project-name>
 ```
 
 #### Options
@@ -338,7 +338,7 @@ flowc new [--template <template>] <project-name>
 
 #### Description
 
-The `new` command creates a complete FlowLang project structure with different templates:
+The `new` command creates a complete Cadenza project structure with different templates:
 
 **Basic Template (default):**
 - Backend-focused project with C# output
@@ -360,13 +360,13 @@ The `new` command creates a complete FlowLang project structure with different t
 
 ```bash
 # Create a basic backend project
-flowc new my-backend-app
+cadenzac new my-backend-app
 
 # Create a UI component project
-flowc new --template ui my-ui-app
+cadenzac new --template ui my-ui-app
 
 # Create a full-stack application
-flowc new --template fullstack my-fullstack-app
+cadenzac new --template fullstack my-fullstack-app
 
 # Navigate to the project
 cd my-ui-app
@@ -377,16 +377,16 @@ cd my-ui-app
 **Basic Template:**
 ```
 my-backend-app/
-├── flowc.json              # Project configuration
-├── main.flow              # Main source file
+├── cadenzac.json              # Project configuration
+├── main.cdz              # Main source file
 └── README.md              # Project documentation
 ```
 
 **UI Template:**
 ```
 my-ui-app/
-├── flowc.json              # Project configuration
-├── main.flow              # Main UI component
+├── cadenzac.json              # Project configuration
+├── main.cdz              # Main UI component
 ├── components/            # UI components directory
 ├── state/                 # State management
 └── README.md              # Project documentation
@@ -395,16 +395,16 @@ my-ui-app/
 **Fullstack Template:**
 ```
 my-fullstack-app/
-├── flowc.json              # Project configuration
+├── cadenzac.json              # Project configuration
 ├── backend/
-│   └── UserService.flow   # Backend services
+│   └── UserService.cdz   # Backend services
 ├── frontend/
 │   ├── components/        # UI components
 │   ├── state/            # State management
-│   └── main.flow         # Frontend entry point
+│   └── main.cdz         # Frontend entry point
 ├── shared/
 │   └── types/            # Shared type definitions
-│       └── User.flow
+│       └── User.cdz
 └── README.md              # Project documentation
 ```
 
@@ -412,25 +412,25 @@ my-fullstack-app/
 
 ```
 my-awesome-app/
-├── flowc.json              # Project configuration
+├── cadenzac.json              # Project configuration
 ├── src/
-│   └── main.flow          # Main source file
+│   └── main.cdz          # Main source file
 ├── examples/
-│   └── hello.flow         # Example file
+│   └── hello.cdz         # Example file
 ├── tests/
-│   └── basic_test.flow    # Test file
+│   └── basic_test.cdz    # Test file
 ├── .gitignore             # Git ignore patterns
 └── README.md              # Project documentation
 ```
 
 #### Generated Files Content
 
-**flowc.json:**
+**cadenzac.json:**
 ```json
 {
   "Name": "my-awesome-app",
   "Version": "1.0.0",
-  "Description": "A FlowLang project: my-awesome-app",
+  "Description": "A Cadenza project: my-awesome-app",
   "Build": {
     "Source": "src/",
     "Output": "build/",
@@ -440,15 +440,15 @@ my-awesome-app/
 }
 ```
 
-**src/main.flow:**
-```flowlang
+**src/main.cdz:**
+```cadenza
 function main() -> string {
-    return "Hello, FlowLang!"
+    return "Hello, Cadenza!"
 }
 ```
 
-**examples/hello.flow:**
-```flowlang
+**examples/hello.cdz:**
+```cadenza
 pure function greet(name: string) -> string {
     return $"Hello, {name}!"
 }
@@ -458,8 +458,8 @@ function main() -> string {
 }
 ```
 
-**tests/basic_test.flow:**
-```flowlang
+**tests/basic_test.cdz:**
+```cadenza
 pure function add(a: int, b: int) -> int {
     return a + b
 }
@@ -477,14 +477,14 @@ function test_add() -> bool {
 
 ### `build` Command ❌ **Phase 5 - Self-hosting migration**
 
-**STATUS**: Not yet implemented. The `build` command will be available after the .flow tools are tested and fixed in Phase 5.
+**STATUS**: Not yet implemented. The `build` command will be available after the .cdz tools are tested and fixed in Phase 5.
 
-Builds the current FlowLang project by transpiling all source files.
+Builds the current Cadenza project by transpiling all source files.
 
 #### Syntax
 
 ```bash
-flowc build
+cadenzac build
 ```
 
 #### Parameters
@@ -495,8 +495,8 @@ None.
 
 The `build` command:
 
-1. Reads configuration from `flowc.json`
-2. Finds all `.flow` files in the source directory
+1. Reads configuration from `cadenzac.json`
+2. Finds all `.cdz` files in the source directory
 3. Transpiles them to C# files in the output directory
 4. Preserves directory structure
 5. Reports build status
@@ -505,7 +505,7 @@ The `build` command:
 
 ```bash
 # Build the current project
-flowc build
+cadenzac build
 ```
 
 #### Sample Output
@@ -517,7 +517,7 @@ Build completed. Output in 'build/'
 
 #### Configuration
 
-Build behavior is controlled by `flowc.json`:
+Build behavior is controlled by `cadenzac.json`:
 
 ```json
 {
@@ -531,31 +531,31 @@ Build behavior is controlled by `flowc.json`:
 
 #### Error Conditions
 
-- **No flowc.json**: Uses default configuration with warning
+- **No cadenzac.json**: Uses default configuration with warning
 - **No source directory**: Returns error code 1
-- **No .flow files**: Returns error code 1
+- **No .cdz files**: Returns error code 1
 - **Transpilation errors**: Returns error code 1
 
 ### `run` Command ✅ **WORKING** (July 2025)
 
-Transpiles and displays the C# code for a single FlowLang file.
+Transpiles and displays the C# code for a single Cadenza file.
 
 #### Syntax
 
 ```bash
 # Using standalone executable
-./bin/release/flowc-core --run <file.flow>
+./bin/release/cadenzac-core --run <file.cdz>
 
 # Using dotnet run
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run <file.flow>
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run <file.cdz>
 
 # Legacy transpilation mode (shows C# code)
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- <file.flow>
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- <file.cdz>
 ```
 
 #### Parameters
 
-- `<file.flow>` (required): Path to the FlowLang file
+- `<file.cdz>` (required): Path to the Cadenza file
 
 #### Description
 
@@ -569,23 +569,23 @@ The `run` command:
 
 ```bash
 # Run a single file - WORKING
-./bin/release/flowc-core --run examples/hello.flow
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run examples/hello.flow
+./bin/release/cadenzac-core --run examples/hello.cdz
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run examples/hello.cdz
 
 # Run with relative path - WORKING
-./bin/release/flowc-core --run src/main.flow
+./bin/release/cadenzac-core --run src/main.cdz
 
 # Run with absolute path - WORKING
-./bin/release/flowc-core --run /path/to/project/examples/demo.flow
+./bin/release/cadenzac-core --run /path/to/project/examples/demo.cdz
 
 # Show transpiled C# code (legacy mode) - WORKING
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- examples/hello.flow
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- examples/hello.cdz
 ```
 
 #### Sample Output
 
 ```
-Transpiled 'examples/hello.flow' to '/tmp/hello.cs'
+Transpiled 'examples/hello.cdz' to '/tmp/hello.cs'
 Generated C# code:
 ==================================================
 /// <summary>
@@ -618,14 +618,14 @@ Run complete.
 
 ### `test` Command ❌ **Phase 5 - Self-hosting migration**
 
-**STATUS**: Not yet implemented. The `test` command will be available after the .flow tools are tested and fixed in Phase 5.
+**STATUS**: Not yet implemented. The `test` command will be available after the .cdz tools are tested and fixed in Phase 5.
 
 Runs all tests in the current project.
 
 #### Syntax
 
 ```bash
-flowc test
+cadenzac test
 ```
 
 #### Parameters
@@ -636,7 +636,7 @@ None.
 
 The `test` command:
 
-1. Finds all `.flow` files in the `tests/` directory
+1. Finds all `.cdz` files in the `tests/` directory
 2. Validates that each file transpiles correctly
 3. Reports success/failure for each test
 4. Returns overall test status
@@ -645,16 +645,16 @@ The `test` command:
 
 ```bash
 # Run all tests
-flowc test
+cadenzac test
 ```
 
 #### Sample Output
 
 ```
 Found 2 test file(s)
-Processing test: tests/basic_test.flow
+Processing test: tests/basic_test.cdz
   ✓ Transpiled successfully
-Processing test: tests/advanced_test.flow
+Processing test: tests/advanced_test.cdz
   ✓ Transpiled successfully
 
 All tests passed!
@@ -666,10 +666,10 @@ Tests should be organized in the `tests/` directory:
 
 ```
 tests/
-├── basic_test.flow         # Basic functionality tests
-├── result_test.flow        # Result type tests
-├── effect_test.flow        # Effect system tests
-└── integration_test.flow   # Integration tests
+├── basic_test.cdz         # Basic functionality tests
+├── result_test.cdz        # Result type tests
+├── effect_test.cdz        # Effect system tests
+└── integration_test.cdz   # Integration tests
 ```
 
 #### Error Conditions
@@ -685,7 +685,7 @@ Shows help information for commands.
 #### Syntax
 
 ```bash
-flowc help [command]
+cadenzac help [command]
 ```
 
 #### Parameters
@@ -704,12 +704,12 @@ The `help` command provides:
 
 ```bash
 # Show general help - WORKING
-./bin/release/flowc-core --help
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --help
+./bin/release/cadenzac-core --help
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --help
 
 # Show version - WORKING
-./bin/release/flowc-core --version
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --version
+./bin/release/cadenzac-core --version
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --version
 
 # Note: Command-specific help for new, build, run, test will be available in Phase 5
 ```
@@ -717,18 +717,18 @@ dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --version
 #### General Help Output
 
 ```
-FlowLang Transpiler (flowc) v1.0.0
+Cadenza Transpiler (cadenzac) v1.0.0
 
-Usage: flowc <command> [options]
+Usage: cadenzac <command> [options]
 
 Commands:
-  new          Create a new FlowLang project
-  build        Build the current FlowLang project
-  run          Transpile and run a single FlowLang file
+  new          Create a new Cadenza project
+  build        Build the current Cadenza project
+  run          Transpile and run a single Cadenza file
   test         Run tests in the current project
   help         Show help information
 
-Use 'flowc help <command>' for more information about a command.
+Use 'cadenzac help <command>' for more information about a command.
 ```
 
 #### Command-specific Help
@@ -743,14 +743,14 @@ Each command provides detailed help including:
 
 ### `lsp` Command ❌ **Phase 5 - Self-hosting migration**
 
-**STATUS**: Not yet implemented. The `lsp` command will be available after the .flow tools are tested and fixed in Phase 5.
+**STATUS**: Not yet implemented. The `lsp` command will be available after the .cdz tools are tested and fixed in Phase 5.
 
-Starts the FlowLang Language Server Protocol server for IDE integration.
+Starts the Cadenza Language Server Protocol server for IDE integration.
 
 #### Syntax
 
 ```bash
-flowc lsp [options]
+cadenzac lsp [options]
 ```
 
 #### Parameters
@@ -763,7 +763,7 @@ flowc lsp [options]
 The `lsp` command starts a Language Server Protocol server that provides:
 
 - Real-time syntax and semantic error detection
-- Auto-completion for FlowLang keywords, types, and functions
+- Auto-completion for Cadenza keywords, types, and functions
 - Hover information with type details and effect annotations
 - Go-to-definition navigation
 - Document symbols and workspace symbols
@@ -772,13 +772,13 @@ The `lsp` command starts a Language Server Protocol server that provides:
 
 ```bash
 # Start LSP server (stdin/stdout mode for editors)
-flowc lsp
+cadenzac lsp
 
 # Start with verbose logging
-flowc lsp --verbose
+cadenzac lsp --verbose
 
 # Start on specific TCP port
-flowc lsp --port 8080
+cadenzac lsp --port 8080
 ```
 
 #### IDE Integration
@@ -791,14 +791,14 @@ See [LSP Integration Guide](lsp-integration.md) for setup instructions with:
 
 ### `lint` Command ❌ **Phase 5 - Self-hosting migration**
 
-**STATUS**: Not yet implemented. The `lint` command will be available after the .flow tools are tested and fixed in Phase 5.
+**STATUS**: Not yet implemented. The `lint` command will be available after the .cdz tools are tested and fixed in Phase 5.
 
-Runs static analysis and linting on FlowLang source code.
+Runs static analysis and linting on Cadenza source code.
 
 #### Syntax
 
 ```bash
-flowc lint [paths...] [options]
+cadenzac lint [paths...] [options]
 ```
 
 #### Parameters
@@ -825,22 +825,22 @@ The `lint` command provides comprehensive static analysis including:
 
 ```bash
 # Lint current directory
-flowc lint
+cadenzac lint
 
 # Lint specific files/directories
-flowc lint src/ examples/
+cadenzac lint src/ examples/
 
 # Use custom configuration
-flowc lint --config my-rules.json
+cadenzac lint --config my-rules.json
 
 # JSON output for CI/CD
-flowc lint --format json
+cadenzac lint --format json
 
 # Auto-fix issues
-flowc lint --fix
+cadenzac lint --fix
 
 # Run only effect system rules
-flowc lint --effects
+cadenzac lint --effects
 ```
 
 #### Configuration
@@ -854,7 +854,7 @@ Create `flowlint.json` to customize rules:
     "unused-results": "error",
     "dead-code": "warning"
   },
-  "exclude": ["generated/", "*.test.flow"]
+  "exclude": ["generated/", "*.test.cdz"]
 }
 ```
 
@@ -867,7 +867,7 @@ Adds a package dependency to the current project.
 #### Syntax
 
 ```bash
-flowc add <package> [version] [options]
+cadenzac add <package> [version] [options]
 ```
 
 #### Parameters
@@ -881,8 +881,8 @@ flowc add <package> [version] [options]
 
 The `add` command:
 
-1. Resolves the package from FlowLang or NuGet registries
-2. Updates `flowc.json` with the new dependency
+1. Resolves the package from Cadenza or NuGet registries
+2. Updates `cadenzac.json` with the new dependency
 3. Downloads and installs the package
 4. Automatically infers effects for .NET libraries
 5. Updates the lock file
@@ -891,16 +891,16 @@ The `add` command:
 
 ```bash
 # Add latest version
-flowc add FlowLang.Database
+cadenzac add Cadenza.Database
 
 # Add specific version
-flowc add Newtonsoft.Json@13.0.3
+cadenzac add Newtonsoft.Json@13.0.3
 
 # Add with version constraint
-flowc add FlowLang.Testing@^1.0.0 --dev
+cadenzac add Cadenza.Testing@^1.0.0 --dev
 
 # Add from NuGet
-flowc add Microsoft.Extensions.Logging
+cadenzac add Microsoft.Extensions.Logging
 ```
 
 ### `install` Command
@@ -910,7 +910,7 @@ Installs all project dependencies.
 #### Syntax
 
 ```bash
-flowc install [options]
+cadenzac install [options]
 ```
 
 #### Parameters
@@ -923,7 +923,7 @@ flowc install [options]
 
 The `install` command:
 
-1. Reads dependencies from `flowc.json`
+1. Reads dependencies from `cadenzac.json`
 2. Resolves version constraints and conflicts
 3. Downloads packages from configured registries
 4. Updates the lock file
@@ -933,13 +933,13 @@ The `install` command:
 
 ```bash
 # Install all dependencies
-flowc install
+cadenzac install
 
 # Production-only install
-flowc install --production
+cadenzac install --production
 
 # Force reinstall
-flowc install --force
+cadenzac install --force
 ```
 
 ### `audit` Command
@@ -949,7 +949,7 @@ Performs security audit of project dependencies.
 #### Syntax
 
 ```bash
-flowc audit [options]
+cadenzac audit [options]
 ```
 
 #### Parameters
@@ -972,16 +972,16 @@ The `audit` command:
 
 ```bash
 # Run security audit
-flowc audit
+cadenzac audit
 
 # Auto-fix vulnerabilities
-flowc audit --fix
+cadenzac audit --fix
 
 # JSON output for CI/CD
-flowc audit --format json
+cadenzac audit --format json
 
 # Only critical and high severity
-flowc audit --severity high
+cadenzac audit --severity high
 ```
 
 ### `workspace` Command
@@ -991,7 +991,7 @@ Manages multi-project workspaces.
 #### Syntax
 
 ```bash
-flowc workspace <subcommand> [options]
+cadenzac workspace <subcommand> [options]
 ```
 
 #### Subcommands
@@ -1004,21 +1004,21 @@ flowc workspace <subcommand> [options]
 
 ```bash
 # List workspace projects
-flowc workspace list
+cadenzac workspace list
 
 # Install dependencies for all projects
-flowc workspace install
+cadenzac workspace install
 
 # Run build across workspace
-flowc workspace run build
+cadenzac workspace run build
 
 # Run tests across workspace
-flowc workspace run test
+cadenzac workspace run test
 ```
 
 #### Workspace Configuration
 
-Configure in root `flowc.json`:
+Configure in root `cadenzac.json`:
 
 ```json
 {
@@ -1034,9 +1034,9 @@ See [Package Manager Guide](package-manager.md) for complete workspace documenta
 
 ## Configuration
 
-### Project Configuration (flowc.json)
+### Project Configuration (cadenzac.json)
 
-FlowLang projects are configured using `flowc.json`:
+Cadenza projects are configured using `cadenzac.json`:
 
 ```json
 {
@@ -1066,7 +1066,7 @@ FlowLang projects are configured using `flowc.json`:
 
 #### Default Configuration
 
-If no `flowc.json` exists, these defaults are used:
+If no `cadenzac.json` exists, these defaults are used:
 
 ```json
 {
@@ -1088,67 +1088,67 @@ If no `flowc.json` exists, these defaults are used:
 
 ```bash
 # Create project
-flowc new my-web-api
+cadenzac new my-web-api
 cd my-web-api
 
 # Edit source files
-# ... edit src/main.flow
+# ... edit src/main.cdz
 
 # Build project
-flowc build
+cadenzac build
 
 # Test project
-flowc test
+cadenzac test
 
 # Run examples
-flowc run examples/hello.flow
+cadenzac run examples/hello.cdz
 ```
 
 ### Development Workflow
 
 ```bash
 # Quick testing of individual files
-flowc run src/user_service.flow
+cadenzac run src/user_service.cdz
 
 # Full project build
-flowc build
+cadenzac build
 
 # Run all tests
-flowc test
+cadenzac test
 
 # Iterate on development
 # ... edit files
-flowc run src/modified_file.flow
-flowc test
+cadenzac run src/modified_file.cdz
+cadenzac test
 ```
 
 ### Project Structure Best Practices
 
 ```
 my-project/
-├── flowc.json                  # Project configuration
+├── cadenzac.json                  # Project configuration
 ├── src/                        # Main source code
-│   ├── main.flow              # Application entry point
+│   ├── main.cdz              # Application entry point
 │   ├── models/                # Data models
-│   │   ├── user.flow
-│   │   └── product.flow
+│   │   ├── user.cdz
+│   │   └── product.cdz
 │   ├── services/              # Business logic
-│   │   ├── user_service.flow
-│   │   └── product_service.flow
+│   │   ├── user_service.cdz
+│   │   └── product_service.cdz
 │   └── utils/                 # Utility functions
-│       └── validation.flow
+│       └── validation.cdz
 ├── examples/                   # Usage examples
-│   ├── basic_usage.flow
-│   ├── advanced_features.flow
-│   └── integration_example.flow
+│   ├── basic_usage.cdz
+│   ├── advanced_features.cdz
+│   └── integration_example.cdz
 ├── tests/                      # Test files
 │   ├── unit/
-│   │   ├── user_tests.flow
-│   │   └── validation_tests.flow
+│   │   ├── user_tests.cdz
+│   │   └── validation_tests.cdz
 │   ├── integration/
-│   │   └── api_tests.flow
+│   │   └── api_tests.cdz
 │   └── performance/
-│       └── benchmark_tests.flow
+│       └── benchmark_tests.cdz
 ├── docs/                       # Project documentation
 │   ├── API.md
 │   └── DEPLOYMENT.md
@@ -1160,7 +1160,7 @@ my-project/
 
 ```yaml
 # Example GitHub Actions workflow
-name: FlowLang CI
+name: Cadenza CI
 
 on: [push, pull_request]
 
@@ -1176,14 +1176,14 @@ jobs:
       with:
         dotnet-version: 8.0.x
     
-    - name: Build FlowLang CLI
+    - name: Build Cadenza CLI
       run: dotnet build src/
     
     - name: Build Project
-      run: dotnet run --project src/flowc.csproj -- build
+      run: dotnet run --project src/cadenzac.csproj -- build
     
     - name: Run Tests
-      run: dotnet run --project src/flowc.csproj -- test
+      run: dotnet run --project src/cadenzac.csproj -- test
     
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v2
@@ -1198,18 +1198,18 @@ jobs:
 
 #### 1. Command Not Found
 
-**Error:** `flowc: command not found`
+**Error:** `cadenzac: command not found`
 
 **Solution:**
 ```bash
 # Use full dotnet command (WORKING as of July 2025)
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --version
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --version
 
 # Or use standalone executable
-./bin/release/flowc-core --version
+./bin/release/cadenzac-core --version
 
 # Or create alias
-alias flowc="dotnet run --project /path/to/flowlang/src/FlowLang.Core/flowc-core.csproj --"
+alias cadenzac="dotnet run --project /path/to/cadenza/src/Cadenza.Core/cadenzac-core.csproj --"
 ```
 
 #### 2. Project Already Exists
@@ -1218,7 +1218,7 @@ alias flowc="dotnet run --project /path/to/flowlang/src/FlowLang.Core/flowc-core
 
 **Solutions:**
 ```bash
-# NOTE: flowc new is not yet implemented (Phase 5)
+# NOTE: cadenzac new is not yet implemented (Phase 5)
 # For now, create projects manually:
 
 # Create directory structure
@@ -1227,13 +1227,13 @@ cd my-project
 mkdir src examples tests
 
 # Create basic files
-echo 'function main() -> string { return "Hello!" }' > src/main.flow
-echo 'function greet(name: string) -> string { return $"Hello, {name}!" }' > examples/hello.flow
+echo 'function main() -> string { return "Hello!" }' > src/main.cdz
+echo 'function greet(name: string) -> string { return $"Hello, {name}!" }' > examples/hello.cdz
 ```
 
 #### 3. No Source Files
 
-**Error:** `No .flow files found in 'src/'`
+**Error:** `No .cdz files found in 'src/'`
 
 **Solutions:**
 ```bash
@@ -1241,10 +1241,10 @@ echo 'function greet(name: string) -> string { return $"Hello, {name}!" }' > exa
 ls src/
 
 # Create source files
-echo 'function main() -> string { return "Hello" }' > src/main.flow
+echo 'function main() -> string { return "Hello" }' > src/main.cdz
 
 # Check configuration
-cat flowc.json
+cat cadenzac.json
 ```
 
 #### 4. Transpilation Errors
@@ -1254,13 +1254,13 @@ cat flowc.json
 **Solutions:**
 ```bash
 # Test individual files (WORKING)
-./bin/release/flowc-core --run src/problematic_file.flow
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run src/problematic_file.flow
+./bin/release/cadenzac-core --run src/problematic_file.cdz
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run src/problematic_file.cdz
 
 # Check syntax against language reference
 # See docs/language-reference.md
 
-# Validate FlowLang syntax
+# Validate Cadenza syntax
 # Common issues:
 # - Missing type annotations
 # - Incorrect effect declarations
@@ -1292,10 +1292,10 @@ For additional debugging information:
 
 ```bash
 # Use verbose dotnet output (WORKING)
-dotnet run --project src/FlowLang.Core/flowc-core.csproj --verbosity detailed -- --run myfile.flow
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj --verbosity detailed -- --run myfile.cdz
 
 # Check generated files for traditional transpilation
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- myfile.flow myfile.cs
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- myfile.cdz myfile.cs
 cat myfile.cs
 ```
 
@@ -1304,8 +1304,8 @@ cat myfile.cs
 1. **Built-in Help:**
    ```bash
    # WORKING as of July 2025
-   ./bin/release/flowc-core --help
-   dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --help
+   ./bin/release/cadenzac-core --help
+   dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --help
    ```
 
 2. **Documentation:**
@@ -1329,10 +1329,10 @@ The CLI maintains backward compatibility with the legacy `--input` mode:
 
 ```bash
 # Legacy mode (deprecated)
-flowc --input examples/hello.flow --output output.cs
+cadenzac --input examples/hello.cdz --output output.cs
 
 # Modern equivalent
-flowc run examples/hello.flow
+cadenzac run examples/hello.cdz
 ```
 
 ### Migration from Legacy CLI
@@ -1340,26 +1340,26 @@ flowc run examples/hello.flow
 1. **Replace `--input` calls:**
    ```bash
    # Old
-   flowc --input file.flow
+   cadenzac --input file.cdz
    
    # New (WORKING as of July 2025)
-   ./bin/release/flowc-core --run file.flow
-   dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run file.flow
+   ./bin/release/cadenzac-core --run file.cdz
+   dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run file.cdz
    ```
 
 2. **Use project structure:**
    ```bash
    # Instead of individual file processing
-   # NOTE: flowc new and flowc build are not yet implemented (Phase 5)
+   # NOTE: cadenzac new and cadenzac build are not yet implemented (Phase 5)
    # For now, work with individual files:
-   ./bin/release/flowc-core --run file.flow
+   ./bin/release/cadenzac-core --run file.cdz
    ```
 
 ## Summary
 
-The FlowLang CLI provides a complete development experience:
+The Cadenza CLI provides a complete development experience:
 
-- **Project Management**: Create and organize FlowLang projects
+- **Project Management**: Create and organize Cadenza projects
 - **Build System**: Transpile source files to C#
 - **Development Tools**: Test individual files quickly
 - **Testing Framework**: Validate project correctness
@@ -1369,5 +1369,5 @@ The FlowLang CLI provides a complete development experience:
 For more information, see:
 - [Getting Started Guide](getting-started.md) - Basic usage tutorial
 - [Language Reference](language-reference.md) - Complete language documentation
-- [Migration Guide](migration-guide.md) - Moving from C# to FlowLang
+- [Migration Guide](migration-guide.md) - Moving from C# to Cadenza
 - [Examples Directory](examples/) - Working code samples

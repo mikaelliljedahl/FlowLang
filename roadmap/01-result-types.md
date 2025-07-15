@@ -1,10 +1,10 @@
 # Result Types Implementation
 
 ## Overview
-Implement FlowLang's core error handling system using Result<T, E> types that map to C# equivalents.
+Implement Cadenza's core error handling system using Result<T, E> types that map to C# equivalents.
 
 ## Goals
-- Add Result<T, E> type to FlowLang syntax
+- Add Result<T, E> type to Cadenza syntax
 - Generate equivalent C# code using nullable reference types or custom Result class
 - Support Ok() and Error() constructors
 - Handle error propagation with `?` operator
@@ -32,8 +32,8 @@ Implement FlowLang's core error handling system using Result<T, E> types that ma
 - Generate Ok/Error constructors
 - Generate error propagation logic
 
-## Example FlowLang Code
-```flowlang
+## Example Cadenza Code
+```cadenza
 function divide(a: int, b: int) -> Result<int, String> {
     if b == 0 {
         return Error("Division by zero")
@@ -79,7 +79,7 @@ public static Result<int, string> calculate(int x, int y)
 9. Test with examples
 
 ## Success Criteria
-- FlowLang Result types parse correctly
+- Cadenza Result types parse correctly
 - Generated C# code compiles and runs
 - Error propagation works as expected
 - Examples demonstrate full functionality

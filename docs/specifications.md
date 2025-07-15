@@ -1,10 +1,10 @@
-# FlowLang Specification Blocks Guide
+# Cadenza Specification Blocks Guide
 
 ## Overview
 
 Specification blocks solve a fundamental problem in software development: **the loss of context between intent and implementation**. While we carefully version control our code, we often lose the reasoning, business requirements, and decision-making process that led to that code.
 
-FlowLang's specification blocks create an **atomic link** between the "why" (specification) and the "how" (implementation), ensuring that context is preserved throughout the software lifecycle.
+Cadenza's specification blocks create an **atomic link** between the "why" (specification) and the "how" (implementation), ensuring that context is preserved throughout the software lifecycle.
 
 ## The Problem Statement
 
@@ -19,7 +19,7 @@ Business Requirements → Specification Document → Code → Binary
 
 **Impact on LLMs:** AI assistants lack the context of *why* code exists, making maintenance, debugging, and enhancement significantly harder.
 
-### FlowLang's Solution
+### Cadenza's Solution
 ```
 Business Requirements → Specification Block + Code → Binary
          ↓                        ↓                    ↓
@@ -34,7 +34,7 @@ Business Requirements → Specification Block + Code → Binary
 
 ### Basic Structure
 
-```flowlang
+```cadenza
 /*spec
 intent: "Required: What this function does and why it exists"
 rules:
@@ -62,7 +62,7 @@ The natural language description of what the function does and **why it exists**
 - Mention any important constraints or assumptions
 
 **Examples:**
-```flowlang
+```cadenza
 intent: "Transfer funds between user accounts atomically while maintaining audit trail"
 intent: "Validate user email format according to RFC 5322 for registration system"
 intent: "Calculate shipping cost based on weight, distance, and delivery speed preferences"
@@ -78,7 +78,7 @@ A list of business rules, constraints, validations, or requirements that the imp
 - Be specific about data constraints
 
 **Examples:**
-```flowlang
+```cadenza
 rules:
   - "Transfer amount must be positive and non-zero"
   - "Source account must have sufficient available balance"
@@ -97,7 +97,7 @@ Expected outcomes or state changes that should be true after successful executio
 - Consider both success and failure scenarios
 
 **Examples:**
-```flowlang
+```cadenza
 postconditions:
   - "Source account balance is reduced by transfer amount"
   - "Destination account balance is increased by transfer amount"
@@ -110,7 +110,7 @@ postconditions:
 Reference to external documentation, requirements documents, or design specifications.
 
 **Examples:**
-```flowlang
+```cadenza
 source_doc: "requirements/banking-transfers-v2.3.md"
 source_doc: "https://wiki.company.com/payment-processing"
 source_doc: "design/user-authentication-flow.pdf"
@@ -122,7 +122,7 @@ source_doc: "design/user-authentication-flow.pdf"
 
 Most common usage - specify individual function behavior:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Authenticate user credentials and create secure session"
 rules:
@@ -171,7 +171,7 @@ function authenticateUser(email: string, password: string)
 
 Define the purpose and scope of entire modules:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Comprehensive user management system for e-commerce platform"
 rules:
@@ -227,7 +227,7 @@ module UserManagement {
 
 Start with the specification, then implement:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Process customer order with inventory validation and payment"
 rules:
@@ -262,7 +262,7 @@ function processOrder(order: OrderDetails)
 
 Specifications provide clear criteria for test generation:
 
-```flowlang
+```cadenza
 // Test cases derived from specification rules
 function testProcessOrder() {
     // Test rule: "All ordered items must be in stock"
@@ -288,7 +288,7 @@ function testProcessOrder() {
 
 Use specifications to validate implementation consistency:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Calculate user discount based on loyalty tier and purchase history"
 rules:
@@ -323,7 +323,7 @@ function calculateDiscount(user: User) -> Result<float, DiscountError> {
 
 ### E-Commerce Example
 
-```flowlang
+```cadenza
 /*spec
 intent: "Process product return request with validation and refund calculation"
 rules:
@@ -381,7 +381,7 @@ function processReturnRequest(
 
 ### Financial Services Example
 
-```flowlang
+```cadenza
 /*spec
 intent: "Calculate loan eligibility and terms based on applicant financial profile"
 rules:
@@ -441,7 +441,7 @@ function assessLoanEligibility(application: LoanApplication)
 
 ### Healthcare Example
 
-```flowlang
+```cadenza
 /*spec
 intent: "Schedule patient appointment with conflict resolution and insurance verification"
 rules:
@@ -517,7 +517,7 @@ function scheduleAppointment(
 ## Working Example
 
 For a complete working example with multiple specification blocks demonstrating real-world usage, see:
-- **`examples/specification_example.flow`** - Shows loyalty discount calculation, payment processing, user validation, and reporting functions with comprehensive specification blocks
+- **`examples/specification_example.cdz`** - Shows loyalty discount calculation, payment processing, user validation, and reporting functions with comprehensive specification blocks
 
 This example demonstrates:
 - **Business Logic Preservation**: Loyalty program rules with tier-based discounts
@@ -530,7 +530,7 @@ This example demonstrates:
 ### 1. Enhanced Context Understanding
 
 **Without Specifications:**
-```flowlang
+```cadenza
 function processPayment(amount: float, cardNumber: string) -> bool {
     // What business rules apply?
     // What error conditions should be handled?
@@ -540,7 +540,7 @@ function processPayment(amount: float, cardNumber: string) -> bool {
 ```
 
 **With Specifications:**
-```flowlang
+```cadenza
 /*spec
 intent: "Process credit card payment with fraud detection and compliance"
 rules:
@@ -563,7 +563,7 @@ function processPayment(amount: float, cardNumber: string) -> Result<PaymentResu
 
 LLMs can generate comprehensive tests directly from specifications:
 
-```flowlang
+```cadenza
 // LLM can automatically generate:
 function testProcessPayment() {
     // From rule: "Payment amount must be positive"
@@ -583,7 +583,7 @@ function testProcessPayment() {
 
 When requirements change, LLMs can ensure implementation stays aligned:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Calculate shipping cost with new express delivery option"
 rules:
@@ -607,7 +607,7 @@ function calculateShipping(weight: float, orderTotal: float)
 
 Before writing any code, start with the specification:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Your intent here"
 rules:
@@ -627,7 +627,7 @@ function myFunction() -> ResultType {
 
 Update specifications whenever requirements change:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Process user login with new 2FA requirement"  // Updated intent
 rules:
@@ -649,7 +649,7 @@ function loginUser(username: string, password: string)
 Use concrete, measurable criteria:
 
 **Good:**
-```flowlang
+```cadenza
 rules:
   - "Password must be at least 8 characters long"
   - "Password must contain at least one uppercase letter"
@@ -658,7 +658,7 @@ rules:
 ```
 
 **Avoid:**
-```flowlang
+```cadenza
 rules:
   - "Password must be secure"  // Too vague
   - "Password should be good"  // Not testable
@@ -669,12 +669,12 @@ rules:
 Capture the "why" not just the "what":
 
 **Good:**
-```flowlang
+```cadenza
 intent: "Send order confirmation email to improve customer confidence and provide shipment tracking information"
 ```
 
 **Avoid:**
-```flowlang
+```cadenza
 intent: "Send an email"  // Lacks business context
 ```
 
@@ -682,7 +682,7 @@ intent: "Send an email"  // Lacks business context
 
 Establish a common vocabulary for specifications across your project:
 
-```flowlang
+```cadenza
 // Use consistent terms throughout specifications
 rules:
   - "User must be authenticated"  // Not "logged in" or "signed in"
@@ -696,7 +696,7 @@ rules:
 
 Specifications can drive code generation for boilerplate and validation:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Validate user registration form data"
 rules:
@@ -740,7 +740,7 @@ public static Result<PaymentResult, PaymentError> processPayment(float amount, s
 Linting rules can verify specification-code consistency:
 
 ```bash
-flowc lint --check-specs
+cadenzac lint --check-specs
 # Warns if implementation doesn't handle all specified error conditions
 # Warns if postconditions aren't being met
 # Suggests tests based on specification rules
@@ -748,7 +748,7 @@ flowc lint --check-specs
 
 ## Conclusion
 
-Specification blocks transform FlowLang from a simple transpilation language into a **context-preserving development platform**. By atomically linking intent with implementation, we solve the fundamental problem of lost context that plagues traditional software development.
+Specification blocks transform Cadenza from a simple transpilation language into a **context-preserving development platform**. By atomically linking intent with implementation, we solve the fundamental problem of lost context that plagues traditional software development.
 
 For LLM-assisted development, this means:
 - **Complete Context**: AI assistants understand both what and why

@@ -6,18 +6,18 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 
-namespace FlowLang.Tests.Regression
+namespace Cadenza.Tests.Regression
 {
     [TestFixture]
     public class RegressionTests
     {
-        private FlowLangTranspiler _transpiler;
+        private CadenzaTranspiler _transpiler;
         private string _regressionDataPath;
 
         [SetUp]
         public void SetUp()
         {
-            _transpiler = new FlowLangTranspiler();
+            _transpiler = new CadenzaTranspiler();
             _regressionDataPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "regression", "data");
             
             // Create regression data directory if it doesn't exist

@@ -1,22 +1,22 @@
 {
-  "name": "flowlang-package-demo",
+  "name": "cadenza-package-demo",
   "version": "1.0.0",
-  "description": "Demonstration of FlowLang enhanced package management",
+  "description": "Demonstration of Cadenza enhanced package management",
   "dependencies": {
-    "FlowLang.Core": "^2.1.0",
-    "FlowLang.Database": "~1.5.2",
+    "Cadenza.Core": "^2.1.0",
+    "Cadenza.Database": "~1.5.2",
     "Newtonsoft.Json": "13.0.3",
     "System.Net.Http": "^4.3.4"
   },
   "devDependencies": {
-    "FlowLang.Testing": "^1.0.0",
-    "FlowLang.Benchmarks": "^0.5.0"
+    "Cadenza.Testing": "^1.0.0",
+    "Cadenza.Benchmarks": "^0.5.0"
   },
   "nugetSources": [
     "https://api.nuget.org/v3/index.json",
     "https://nuget.internal.company.com/v3/index.json"
   ],
-  "flowlangRegistry": "https://packages.flowlang.org",
+  "cadenzaRegistry": "https://packages.cadenza.org",
   "effectMappings": {
     "System.Data.SqlClient": ["Database"],
     "System.Net.Http": ["Network"],
@@ -40,11 +40,11 @@
     ]
   },
   "publishConfig": {
-    "registry": "https://packages.flowlang.org",
+    "registry": "https://packages.cadenza.org",
     "access": "public",
     "metadata": {
-      "homepage": "https://github.com/mycompany/flowlang-package-demo",
-      "repository": "https://github.com/mycompany/flowlang-package-demo.git",
+      "homepage": "https://github.com/mycompany/cadenza-package-demo",
+      "repository": "https://github.com/mycompany/cadenza-package-demo.git",
       "license": "MIT"
     }
   },

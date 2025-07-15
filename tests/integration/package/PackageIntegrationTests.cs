@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using FlowLang.Package;
+using Cadenza.Package;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace FlowLang.Tests.Integration.Package;
+namespace Cadenza.Tests.Integration.Package;
 
 [TestClass]
 public class PackageIntegrationTests
@@ -31,7 +31,7 @@ public class PackageIntegrationTests
     [TestMethod]
     public async Task EndToEnd_PackageLifecycle_Should_Work()
     {
-        // Arrange - Create a new FlowLang project
+        // Arrange - Create a new Cadenza project
         var config = new EnhancedFlowcConfig(
             Name: "integration-test-project",
             Version: "1.0.0",
@@ -90,9 +90,9 @@ public class PackageIntegrationTests
         var project2Config = new EnhancedFlowcConfig(Name: "project2", Version: "1.0.0");
         var excludedConfig = new EnhancedFlowcConfig(Name: "excluded", Version: "1.0.0");
         
-        await ConfigurationManager.SaveConfigAsync(project1Config, Path.Combine(project1Dir, "flowc.json"));
-        await ConfigurationManager.SaveConfigAsync(project2Config, Path.Combine(project2Dir, "flowc.json"));
-        await ConfigurationManager.SaveConfigAsync(excludedConfig, Path.Combine(excludedDir, "flowc.json"));
+        await ConfigurationManager.SaveConfigAsync(project1Config, Path.Combine(project1Dir, "cadenzac.json"));
+        await ConfigurationManager.SaveConfigAsync(project2Config, Path.Combine(project2Dir, "cadenzac.json"));
+        await ConfigurationManager.SaveConfigAsync(excludedConfig, Path.Combine(excludedDir, "cadenzac.json"));
 
         // Act
         var workspaceManager = new WorkspaceManager();
@@ -108,11 +108,11 @@ public class PackageIntegrationTests
     [TestMethod]
     public async Task PackageCreation_Should_GenerateValidPackage()
     {
-        // Arrange - Create a complete FlowLang project
+        // Arrange - Create a complete Cadenza project
         var config = new EnhancedFlowcConfig(
             Name: "sample-package",
             Version: "1.0.0",
-            Description: "A sample FlowLang package"
+            Description: "A sample Cadenza package"
         );
         await ConfigurationManager.SaveConfigAsync(config);
 
@@ -128,15 +128,15 @@ module SamplePackage {
     
     export { add }
 }";
-        await File.WriteAllTextAsync(Path.Combine(srcDir, "main.flow"), mainFlow);
+        await File.WriteAllTextAsync(Path.Combine(srcDir, "main.cdz"), mainFlow);
 
         var readme = @"# Sample Package
 
-This is a sample FlowLang package for testing.
+This is a sample Cadenza package for testing.
 
 ## Usage
 
-```flowlang
+```cadenza
 import SamplePackage.{add}
 
 function main() -> int {
@@ -166,7 +166,7 @@ function main() -> int {
             Version: "1.0.0",
             Resolved: "https://example.com/vulnerable-1.0.0.tgz",
             Integrity: "sha512-test",
-            Type: PackageType.FlowLang
+            Type: PackageType.Cadenza
         );
         await ConfigurationManager.SaveLockFileAsync(lockFile);
 

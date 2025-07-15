@@ -1,4 +1,4 @@
-# FlowLang Next Phase Development Plan 🚀
+# Cadenza Next Phase Development Plan 🚀
 
 ## Current Status Assessment (Completed Phase 4A)
 
@@ -16,9 +16,9 @@
    - Auto-target detection based on component presence
 
 3. **✅ Enhanced CLI with Frontend Support**
-   - `flowc compile --target javascript` for UI components
-   - `flowc new --template ui/fullstack` project templates
-   - `flowc targets` command for platform information
+   - `cadenzac compile --target javascript` for UI components
+   - `cadenzac new --template ui/fullstack` project templates
+   - `cadenzac targets` command for platform information
 
 4. **✅ Comprehensive Documentation**
    - Complete UI component developer guide
@@ -49,8 +49,8 @@ public class NativeGenerator : ITargetGenerator
 #### **Priority 2: Development Server Implementation**
 ```bash
 # Currently shows: "🚧 Development server not implemented yet"
-flowc dev --watch  # Should start hot-reload server
-flowc dev --port 8080 --verbose  # Custom port with logging
+cadenzac dev --watch  # Should start hot-reload server
+cadenzac dev --port 8080 --verbose  # Custom port with logging
 ```
 
 **Implementation Requirements:**
@@ -67,7 +67,7 @@ Current parser handles basic UI component syntax but needs:
 - Nested component composition
 
 #### **Priority 4: Testing Framework Integration**
-```flowlang
+```cadenza
 // UI component testing syntax
 test "TodoItem should toggle completion" {
     let todo = Todo { id: "1", text: "Test", completed: false }
@@ -80,8 +80,8 @@ test "TodoItem should toggle completion" {
 
 ### 🎯 **Phase 4C: Advanced Frontend Features (2-3 weeks)**
 
-#### **Priority 1: CSS-in-FlowLang**
-```flowlang
+#### **Priority 1: CSS-in-Cadenza**
+```cadenza
 // Styled components with explicit styling
 component StyledButton(variant: ButtonVariant) 
     uses [DOM] 
@@ -110,7 +110,7 @@ component StyledButton(variant: ButtonVariant)
 ```
 
 #### **Priority 2: Animation System**
-```flowlang
+```cadenza
 component FadeInModal(show: bool) 
     uses [DOM] 
     state [is_visible]
@@ -136,7 +136,7 @@ component FadeInModal(show: bool)
 ```
 
 #### **Priority 3: Form Validation System**
-```flowlang
+```cadenza
 component ContactForm() 
     uses [DOM, Network] 
     state [form_data, errors, is_submitting]
@@ -167,7 +167,7 @@ component ContactForm()
 ### 🌐 **Phase 4D: Full-Stack Integration (3-4 weeks)**
 
 #### **Priority 1: Real-Time Synchronization**
-```flowlang
+```cadenza
 // WebSocket integration for real-time updates
 component LiveUserList() 
     uses [WebSocket, Network] 
@@ -193,12 +193,12 @@ component LiveUserList()
 ```
 
 #### **Priority 2: Progressive Web App (PWA) Support**
-```flowlang
-// PWA configuration in FlowLang
+```cadenza
+// PWA configuration in Cadenza
 pwa_config AppConfig {
-    name: "FlowLang Todo App"
+    name: "Cadenza Todo App"
     short_name: "FlowTodo"
-    description: "A todo app built with FlowLang"
+    description: "A todo app built with Cadenza"
     start_url: "/"
     display: "standalone"
     theme_color: "#007bff"
@@ -215,7 +215,7 @@ pwa_config AppConfig {
 ```
 
 #### **Priority 3: Cross-Platform Mobile Support**
-```flowlang
+```cadenza
 // React Native target for mobile apps
 component MobileUserProfile() 
     uses [Navigation, Camera, Storage] 
@@ -267,7 +267,7 @@ component MobileUserProfile()
    - Component composition and props passing
 
 ### **Week 3-4: UI Enhancement**
-1. **CSS-in-FlowLang System**
+1. **CSS-in-Cadenza System**
    - Styled component syntax
    - CSS generation and optimization
    - Theme system integration
@@ -323,7 +323,7 @@ component MobileUserProfile()
 - **Cross-Platform Support**: 100% feature parity between web and mobile
 
 ### **Developer Experience Metrics**
-- **Project Setup Time**: <30 seconds with `flowc new --template fullstack`
+- **Project Setup Time**: <30 seconds with `cadenzac new --template fullstack`
 - **Learning Curve**: New developers productive within 1 hour
 - **LLM Assistance**: 95% accuracy for AI-generated component code
 - **Error Messages**: Context-aware with suggested fixes
@@ -348,6 +348,6 @@ component MobileUserProfile()
 
 ## Conclusion
 
-Phase 4B-D will complete FlowLang's vision as the premier language for LLM-assisted full-stack development. With explicit syntax, comprehensive type safety, and seamless multi-platform support, FlowLang will enable AI developers to build production-ready applications with unprecedented predictability and safety.
+Phase 4B-D will complete Cadenza's vision as the premier language for LLM-assisted full-stack development. With explicit syntax, comprehensive type safety, and seamless multi-platform support, Cadenza will enable AI developers to build production-ready applications with unprecedented predictability and safety.
 
-The roadmap prioritizes immediate developer productivity while building toward advanced features that showcase FlowLang's unique strengths in the AI development ecosystem.
+The roadmap prioritizes immediate developer productivity while building toward advanced features that showcase Cadenza's unique strengths in the AI development ecosystem.

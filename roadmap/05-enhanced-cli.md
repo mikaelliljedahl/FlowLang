@@ -1,14 +1,14 @@
 # Enhanced CLI Tool Implementation
 
 ## Overview
-Create a professional command-line interface for FlowLang with multiple commands and configuration support.
+Create a professional command-line interface for Cadenza with multiple commands and configuration support.
 
 ## Goals
-- Add `flowc new <project>` command for project creation
-- Add `flowc build` command for building projects
-- Add `flowc run` command for running transpiled code
-- Add `flowc test` command for running tests
-- Support configuration files (flowc.json)
+- Add `cadenzac new <project>` command for project creation
+- Add `cadenzac build` command for building projects
+- Add `cadenzac run` command for running transpiled code
+- Add `cadenzac test` command for running tests
+- Support configuration files (cadenzac.json)
 
 ## Technical Requirements
 
@@ -19,15 +19,15 @@ Create a professional command-line interface for FlowLang with multiple commands
 - Add version information
 
 ### 2. Commands to Implement
-- `flowc new <name>` - Create new FlowLang project
-- `flowc build [options]` - Build project to C#
-- `flowc run [file]` - Transpile and run single file
-- `flowc test` - Run tests in project
-- `flowc --help` - Show help information
-- `flowc --version` - Show version
+- `cadenzac new <name>` - Create new Cadenza project
+- `cadenzac build [options]` - Build project to C#
+- `cadenzac run [file]` - Transpile and run single file
+- `cadenzac test` - Run tests in project
+- `cadenzac --help` - Show help information
+- `cadenzac --version` - Show version
 
 ### 3. Configuration Support
-- Read flowc.json configuration file
+- Read cadenzac.json configuration file
 - Support project-level settings
 - Support build options and output paths
 
@@ -39,42 +39,42 @@ Create a professional command-line interface for FlowLang with multiple commands
 ## Example Usage
 ```bash
 # Create new project
-flowc new my-project
+cadenzac new my-project
 cd my-project
 
 # Build project
-flowc build
+cadenzac build
 
 # Run single file
-flowc run examples/hello.flow
+cadenzac run examples/hello.cdz
 
 # Run tests
-flowc test
+cadenzac test
 
 # Show help
-flowc --help
+cadenzac --help
 ```
 
 ## Expected Project Structure
 ```
 my-project/
-├── flowc.json          # Project configuration
+├── cadenzac.json          # Project configuration
 ├── src/
-│   └── main.flow       # Main source files
+│   └── main.cdz       # Main source files
 ├── examples/
-│   └── hello.flow      # Example files
+│   └── hello.cdz      # Example files
 ├── tests/
-│   └── basic_test.flow # Test files
+│   └── basic_test.cdz # Test files
 ├── .gitignore
 └── README.md
 ```
 
-## Configuration File (flowc.json)
+## Configuration File (cadenzac.json)
 ```json
 {
   "name": "my-project",
   "version": "1.0.0",
-  "description": "My FlowLang project",
+  "description": "My Cadenza project",
   "build": {
     "source": "src/",
     "output": "build/",

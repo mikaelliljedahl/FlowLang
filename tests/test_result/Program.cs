@@ -38,7 +38,7 @@ class Program
     
     static void Main()
     {
-        Console.WriteLine("Testing FlowLang-style Result type in C#");
+        Console.WriteLine("Testing Cadenza-style Result type in C#");
         Console.WriteLine("=======================================");
         
         // Test successful case
@@ -67,6 +67,6 @@ class Program
         
         Console.WriteLine("\n✅ Result type implementation works correctly!");
         Console.WriteLine("✅ Error propagation works as expected!");
-        Console.WriteLine("✅ This demonstrates the exact C# code that FlowLang transpiler generates!");
+        Console.WriteLine("✅ This demonstrates the exact C# code that Cadenza transpiler generates!");
     }
 }

@@ -1,6 +1,6 @@
-# FlowLang Language Reference
+# Cadenza Language Reference
 
-This document provides a complete reference for the FlowLang programming language, covering all syntax, features, and semantics.
+This document provides a complete reference for the Cadenza programming language, covering all syntax, features, and semantics.
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ This document provides a complete reference for the FlowLang programming languag
 
 ## Language Overview
 
-FlowLang is a statically-typed, functional programming language that transpiles to C#. It emphasizes:
+Cadenza is a statically-typed, functional programming language that transpiles to C#. It emphasizes:
 
 - **Explicit side effects** through an effect system
 - **Safe error handling** with Result types
@@ -33,7 +33,7 @@ FlowLang is a statically-typed, functional programming language that transpiles 
 - **String interpolation** for readable text formatting
 - **Specification preservation** with embedded specification blocks for atomic intent-code linking
 
-**Current Status (July 2025)**: Direct compilation, traditional transpilation, and module system are working. Phase 5 self-hosting migration is in progress to implement .flow-based tooling.
+**Current Status (July 2025)**: Direct compilation, traditional transpilation, and module system are working. Phase 5 self-hosting migration is in progress to implement .cdz-based tooling.
 
 ## Lexical Elements
 
@@ -41,7 +41,7 @@ FlowLang is a statically-typed, functional programming language that transpiles 
 
 Identifiers must start with a letter or underscore, followed by letters, digits, or underscores:
 
-```flowlang
+```cadenza
 valid_identifier
 validIdentifier
 _private
@@ -50,7 +50,7 @@ user1
 ```
 
 **Invalid identifiers:**
-```flowlang
+```cadenza
 1invalid    // Cannot start with digit
 user-name   // Hyphens not allowed
 if          // Reserved keyword
@@ -60,7 +60,7 @@ if          // Reserved keyword
 
 #### Integer Literals
 
-```flowlang
+```cadenza
 42
 0
 1234567890
@@ -68,7 +68,7 @@ if          // Reserved keyword
 
 #### String Literals
 
-```flowlang
+```cadenza
 "Hello, World!"
 "Line 1\nLine 2"           // With escape sequences
 "She said \"Hello\""       // Escaped quotes
@@ -78,7 +78,7 @@ if          // Reserved keyword
 
 #### String Interpolation
 
-```flowlang
+```cadenza
 $"Hello, {name}!"
 $"User {user} has {count} items"
 $"Result: {calculate(a, b)}"
@@ -120,7 +120,7 @@ $"Result: {calculate(a, b)}"
 
 ### Basic Types
 
-```flowlang
+```cadenza
 int     // 32-bit signed integer
 string  // Unicode string
 bool    // Boolean (true/false)
@@ -130,7 +130,7 @@ bool    // Boolean (true/false)
 
 Result types encapsulate success or error values:
 
-```flowlang
+```cadenza
 Result<int, string>        // Success type int, error type string
 Result<User, DatabaseError> // Success type User, error type DatabaseError
 ```
@@ -139,7 +139,7 @@ Result<User, DatabaseError> // Success type User, error type DatabaseError
 
 Functions have types based on their signature:
 
-```flowlang
+```cadenza
 // Type: (int, int) -> int
 pure function add(a: int, b: int) -> int
 
@@ -151,7 +151,7 @@ function saveUser(name: string) uses [Database] -> Result<int, string>
 
 Type annotations are required for function parameters and return types:
 
-```flowlang
+```cadenza
 function example(param: int) -> string {
     return "Value: " + param
 }
@@ -161,7 +161,7 @@ function example(param: int) -> string {
 
 ### Function Declaration
 
-```flowlang
+```cadenza
 function functionName(param1: type1, param2: type2) -> returnType {
     // Function body
     return expression
@@ -172,7 +172,7 @@ function functionName(param1: type1, param2: type2) -> returnType {
 
 Pure functions have no side effects:
 
-```flowlang
+```cadenza
 pure function add(a: int, b: int) -> int {
     return a + b
 }
@@ -186,7 +186,7 @@ pure function formatMessage(name: string) -> string {
 
 Functions can declare side effects:
 
-```flowlang
+```cadenza
 function logMessage(msg: string) uses [Logging] -> Result<string, string> {
     // Implementation would log the message
     return Ok(msg)
@@ -200,7 +200,7 @@ function saveData(data: string) uses [Database, Logging] -> Result<int, string> 
 
 ### Function Calls
 
-```flowlang
+```cadenza
 // Simple function call
 let result = add(5, 3)
 
@@ -215,7 +215,7 @@ let sum = Math.add(10, 20)
 
 Parameters must have type annotations:
 
-```flowlang
+```cadenza
 function example(
     name: string,
     age: int,
@@ -231,7 +231,7 @@ function example(
 
 Variables are declared using `let` statements:
 
-```flowlang
+```cadenza
 let x = 42
 let message = "Hello"
 let result = calculate(10, 20)
@@ -239,9 +239,9 @@ let result = calculate(10, 20)
 
 ### Type Inference
 
-FlowLang infers types from the assigned expression:
+Cadenza infers types from the assigned expression:
 
-```flowlang
+```cadenza
 let number = 42        // Inferred as int
 let text = "Hello"     // Inferred as string
 let flag = true        // Inferred as bool
@@ -249,7 +249,7 @@ let flag = true        // Inferred as bool
 
 ### Error Propagation in Let Statements
 
-```flowlang
+```cadenza
 function example() -> Result<int, string> {
     let step1 = riskyOperation()?    // Propagates error if step1 fails
     let step2 = anotherOperation(step1)?  // Uses step1 if successful
@@ -261,7 +261,7 @@ function example() -> Result<int, string> {
 
 ### If Statements
 
-```flowlang
+```cadenza
 if condition {
     // then branch
 } else {
@@ -282,7 +282,7 @@ if age < 13 {
 
 Guard statements provide early returns for validation:
 
-```flowlang
+```cadenza
 guard condition else {
     // executed if condition is false
     return Error("Validation failed")
@@ -294,7 +294,7 @@ guard condition else {
 
 Complex boolean logic is supported:
 
-```flowlang
+```cadenza
 // Logical operators
 if isAdmin && (hasPermission || isOwner) {
     // Complex condition
@@ -313,7 +313,7 @@ if !isEmpty && !isInvalid {
 
 ### Examples
 
-```flowlang
+```cadenza
 function validateUser(name: string, age: int) -> Result<string, string> {
     guard name != "" else {
         return Error("Name cannot be empty")
@@ -335,7 +335,7 @@ function validateUser(name: string, age: int) -> Result<string, string> {
 
 ### Binary Expressions
 
-```flowlang
+```cadenza
 // Arithmetic
 a + b
 a - b
@@ -360,13 +360,13 @@ a || b
 
 ### Unary Expressions
 
-```flowlang
+```cadenza
 !condition    // Logical NOT
 ```
 
 ### Function Call Expressions
 
-```flowlang
+```cadenza
 functionName(arg1, arg2)
 Module.functionName(arg1, arg2)
 ```
@@ -385,7 +385,7 @@ From highest to lowest precedence:
 
 Use parentheses to override precedence:
 
-```flowlang
+```cadenza
 // Without parentheses: (a + b) * c
 a + b * c
 
@@ -397,7 +397,7 @@ a + b * c
 
 ### Creating Result Values
 
-```flowlang
+```cadenza
 // Success value
 return Ok(42)
 return Ok("Success message")
@@ -411,7 +411,7 @@ return Error("Validation failed: " + details)
 
 Use the `?` operator to propagate errors:
 
-```flowlang
+```cadenza
 function chainedOperations() -> Result<int, string> {
     let step1 = firstOperation()?     // Returns early if error
     let step2 = secondOperation(step1)?  // Uses step1 if successful
@@ -422,7 +422,7 @@ function chainedOperations() -> Result<int, string> {
 
 ### Result Type Examples
 
-```flowlang
+```cadenza
 function safeDivide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")
@@ -441,7 +441,7 @@ function complexCalculation(x: int, y: int) -> Result<int, string> {
 
 ### Available Effects
 
-FlowLang provides these built-in effects:
+Cadenza provides these built-in effects:
 
 - `Database` - Database operations
 - `Network` - Network/HTTP calls
@@ -452,7 +452,7 @@ FlowLang provides these built-in effects:
 
 ### Declaring Effects
 
-```flowlang
+```cadenza
 // Single effect
 function logMessage(msg: string) uses [Logging] -> Result<string, string> {
     return Ok(msg)
@@ -473,7 +473,7 @@ function complexOperation() uses [Database, Network, Logging, FileSystem, Memory
 
 When a function calls other functions with effects, it must declare all used effects:
 
-```flowlang
+```cadenza
 function saveUser(name: string) uses [Database] -> Result<int, string> {
     return Ok(42)
 }
@@ -494,7 +494,7 @@ function processUser(name: string) uses [Database, Logging] -> Result<int, strin
 
 Pure functions cannot have effects and cannot call functions with effects:
 
-```flowlang
+```cadenza
 pure function calculate(a: int, b: int) -> int {
     return a + b  // No side effects allowed
 }
@@ -509,7 +509,7 @@ pure function invalid() uses [Database] -> int {
 
 ### Module Declaration
 
-```flowlang
+```cadenza
 module ModuleName {
     // Module contents
     function internalFunction() -> int {
@@ -529,31 +529,31 @@ module ModuleName {
 
 #### Simple Import
 
-```flowlang
+```cadenza
 import ModuleName
 ```
 
 #### Selective Import
 
-```flowlang
+```cadenza
 import ModuleName.{function1, function2}
 ```
 
 #### Wildcard Import
 
-```flowlang
+```cadenza
 import ModuleName.*
 ```
 
 #### Qualified Import
 
-```flowlang
+```cadenza
 import Package.SubModule.{specificFunction}
 ```
 
 ### Using Imported Functions
 
-```flowlang
+```cadenza
 import Math.{add, multiply}
 import Utils.*
 
@@ -567,7 +567,7 @@ function calculate() -> int {
 
 ### Export Statements
 
-```flowlang
+```cadenza
 module UserService {
     function createUser(name: string) -> int {
         return 42
@@ -588,8 +588,8 @@ module UserService {
 
 ### Module Examples
 
-**math_utils.flow:**
-```flowlang
+**math_utils.cdz:**
+```cadenza
 module MathUtils {
     pure function add(a: int, b: int) -> int {
         return a + b
@@ -607,8 +607,8 @@ module MathUtils {
 }
 ```
 
-**string_utils.flow:**
-```flowlang
+**string_utils.cdz:**
+```cadenza
 module StringUtils {
     pure function reverse(s: string) -> string {
         // Implementation would reverse the string
@@ -624,8 +624,8 @@ module StringUtils {
 }
 ```
 
-**main.flow:**
-```flowlang
+**main.cdz:**
+```cadenza
 import MathUtils.{add, square}
 import StringUtils.*
 
@@ -641,7 +641,7 @@ function main() -> string {
 
 ### String Literals
 
-```flowlang
+```cadenza
 "Simple string"
 "String with \"quotes\""
 "Multi-line\nstring\nwith\nbreaks"
@@ -661,14 +661,14 @@ function main() -> string {
 
 ### String Concatenation
 
-```flowlang
+```cadenza
 let greeting = "Hello" + " " + "World"
 let message = "User: " + userName + ", Age: " + userAge
 ```
 
 ### String Interpolation
 
-```flowlang
+```cadenza
 let name = "Alice"
 let age = 30
 let message = $"User {name} is {age} years old"
@@ -682,7 +682,7 @@ let details = $"Status: {isActive ? "Active" : "Inactive"}"
 
 ### String Examples
 
-```flowlang
+```cadenza
 function formatUserInfo(name: string, age: int, email: string) -> string {
     return $"User Profile:\nName: {name}\nAge: {age}\nEmail: {email}"
 }
@@ -703,7 +703,7 @@ Specification blocks allow you to embed intent, business rules, and formal speci
 
 Specification blocks use the `/*spec ... spec*/` syntax and are placed directly before the function or module they describe:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Brief description of what this function does and why"
 rules:
@@ -724,7 +724,7 @@ function functionName(params) -> ReturnType {
 #### intent (Required)
 A natural language description of the function's purpose and business context:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Transfer funds between two accounts atomically, ensuring sufficient balance"
 spec*/
@@ -733,7 +733,7 @@ spec*/
 #### rules (Optional)
 A list of business rules, constraints, or validation requirements:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Process user registration with validation"
 rules:
@@ -746,7 +746,7 @@ spec*/
 
 ### Working Example
 
-For a comprehensive example with multiple functions using specification blocks, see **`examples/specification_example.flow`**. This example demonstrates:
+For a comprehensive example with multiple functions using specification blocks, see **`examples/specification_example.cdz`**. This example demonstrates:
 
 - **Loyalty discount calculation** with business rules for different membership tiers
 - **Payment processing** with security and fraud detection requirements
@@ -756,7 +756,7 @@ For a comprehensive example with multiple functions using specification blocks, 
 #### postconditions (Optional)
 Expected outcomes or state changes after successful execution:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Create new user account"
 postconditions:
@@ -770,7 +770,7 @@ spec*/
 #### source_doc (Optional)
 Reference to external documentation or requirements:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Calculate tax based on jurisdiction rules"
 source_doc: "requirements/tax-calculation-v2.3.md"
@@ -781,7 +781,7 @@ spec*/
 
 Place specification blocks directly before function declarations:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Safely divide two numbers with explicit error handling"
 rules:
@@ -803,7 +803,7 @@ function safeDivide(a: int, b: int) -> Result<int, string> {
 
 Specify the purpose and scope of entire modules:
 
-```flowlang
+```cadenza
 /*spec
 intent: "User authentication and authorization utilities"
 rules:
@@ -822,7 +822,7 @@ module AuthService {
 
 ### Complex Example
 
-```flowlang
+```cadenza
 /*spec
 intent: "Process e-commerce order with inventory management and payment"
 rules:
@@ -885,8 +885,8 @@ function processOrder(order: Order)
 
 Specification blocks are preserved in generated C# code as comprehensive XML documentation:
 
-**FlowLang Input:**
-```flowlang
+**Cadenza Input:**
+```cadenza
 /*spec
 intent: "Calculate user discount based on loyalty tier"
 rules:
@@ -916,7 +916,7 @@ public static float calculateDiscount(User user)
 
 ### Single-line Comments
 
-```flowlang
+```cadenza
 // This is a single-line comment
 function example() -> int {
     return 42  // End-of-line comment
@@ -925,7 +925,7 @@ function example() -> int {
 
 ### Comment Examples
 
-```flowlang
+```cadenza
 // Calculate user tax based on income and rate
 function calculateTax(income: int, rate: int) -> int {
     // Apply tax rate as percentage
@@ -990,7 +990,7 @@ Some keywords are only reserved in specific contexts:
 
 ### Operator Examples
 
-```flowlang
+```cadenza
 // Arithmetic operations
 let sum = a + b
 let product = a * b
@@ -1120,7 +1120,7 @@ character = (* any Unicode character except '"' and '\' *) ;
 
 ### Production Rules Explanation
 
-- **program**: A FlowLang program consists of zero or more statements
+- **program**: A Cadenza program consists of zero or more statements
 - **statement**: Top-level declarations (modules, imports, exports, functions)
 - **functionDeclaration**: Function definitions with optional purity and effects
 - **expression**: Nested expression hierarchy following operator precedence
@@ -1128,7 +1128,7 @@ character = (* any Unicode character except '"' and '\' *) ;
 
 ## Summary
 
-FlowLang provides a complete, type-safe programming experience with:
+Cadenza provides a complete, type-safe programming experience with:
 
 - **Strong typing** with type inference
 - **Explicit effect system** for side effect management  

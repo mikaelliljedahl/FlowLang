@@ -1,0 +1,304 @@
+// Cadenza Built-in Observability Example
+// Demonstrates automatic metrics, tracing, and logging
+
+// Simple function - automatically instrumented
+function calculateTax(amount: int) -> int {
+    // Custom metric recording
+    record_metric("tax_calculation", amount, {"category": "business"})
+    
+    // Custom logging
+    log_info("Calculating tax for amount", {"amount": amount})
+    
+    let taxRate = 0.08
+    let result = amount * taxRate
+    
+    log_info("Tax calculation completed", {"result": result})
+    return result
+}
+
+// Function with effects - automatic effect tracking
+function saveUserData(user: User) uses [Database, Logging] -> Result<string, string> {
+    // Start custom trace span
+    let span = start_span("user_data_validation")
+    
+    // Log function entry (automatic)
+    log_info("Saving user data", {"user_id": user.id, "user_name": user.name})
+    
+    // Validate user data
+    guard user.name != "" else {
+        log_error("User validation failed: empty name", {"user_id": user.id})
+        return Error("User name cannot be empty")
+    }
+    
+    guard user.email.Contains("@") else {
+        log_error("User validation failed: invalid email", {"user_id": user.id, "email": user.email})
+        return Error("Invalid email format")
+    }
+    
+    // Custom metric for validation success
+    record_metric("user_validation_success", 1, {"validation_type": "email_format"})
+    
+    // Database save operation (automatically tracked as Database effect)
+    let saveResult = database_save_user(user)?
+    
+    // Custom metric for database operations
+    record_metric("database_operations", 1, {"operation": "save", "table": "users"})
+    
+    log_info("User data saved successfully", {"user_id": user.id, "save_id": saveResult})
+    
+    return Ok(saveResult)
+}
+
+// Complex function with multiple effects and nested calls
+function processUserRegistration(registrationData: RegistrationRequest) uses [Database, Network, Logging] -> Result<string, string> {
+    let span = start_span("user_registration_process")
+    
+    log_info("Starting user registration process", {"email": registrationData.email})
+    
+    // Step 1: Validate email (Network effect for email validation service)
+    let emailValidation = validateEmailWithService(registrationData.email)?
+    record_metric("email_validations", 1, {"result": "success"})
+    
+    // Step 2: Create user object
+    let user = User {
+        id: generate_user_id(),
+        name: registrationData.name,
+        email: registrationData.email,
+        created_at: current_timestamp()
+    }
+    
+    // Step 3: Save user (Database effect)
+    let userId = saveUserData(user)?  // This call is also automatically traced
+    
+    // Step 4: Send welcome email (Network effect)
+    let emailResult = sendWelcomeEmail(user.email, user.name)?
+    record_metric("welcome_emails_sent", 1, {"user_id": userId})
+    
+    // Step 5: Record analytics event (Network effect)
+    let analyticsResult = recordAnalyticsEvent("user_registered", {
+        "user_id": userId,
+        "registration_source": registrationData.source,
+        "timestamp": current_timestamp()
+    })?
+    
+    log_info("User registration completed successfully", {
+        "user_id": userId,
+        "email": user.email,
+        "analytics_event_id": analyticsResult
+    })
+    
+    return Ok(userId)
+}
+
+// Function demonstrating error handling and observability
+function riskyOperation(input: string) uses [Network, Logging] -> Result<string, string> {
+    log_info("Attempting risky operation", {"input_length": input.Length})
+    
+    guard input.Length > 0 else {
+        // Error is automatically logged and traced
+        record_metric("risky_operation_errors", 1, {"error_type": "empty_input"})
+        return Error("Input cannot be empty")
+    }
+    
+    // Simulate external API call that might fail
+    if input.Contains("fail") {
+        record_metric("risky_operation_errors", 1, {"error_type": "simulated_failure"})
+        return Error("Simulated failure in risky operation")
+    }
+    
+    // Simulate network delay
+    let networkResult = external_api_call(input)?
+    
+    record_metric("risky_operation_success", 1, {"input_type": "valid"})
+    log_info("Risky operation completed successfully", {"result_length": networkResult.Length})
+    
+    return Ok(networkResult)
+}
+
+// Function showing performance monitoring
+function performanceIntensiveTask(dataSize: int) uses [Memory, Logging] -> Result<string, string> {
+    let span = start_span("performance_task")
+    
+    log_info("Starting performance intensive task", {"data_size": dataSize})
+    
+    // Record memory usage before operation
+    record_metric("memory_usage_before", get_memory_usage(), {"task": "data_processing"})
+    
+    // Simulate intensive computation
+    let result = ""
+    for i in 1..dataSize {
+        result = result + $"item_{i},"
+        
+        // Record progress every 1000 items
+        if i % 1000 == 0 {
+            record_metric("processing_progress", i, {"task": "data_processing"})
+            log_info("Processing progress", {"items_processed": i, "total_items": dataSize})
+        }
+    }
+    
+    // Record memory usage after operation
+    record_metric("memory_usage_after", get_memory_usage(), {"task": "data_processing"})
+    
+    log_info("Performance intensive task completed", {
+        "data_size": dataSize,
+        "result_length": result.Length
+    })
+    
+    return Ok(result)
+}
+
+// Function showing distributed tracing across service boundaries
+function distributedServiceCall(serviceUrl: string, payload: string) uses [Network, Logging] -> Result<string, string> {
+    let span = start_span("distributed_service_call")
+    
+    log_info("Making distributed service call", {"service_url": serviceUrl})
+    
+    // Record service call metrics
+    record_metric("service_calls", 1, {"service": serviceUrl, "operation": "POST"})
+    
+    // Make the actual service call (traces are automatically propagated)
+    let response = http_post(serviceUrl, payload)?
+    
+    // Record response metrics
+    record_metric("service_call_duration", response.duration_ms, {"service": serviceUrl})
+    record_metric("service_response_size", response.body.Length, {"service": serviceUrl})
+    
+    if response.status_code >= 400 {
+        record_metric("service_call_errors", 1, {"service": serviceUrl, "status_code": response.status_code})
+        log_error("Service call failed", {
+            "service_url": serviceUrl,
+            "status_code": response.status_code,
+            "error": response.body
+        })
+        return Error($"Service call failed with status {response.status_code}")
+    }
+    
+    log_info("Distributed service call completed", {
+        "service_url": serviceUrl,
+        "status_code": response.status_code,
+        "response_size": response.body.Length
+    })
+    
+    return Ok(response.body)
+}
+
+// Supporting types and functions
+type User {
+    id: string,
+    name: string,
+    email: string,
+    created_at: string
+}
+
+type RegistrationRequest {
+    name: string,
+    email: string,
+    source: string
+}
+
+type ApiResponse {
+    status_code: int,
+    body: string,
+    duration_ms: int
+}
+
+// Mock functions for demonstration (these would be actual implementations)
+function validateEmailWithService(email: string) uses [Network] -> Result<bool, string> {
+    // Simulated email validation service call
+    return Ok(email.Contains("@"))
+}
+
+function sendWelcomeEmail(email: string, name: string) uses [Network] -> Result<string, string> {
+    // Simulated email sending
+    return Ok("email_123456")
+}
+
+function recordAnalyticsEvent(eventName: string, properties: object) uses [Network] -> Result<string, string> {
+    // Simulated analytics recording
+    return Ok("analytics_event_789")
+}
+
+function external_api_call(input: string) uses [Network] -> Result<string, string> {
+    // Simulated external API call
+    return Ok($"processed_{input}")
+}
+
+function http_post(url: string, payload: string) uses [Network] -> Result<ApiResponse, string> {
+    // Simulated HTTP call
+    return Ok(ApiResponse {
+        status_code: 200,
+        body: "response_data",
+        duration_ms: 150
+    })
+}
+
+function database_save_user(user: User) uses [Database] -> Result<string, string> {
+    // Simulated database save
+    return Ok($"user_id_{user.id}")
+}
+
+function generate_user_id() -> string {
+    return "user_123456789"
+}
+
+function current_timestamp() -> string {
+    return "2024-01-15T10:30:00Z"
+}
+
+function get_memory_usage() uses [Memory] -> int {
+    return 1024000  // Simulated memory usage in bytes
+}
+
+// Example usage and observability dashboard functions
+function getPerformanceMetrics() -> string {
+    // Get function performance summary for the last hour
+    let summary = get_function_summary("processUserRegistration", 60)
+    
+    if summary != null {
+        return $"Function: {summary.function_name}, " +
+               $"Invocations: {summary.total_invocations}, " +
+               $"Success Rate: {summary.success_rate * 100}%, " +
+               $"Avg Duration: {summary.average_duration}ms, " +
+               $"Errors: {summary.error_count}"
+    } else {
+        return "No performance data available"
+    }
+}
+
+function main() -> string {
+    // Initialize observability (this would normally be done at application startup)
+    initialize_observability()
+    
+    // Example user registration
+    let registrationRequest = RegistrationRequest {
+        name: "John Doe",
+        email: "john.doe@example.com",
+        source: "web_signup"
+    }
+    
+    let result = processUserRegistration(registrationRequest)
+    
+    if result.IsOk {
+        let performanceInfo = getPerformanceMetrics()
+        return $"Registration successful: {result.Value}. Performance: {performanceInfo}"
+    } else {
+        return $"Registration failed: {result.Error}"
+    }
+}
+
+// Function to demonstrate how observability data can be queried
+function getObservabilityDashboard() -> string {
+    // This would integrate with actual observability platforms
+    return $"Observability Dashboard:\n" +
+           $"- Total function calls: {get_total_function_calls()}\n" +
+           $"- Average response time: {get_average_response_time()}ms\n" +
+           $"- Error rate: {get_error_rate()}%\n" +
+           $"- Top effects used: {get_top_effects()}"
+}
+
+// Mock observability query functions
+function get_total_function_calls() -> int { return 1523 }
+function get_average_response_time() -> int { return 85 }
+function get_error_rate() -> float { return 2.3 }
+function get_top_effects() -> string { return "Database (45%), Network (32%), Logging (23%)" }
+function initialize_observability() -> unit { /* Initialization code */ }

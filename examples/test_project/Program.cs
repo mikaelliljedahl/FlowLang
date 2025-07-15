@@ -66,7 +66,7 @@ public class Program
 
     public static void Main(string[] args)
     {
-        Console.WriteLine("Testing FlowLang Control Flow:");
+        Console.WriteLine("Testing Cadenza Control Flow:");
         
         // Test boolean expressions
         Console.WriteLine($"test_boolean(5, 3): {test_boolean(5, 3)}"); // should be true

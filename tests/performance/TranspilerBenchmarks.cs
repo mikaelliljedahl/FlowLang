@@ -4,13 +4,13 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 
-namespace FlowLang.Tests.Performance
+namespace Cadenza.Tests.Performance
 {
     [MemoryDiagnoser]
     [SimpleJob]
     public class TranspilerBenchmarks
     {
-        private FlowLangTranspiler _transpiler;
+        private CadenzaTranspiler _transpiler;
         private string _simpleFunction;
         private string _complexFunction;
         private string _moduleCode;
@@ -19,7 +19,7 @@ namespace FlowLang.Tests.Performance
         [GlobalSetup]
         public void Setup()
         {
-            _transpiler = new FlowLangTranspiler();
+            _transpiler = new CadenzaTranspiler();
 
             _simpleFunction = "function add(a: int, b: int) -> int { return a + b }";
 
@@ -101,32 +101,32 @@ namespace FlowLang.Tests.Performance
         [Benchmark]
         public List<Token> LexSimpleFunction()
         {
-            var lexer = new FlowLangLexer(_simpleFunction);
+            var lexer = new CadenzaLexer(_simpleFunction);
             return lexer.Tokenize();
         }
 
         [Benchmark]
         public List<Token> LexComplexFunction()
         {
-            var lexer = new FlowLangLexer(_complexFunction);
+            var lexer = new CadenzaLexer(_complexFunction);
             return lexer.Tokenize();
         }
 
         [Benchmark]
         public Program ParseSimpleFunction()
         {
-            var lexer = new FlowLangLexer(_simpleFunction);
+            var lexer = new CadenzaLexer(_simpleFunction);
             var tokens = lexer.Tokenize();
-            var parser = new FlowLangParser(tokens);
+            var parser = new CadenzaParser(tokens);
             return parser.Parse();
         }
 
         [Benchmark]
         public Program ParseComplexFunction()
         {
-            var lexer = new FlowLangLexer(_complexFunction);
+            var lexer = new CadenzaLexer(_complexFunction);
             var tokens = lexer.Tokenize();
-            var parser = new FlowLangParser(tokens);
+            var parser = new CadenzaParser(tokens);
             return parser.Parse();
         }
 

@@ -1,12 +1,12 @@
-// Test script to validate FlowLang self-hosting
+// Test script to validate Cadenza self-hosting
 // This compiles and runs both the development server and linter
 
 using System;
 using System.IO;
 using System.Collections.Generic;
-using FlowLang.Runtime;
+using Cadenza.Runtime;
 
-// Include the generated FlowLang code
+// Include the generated Cadenza code
 public static class Result
 {
     public static Result<T, E> Ok<T, E>(T value) { return new Result<T, E>(true, value, default); }
@@ -50,12 +50,12 @@ public class Option<T>
 // Development Server Functions
 public static string generateDevHTML()
 {
-    return "<html><head><title>FlowLang Development Server</title></head><body><h1>FlowLang Development Server</h1><p>Server is running successfully!</p><p>This is a self-hosted FlowLang development environment.</p></body></html>";
+    return "<html><head><title>Cadenza Development Server</title></head><body><h1>Cadenza Development Server</h1><p>Server is running successfully!</p><p>This is a self-hosted Cadenza development environment.</p></body></html>";
 }
 
 public static Result<string, string> logServerInfo()
 {
-    LoggingRuntime.LogInfo("FlowLang Development Server initializing...");
+    LoggingRuntime.LogInfo("Cadenza Development Server initializing...");
     LoggingRuntime.LogInfo("Server port: 3000");
     LoggingRuntime.LogInfo("Project directory: " + CommandLineRuntime.GetCurrentDirectory());
     return Result.Ok<string, string>("Server info logged");
@@ -90,7 +90,7 @@ public static Result<string, string> mainDevServer()
     
     if (serverResult.Success)
     {
-        return Result.Ok<string, string>("FlowLang development server started successfully");
+        return Result.Ok<string, string>("Cadenza development server started successfully");
     }
     else
     {
@@ -101,18 +101,18 @@ public static Result<string, string> mainDevServer()
 // Linter Functions
 public static Result<List<string>, string> discover_flow_files()
 {
-    var files = new List<string> { "src/tools/simple-dev-server.flow", "src/tools/linter.flow", "src/tools/dev-server.flow" };
+    var files = new List<string> { "src/tools/simple-dev-server.cdz", "src/tools/linter.cdz", "src/tools/dev-server.cdz" };
     return Result.Ok<List<string>, string>(files);
 }
 
 public static Result<int, string> run_linter()
 {
-    LoggingRuntime.LogInfo("Starting FlowLang linter...");
+    LoggingRuntime.LogInfo("Starting Cadenza linter...");
     
     var files = discover_flow_files();
     if (files.Success)
     {
-        LoggingRuntime.LogInfo($"Found {files.Value.Count} FlowLang files");
+        LoggingRuntime.LogInfo($"Found {files.Value.Count} Cadenza files");
         
         // Lint each file
         foreach (var file in files.Value)
@@ -148,7 +148,7 @@ public static class SelfHostingTest
 {
     public static void Main(string[] args)
     {
-        Console.WriteLine("FlowLang Self-Hosting Test");
+        Console.WriteLine("Cadenza Self-Hosting Test");
         Console.WriteLine("==========================");
         Console.WriteLine();
         
@@ -188,7 +188,7 @@ public static class SelfHostingTest
         Console.WriteLine("Testing HTML Generation:");
         Console.WriteLine("-----------------------");
         var html = generateDevHTML();
-        if (html.Contains("FlowLang Development Server"))
+        if (html.Contains("Cadenza Development Server"))
         {
             Console.WriteLine("✓ HTML generation test passed");
         }
@@ -204,18 +204,18 @@ public static class SelfHostingTest
         Console.WriteLine("----------------------");
         var config = new ConfigRuntime.ProjectConfig
         {
-            Name = "FlowLang",
+            Name = "Cadenza",
             Version = "1.0.0"
         };
         
         var json = JsonRuntime.Stringify(config);
         Console.WriteLine($"✓ JSON serialization test passed: {json.Length} characters");
         
-        var files = GlobRuntime.MatchFiles("*.flow", "src/tools/");
+        var files = GlobRuntime.MatchFiles("*.cdz", "src/tools/");
         Console.WriteLine($"✓ Glob pattern matching test passed: {files.Length} files found");
         
         Console.WriteLine();
         Console.WriteLine("Self-hosting validation complete!");
-        Console.WriteLine("FlowLang is successfully transpiling and executing its own development tools.");
+        Console.WriteLine("Cadenza is successfully transpiling and executing its own development tools.");
     }
 }

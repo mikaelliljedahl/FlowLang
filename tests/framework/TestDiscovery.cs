@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 
-namespace FlowLang.Tests.Framework
+namespace Cadenza.Tests.Framework
 {
     [TestFixture]
     public class TestDiscoveryTests
@@ -100,7 +100,7 @@ namespace FlowLang.Tests.Framework
             {
                 // Check namespace organization
                 var namespaceParts = testClass.Namespace?.Split('.') ?? new string[0];
-                if (namespaceParts.Length < 3) // FlowLang.Tests.{Category}
+                if (namespaceParts.Length < 3) // Cadenza.Tests.{Category}
                 {
                     organizationIssues.Add($"{testClass.Name}: Improper namespace organization");
                 }
@@ -158,7 +158,7 @@ namespace FlowLang.Tests.Framework
                 var namespaceParts = testClass.Namespace?.Split('.') ?? new string[0];
                 if (namespaceParts.Length >= 3)
                 {
-                    var category = namespaceParts[2]; // FlowLang.Tests.{Category}
+                    var category = namespaceParts[2]; // Cadenza.Tests.{Category}
                     switch (category.ToLower())
                     {
                         case "unit":
@@ -231,7 +231,7 @@ namespace FlowLang.Tests.Framework
             }
 
             // Create sample test data if it doesn't exist
-            CreateSampleFlowLangFiles();
+            CreateSampleCadenzaFiles();
         }
 
         public static string GetTestDataPath(string fileName)
@@ -257,12 +257,12 @@ namespace FlowLang.Tests.Framework
             return JsonSerializer.Deserialize<T>(json) ?? throw new InvalidOperationException("Failed to deserialize test result");
         }
 
-        private static void CreateSampleFlowLangFiles()
+        private static void CreateSampleCadenzaFiles()
         {
             var samples = new Dictionary<string, string>
             {
-                ["simple.flow"] = "function add(a: int, b: int) -> int { return a + b }",
-                ["complex.flow"] = @"
+                ["simple.cdz"] = "function add(a: int, b: int) -> int { return a + b }",
+                ["complex.cdz"] = @"
                     function processData(input: string) -> Result<int, string> {
                         let parsed = parseInt(input)?
                         if parsed < 0 {
@@ -270,7 +270,7 @@ namespace FlowLang.Tests.Framework
                         }
                         return Ok(parsed * 2)
                     }",
-                ["module.flow"] = @"
+                ["module.cdz"] = @"
                     module Utils {
                         pure function square(x: int) -> int {
                             return x * x

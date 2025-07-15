@@ -1,0 +1,28 @@
+// Test Cadenza Application for Dev Server
+component TestApp() 
+    uses [DOM] 
+    state [message]
+    events [on_button_click]
+    -> UIComponent 
+{
+    declare_state message: string = "Hello from Cadenza Development Server!"
+    
+    event_handler handle_button_click() uses [DOM] {
+        set_state(message, "Button clicked at " + current_time())
+    }
+    
+    render {
+        container(class: "test-app") {
+            heading(level: 1, text: message)
+            button(
+                text: "Click me to test hot reload",
+                on_click: handle_button_click
+            )
+            paragraph(text: "Make changes to this file and watch them update automatically!")
+        }
+    }
+}
+
+function current_time() -> string {
+    return "now"
+}

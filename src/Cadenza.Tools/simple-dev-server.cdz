@@ -1,0 +1,165 @@
+// Simple Cadenza Development Server using Runtime Bridge
+// This demonstrates Cadenza self-hosting with basic HTTP server functionality
+
+/*spec
+intent: "Simple development server to test Cadenza self-hosting capabilities"
+rules:
+  - "Start HTTP server on port 3000"
+  - "Use runtime bridge for system operations"
+  - "Log server status and requests"
+  - "Demonstrate Cadenza calling .NET libraries"
+  - "Serve HTML interface with hot reload support"
+  - "Watch for file changes and trigger recompilation"
+postconditions:
+  - "HTTP server running and accepting requests"
+  - "Server logs displayed to console"
+  - "Basic HTML page served to browsers"
+  - "WebSocket connection established for hot reload"
+spec*/
+
+// Generate simple HTML page for development interface
+function generateDevHTML() -> string {
+    return "<html><head><title>Cadenza Development Server</title></head><body><h1>Cadenza Development Server</h1><p>Server is running successfully!</p><p>This is a self-hosted Cadenza development environment.</p></body></html>"
+}
+
+// Log server startup information
+function logServerInfo() uses [Logging] -> Result<string, string> {
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Cadenza Development Server initializing...")
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Server port: 3000")
+    let currentDir = Cadenza.Runtime.CommandLineRuntime.GetCurrentDirectory()
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Project directory: " + currentDir)
+    return Ok("Server info logged")
+}
+
+// Create and start HTTP server
+function startHttpServer() uses [Network, Logging] -> Result<string, string> {
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Creating HTTP server...")
+    let server = Cadenza.Runtime.HttpServerRuntime.CreateServer(3000)
+    Cadenza.Runtime.HttpServerRuntime.StartServer(server)
+    Cadenza.Runtime.LoggingRuntime.LogInfo("HTTP server started on port 3000")
+    return Ok("HTTP server started")
+}
+
+// Handle HTTP request and serve appropriate content
+function handleHttpRequest(server: HttpListener) uses [Network, Logging] -> Result<string, string> {
+    let context = Cadenza.Runtime.HttpServerRuntime.WaitForRequest(server)
+    let requestPath = Cadenza.Runtime.HttpServerRuntime.GetRequestPath(context)
+    
+    if requestPath == "/" {
+        let htmlContent = generateDevHTML()
+        Cadenza.Runtime.HttpServerRuntime.SendResponse(context, htmlContent, "text/html")
+        return Ok("Served main page")
+    } else {
+        if requestPath == "/api/status" {
+            let statusJson = "{status:running,version:1.0.0}"
+            Cadenza.Runtime.HttpServerRuntime.SendResponse(context, statusJson, "application/json")
+            return Ok("Served status API")
+        } else {
+            Cadenza.Runtime.HttpServerRuntime.SendResponse(context, "404 Not Found", "text/plain")
+            return Ok("Served 404")
+        }
+    }
+}
+
+// Setup file watcher for hot reload
+function setupFileWatcher() uses [FileSystem, Logging] -> Result<string, string> {
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Setting up file watcher...")
+    let watcher = Cadenza.Runtime.FileSystemRuntime.CreateWatcher("./src/Cadenza.Tools/")
+    Cadenza.Runtime.FileSystemRuntime.StartWatching(watcher, "*.cdz")
+    Cadenza.Runtime.LoggingRuntime.LogInfo("File watcher started for .cdz files")
+    return Ok("File watcher setup")
+}
+
+// Handle file change events
+function onFileChanged(filePath: string) uses [Logging, Network] -> Result<string, string> {
+    Cadenza.Runtime.LoggingRuntime.LogInfo("File changed: " + filePath)
+    let isFlowFile = Cadenza.Runtime.StringRuntime.EndsWith(filePath, ".cdz")
+    
+    if isFlowFile {
+        Cadenza.Runtime.LoggingRuntime.LogInfo("Cadenza file changed, triggering recompilation...")
+        let recompileResult = recompileProject()
+        match recompileResult {
+            Ok(message) -> {
+                let reloadMessage = "{type:reload,file:" + filePath + "}"
+                Cadenza.Runtime.WebSocketRuntime.BroadcastMessage(reloadMessage)
+                return Ok("File change handled with recompilation")
+            }
+            Error(err) -> {
+                let errorMessage = "{type:error,file:" + filePath + "}"
+                Cadenza.Runtime.WebSocketRuntime.BroadcastMessage(errorMessage)
+                return Error("Recompilation failed: " + err)
+            }
+        }
+    }
+    return Ok("File change handled")
+}
+
+// Recompile Cadenza project
+function recompileProject() uses [FileSystem, Logging] -> Result<string, string> {
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Recompiling Cadenza project...")
+    
+    let compilerArgs = ["run", "--project", "src/Cadenza.Core/cadenzac-core.csproj", "--", "src/Cadenza.Tools/simple-dev-server.cdz", "output/dev-server.cs"]
+    let result = Cadenza.Runtime.ProcessRuntime.ExecuteCommand("dotnet", compilerArgs)
+    let exitCode = Cadenza.Runtime.ProcessRuntime.GetExitCode(result)
+    
+    if exitCode == 0 {
+        Cadenza.Runtime.LoggingRuntime.LogInfo("Compilation successful")
+        return Ok("Compilation successful")
+    } else {
+        let errorOutput = Cadenza.Runtime.ProcessRuntime.GetErrorOutput(result)
+        Cadenza.Runtime.LoggingRuntime.LogError("Compilation failed: " + errorOutput)
+        return Error("Compilation failed: " + errorOutput)
+    }
+}
+
+// Main server loop
+function runServerLoop() uses [Network, Logging, FileSystem] -> Result<string, string> {
+    // Create and start the HTTP server
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Starting server components...")
+    let server = Cadenza.Runtime.HttpServerRuntime.CreateServer(3000)
+    Cadenza.Runtime.HttpServerRuntime.StartServer(server)
+    
+    // Setup file watcher
+    let watcherResult = setupFileWatcher()
+    match watcherResult {
+        Error(err) -> {
+            Cadenza.Runtime.LoggingRuntime.LogError("Failed to setup file watcher: " + err)
+            return Error("File watcher setup failed: " + err)
+        }
+        Ok(_) -> {
+            Cadenza.Runtime.LoggingRuntime.LogInfo("All server components started successfully")
+        }
+    }
+    
+    // Start server request loop
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Server is ready to accept requests on http://localhost:3000")
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Press Ctrl+C to stop the server")
+    
+    // Handle incoming requests (simplified for demonstration)
+    let requestResult = handleHttpRequest(server)
+    match requestResult {
+        Ok(message) -> {
+            Cadenza.Runtime.LoggingRuntime.LogInfo("Request handling: " + message)
+            return Ok("Server loop completed successfully")
+        }
+        Error(err) -> {
+            Cadenza.Runtime.LoggingRuntime.LogError("Request handling failed: " + err)
+            return Error("Request handling failed: " + err)
+        }
+    }
+}
+
+// Main function - entry point for the development server
+function main() uses [Network, Logging, FileSystem] -> Result<string, string> {
+    let infoResult = logServerInfo()
+    let serverResult = runServerLoop()
+    
+    match serverResult {
+        Ok(message) -> {
+            return Ok("Cadenza development server started successfully")
+        }
+        Error(err) -> {
+            return Error(err)
+        }
+    }
+}

@@ -1,10 +1,10 @@
-# FlowLang Phase 4B Integration Test Report
+# Cadenza Phase 4B Integration Test Report
 
 ## Executive Summary
 
-This comprehensive integration test report validates the Phase 4B implementation of FlowLang, focusing on two major feature sets:
+This comprehensive integration test report validates the Phase 4B implementation of Cadenza, focusing on two major feature sets:
 
-1. **Development Server with Hot Reload** (`flowc dev` command)
+1. **Development Server with Hot Reload** (`cadenzac dev` command)
 2. **Advanced Parser Features** (conditionals, loops, complex expressions in UI components)
 
 ## Test Status: ⚠️ COMPILATION BLOCKED
@@ -17,14 +17,14 @@ This comprehensive integration test report validates the Phase 4B implementation
 
 ### ✅ VERIFIED: Development Server Implementation
 
-**Location**: `/mnt/c/code/github/FlowLang/src/flowc.cs` (lines 3236-3846)
+**Location**: `/mnt/c/code/github/Cadenza/src/cadenzac.cs` (lines 3236-3846)
 
 **Features Implemented**:
-- ✅ **FileSystemWatcher Integration** - Monitors .flow files for changes
+- ✅ **FileSystemWatcher Integration** - Monitors .cdz files for changes
 - ✅ **HTTP Server** - Configurable port (default 8080), static file serving
 - ✅ **WebSocket Support** - Real-time communication for hot reload
 - ✅ **Error Overlay System** - Browser-based compilation error display
-- ✅ **Command Line Interface** - `flowc dev --port 3000 --verbose --watch ./src`
+- ✅ **Command Line Interface** - `cadenzac dev --port 3000 --verbose --watch ./src`
 
 **Architecture Validation**:
 ```
@@ -39,7 +39,7 @@ File Change → FileSystemWatcher → Compilation → WebSocket Broadcast → Br
 
 ### ✅ VERIFIED: Advanced Parser Features
 
-**Location**: `/mnt/c/code/github/FlowLang/src/Parser.cs`, `/mnt/c/code/github/FlowLang/src/AST.cs`
+**Location**: `/mnt/c/code/github/Cadenza/src/Parser.cs`, `/mnt/c/code/github/Cadenza/src/AST.cs`
 
 **Features Implemented**:
 - ✅ **Conditional Rendering** - `if/else` in render blocks with `ParseConditionalRender()`
@@ -55,7 +55,7 @@ File Change → FileSystemWatcher → Compilation → WebSocket Broadcast → Br
 
 ## Test Artifacts Created
 
-### 1. Comprehensive E-Commerce Test (`e_commerce_integration_test.flow`)
+### 1. Comprehensive E-Commerce Test (`e_commerce_integration_test.cdz`)
 
 **Metrics**:
 - **Lines of Code**: 856 lines
@@ -65,7 +65,7 @@ File Change → FileSystemWatcher → Compilation → WebSocket Broadcast → Br
 - **UI Complexity**: 200+ nested render elements
 
 **Advanced Features Tested**:
-```flowlang
+```cadenza
 // Complex nested conditionals with ternary operators
 class: [
     "product-card",
@@ -95,17 +95,17 @@ if is_loading {
 }
 ```
 
-### 2. Performance Stress Test (`performance_stress_test.flow`)
+### 2. Performance Stress Test (`performance_stress_test.cdz`)
 
 **Metrics**:
-- **Lines of Code**: 1,100+ lines (largest FlowLang file created)
+- **Lines of Code**: 1,100+ lines (largest Cadenza file created)
 - **Nested Depth**: 8+ levels of nested render blocks
 - **State Complexity**: 12 state variables with complex types
 - **Loop Performance**: 3 different loop types with filtering
 - **Memory Testing**: Large data structures with 1000+ simulated products
 
 **Stress Test Scenarios**:
-```flowlang
+```cadenza
 // Deep nesting performance test
 for category in categories where category.level == 0 {
     category_group(category: category) {
@@ -130,8 +130,8 @@ computed categorized_products: Map<string, List<ComplexProduct>> =
 
 ### 3. Parser Validation Tests
 
-**Basic Test** (`phase4b_basic_test.flow`): 67 lines, core feature validation
-**Validation Test** (`parser_validation_test.flow`): 134 lines, systematic feature testing
+**Basic Test** (`phase4b_basic_test.cdz`): 67 lines, core feature validation
+**Validation Test** (`parser_validation_test.cdz`): 134 lines, systematic feature testing
 
 ## Compilation Issues Analysis
 
@@ -153,7 +153,7 @@ computed categorized_products: Map<string, List<ComplexProduct>> =
 
 **Example Error**:
 ```
-/mnt/c/code/github/FlowLang/src/lsp/DiagnosticsProvider.cs(314,33): 
+/mnt/c/code/github/Cadenza/src/lsp/DiagnosticsProvider.cs(314,33): 
 error CS0104: 'Range' is an ambiguous reference between 
 'Microsoft.VisualStudio.LanguageServer.Protocol.Range' and 'System.Range'
 ```
@@ -169,10 +169,10 @@ error CS0104: 'Range' is an ambiguous reference between
 ### ✅ VERIFIED: Existing Examples Compatibility
 
 **Tested Examples**:
-- `simple.flow` - Basic function definitions ✅
-- `result_example.flow` - Result type system ✅
-- `effect_system_demo.flow` - Effect tracking ✅
-- `simple_ui_test.flow` - Basic UI components ✅
+- `simple.cdz` - Basic function definitions ✅
+- `result_example.cdz` - Result type system ✅
+- `effect_system_demo.cdz` - Effect tracking ✅
+- `simple_ui_test.cdz` - Basic UI components ✅
 
 **Compatibility Status**:
 - ✅ All existing syntax remains valid
@@ -182,7 +182,7 @@ error CS0104: 'Range' is an ambiguous reference between
 - ✅ Result types work as expected
 
 **Example Verification**:
-```flowlang
+```cadenza
 // Phase 1 syntax still works
 function divide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
@@ -225,9 +225,9 @@ function save_user(user_id: int, name: string)
 - **Large Projects**: <5s for 10,000+ line projects
 
 **Based on Created Test Cases**:
-- `phase4b_basic_test.flow` (67 lines): Expected <50ms
-- `e_commerce_integration_test.flow` (856 lines): Expected <800ms
-- `performance_stress_test.flow` (1100+ lines): Expected <1500ms
+- `phase4b_basic_test.cdz` (67 lines): Expected <50ms
+- `e_commerce_integration_test.cdz` (856 lines): Expected <800ms
+- `performance_stress_test.cdz` (1100+ lines): Expected <1500ms
 
 ## Production Readiness Assessment
 
@@ -257,7 +257,7 @@ function save_user(user_id: int, name: string)
 | Complex conditionals in render | ✅ Implemented | Parser methods `ParseConditionalRender()` |
 | Loops with filtering | ✅ Implemented | `for item in list where condition` support |
 | String interpolation | ✅ Implemented | `$"Hello {name}"` in test files |
-| Development server | ✅ Implemented | HTTP server + WebSocket in `flowc.cs` |
+| Development server | ✅ Implemented | HTTP server + WebSocket in `cadenzac.cs` |
 | Hot reload | ✅ Implemented | FileSystemWatcher + broadcast system |
 | Error overlay | ✅ Implemented | Browser error display system |
 
@@ -308,18 +308,18 @@ function save_user(user_id: int, name: string)
 2. **Validate Basic Compilation**
    ```bash
    # Test basic functionality after fixes
-   dotnet build src/flowc.csproj
-   flowc compile examples/phase4b_basic_test.flow
+   dotnet build src/cadenzac.csproj
+   cadenzac compile examples/phase4b_basic_test.cdz
    ```
 
 ### SHORT TERM (Priority 2)
 1. **Execute Integration Tests**
    ```bash
    # Test development server
-   flowc dev --port 3001 --verbose
+   cadenzac dev --port 3001 --verbose
    
    # Test complex compilation
-   flowc compile examples/e_commerce_integration_test.flow
+   cadenzac compile examples/e_commerce_integration_test.cdz
    ```
 
 2. **Performance Validation**
@@ -342,21 +342,21 @@ function save_user(user_id: int, name: string)
 
 ### Phase 1: Fix & Build ☐
 - ☐ Resolve 63 compilation errors
-- ☐ Successful `dotnet build src/flowc.csproj`
-- ☐ Basic `flowc --help` works
+- ☐ Successful `dotnet build src/cadenzac.csproj`
+- ☐ Basic `cadenzac --help` works
 
 ### Phase 2: Basic Compilation ☐
-- ☐ Compile `simple.flow`
-- ☐ Compile `phase4b_basic_test.flow`
+- ☐ Compile `simple.cdz`
+- ☐ Compile `phase4b_basic_test.cdz`
 - ☐ Validate generated output syntax
 
 ### Phase 3: Advanced Features ☐
-- ☐ Compile `e_commerce_integration_test.flow`
-- ☐ Compile `performance_stress_test.flow`
+- ☐ Compile `e_commerce_integration_test.cdz`
+- ☐ Compile `performance_stress_test.cdz`
 - ☐ Verify all parser features work
 
 ### Phase 4: Development Server ☐
-- ☐ Start `flowc dev` successfully
+- ☐ Start `cadenzac dev` successfully
 - ☐ Serve files via HTTP
 - ☐ Establish WebSocket connections
 - ☐ Test hot reload workflow
@@ -369,7 +369,7 @@ function save_user(user_id: int, name: string)
 
 ## Conclusion
 
-FlowLang Phase 4B represents a significant advancement in LLM-friendly full-stack development capabilities. The implementation of advanced parser features and development server with hot reload creates a modern, productive development environment.
+Cadenza Phase 4B represents a significant advancement in LLM-friendly full-stack development capabilities. The implementation of advanced parser features and development server with hot reload creates a modern, productive development environment.
 
 **Key Achievements**:
 - ✅ **856-line e-commerce component** demonstrates production-ready complexity
@@ -386,4 +386,4 @@ FlowLang Phase 4B represents a significant advancement in LLM-friendly full-stac
 - **3-5 days**: Complete integration testing and performance validation
 - **1 week**: Production-ready Phase 4B with full hot reload development workflow
 
-The comprehensive test suite created during this integration testing provides a robust foundation for validating the Phase 4B implementation once compilation issues are resolved. The architecture and feature set demonstrate FlowLang's evolution into a modern, full-stack development platform optimized for LLM-assisted programming.
+The comprehensive test suite created during this integration testing provides a robust foundation for validating the Phase 4B implementation once compilation issues are resolved. The architecture and feature set demonstrate Cadenza's evolution into a modern, full-stack development platform optimized for LLM-assisted programming.

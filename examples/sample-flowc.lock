@@ -1,23 +1,23 @@
 {
   "lockfileVersion": 2,
   "resolved": {
-    "FlowLang.Core@2.1.3": {
+    "Cadenza.Core@2.1.3": {
       "version": "2.1.3",
-      "resolved": "https://packages.flowlang.org/FlowLang.Core/-/FlowLang.Core-2.1.3.zip",
+      "resolved": "https://packages.cadenza.org/Cadenza.Core/-/Cadenza.Core-2.1.3.zip",
       "integrity": "sha512-abc123def456ghi789",
       "dependencies": {
         "Newtonsoft.Json": "13.0.3"
       },
       "effects": ["Memory", "IO"],
-      "type": "FlowLang"
+      "type": "Cadenza"
     },
-    "FlowLang.Database@1.5.2": {
+    "Cadenza.Database@1.5.2": {
       "version": "1.5.2",
-      "resolved": "https://packages.flowlang.org/FlowLang.Database/-/FlowLang.Database-1.5.2.zip",
+      "resolved": "https://packages.cadenza.org/Cadenza.Database/-/Cadenza.Database-1.5.2.zip",
       "integrity": "sha512-def456ghi789jkl012",
       "dependencies": {},
       "effects": ["Database", "IO"],
-      "type": "FlowLang"
+      "type": "Cadenza"
     },
     "Newtonsoft.Json@13.0.3": {
       "version": "13.0.3",
@@ -37,23 +37,23 @@
       "effects": ["Network", "IO"],
       "type": "NuGet"
     },
-    "FlowLang.Testing@1.0.5": {
+    "Cadenza.Testing@1.0.5": {
       "version": "1.0.5",
-      "resolved": "https://packages.flowlang.org/FlowLang.Testing/-/FlowLang.Testing-1.0.5.zip",
+      "resolved": "https://packages.cadenza.org/Cadenza.Testing/-/Cadenza.Testing-1.0.5.zip",
       "integrity": "sha512-mno345pqr678stu901",
       "dependencies": {
-        "FlowLang.Core": "^2.1.0"
+        "Cadenza.Core": "^2.1.0"
       },
       "effects": ["IO", "Logging"],
-      "type": "FlowLang"
+      "type": "Cadenza"
     }
   },
   "integrity": {
-    "FlowLang.Core@2.1.3": "sha512-abc123def456ghi789",
-    "FlowLang.Database@1.5.2": "sha512-def456ghi789jkl012",
+    "Cadenza.Core@2.1.3": "sha512-abc123def456ghi789",
+    "Cadenza.Database@1.5.2": "sha512-def456ghi789jkl012",
     "Newtonsoft.Json@13.0.3": "sha512-ghi789jkl012mno345",
     "System.Net.Http@4.3.4": "sha512-jkl012mno345pqr678",
-    "FlowLang.Testing@1.0.5": "sha512-mno345pqr678stu901"
+    "Cadenza.Testing@1.0.5": "sha512-mno345pqr678stu901"
   },
   "generatedAt": "2024-01-15T10:30:00.000Z"
 }

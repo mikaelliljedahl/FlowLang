@@ -3,19 +3,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FlowLang.Tests.Unit
+namespace Cadenza.Tests.Unit
 {
     [TestFixture]
     public class LexerTests
     {
-        private FlowLangLexer _lexer;
+        private CadenzaLexer _lexer;
 
         [Test]
         public void Lexer_ShouldTokenizeSimpleFunction()
         {
             // Arrange
             var source = "function test() -> int";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -37,7 +37,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "123 456 789";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -57,7 +57,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "\"hello\" \"world\"";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -75,7 +75,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "$\"Hello {name}!\"";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -91,7 +91,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "function return if else pure uses Result Ok Error";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -113,7 +113,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "+ - * / > < >= <= == != && || !";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -139,7 +139,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "Database Network Logging FileSystem Memory IO";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -158,7 +158,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "module import export from . Math.add";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -181,7 +181,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "function test() // this is a comment\n-> int";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -202,7 +202,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "\"Hello\\nWorld\" \"Quote: \\\"Test\\\"\"";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -220,7 +220,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "function\ntest() ->\nint";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -239,7 +239,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "\"unterminated string";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act & Assert
             Assert.Throws<Exception>(() => _lexer.Tokenize());
@@ -250,7 +250,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "function test @ invalid";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act & Assert
             Assert.Throws<Exception>(() => _lexer.Tokenize());
@@ -261,7 +261,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "a + b * (c - d) >= 42";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -287,7 +287,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "result?";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -303,7 +303,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "guard condition else { return 0 }";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -320,7 +320,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "let x = 42";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -342,7 +342,7 @@ namespace FlowLang.Tests.Unit
     let x = 42
     return x
 }";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -360,7 +360,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "  function   test  (  )  ->  int  ";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -377,7 +377,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "{ { } }";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -395,7 +395,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "+ - * / > < >= <= == != && ||";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -419,7 +419,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "$\"Name: {user.name}, Age: {user.age}, Status: {getStatus()}\"";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -435,7 +435,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "Result Ok Error";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -451,7 +451,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "function\ntest\n()";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -470,7 +470,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "1234567890";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -485,7 +485,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "$\"unterminated {name";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act & Assert
             Assert.Throws<Exception>(() => _lexer.Tokenize());
@@ -496,7 +496,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "\"invalid\\q escape\"";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();

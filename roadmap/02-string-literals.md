@@ -1,7 +1,7 @@
 # String Literals Implementation
 
 ## Overview
-Add comprehensive string support to FlowLang including literals, concatenation, and interpolation.
+Add comprehensive string support to Cadenza including literals, concatenation, and interpolation.
 
 ## Goals
 - Parse string literals with proper escape sequences
@@ -31,8 +31,8 @@ Add comprehensive string support to FlowLang including literals, concatenation, 
 - Generate string interpolation code
 - Handle string concatenation
 
-## Example FlowLang Code
-```flowlang
+## Example Cadenza Code
+```cadenza
 function greet(name: string) -> string {
     return "Hello, " + name + "!"
 }

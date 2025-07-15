@@ -1,6 +1,6 @@
-# FlowLang Testing Guide
+# Cadenza Testing Guide
 
-This guide covers the comprehensive testing framework for FlowLang, including how to write tests, run the test suite, and contribute test improvements.
+This guide covers the comprehensive testing framework for Cadenza, including how to write tests, run the test suite, and contribute test improvements.
 
 ## Table of Contents
 
@@ -17,12 +17,12 @@ This guide covers the comprehensive testing framework for FlowLang, including ho
 
 ## Testing Overview
 
-FlowLang uses a comprehensive testing framework built on .NET's testing infrastructure with NUnit. The framework provides multiple types of tests to ensure the transpiler's correctness, performance, and reliability.
+Cadenza uses a comprehensive testing framework built on .NET's testing infrastructure with NUnit. The framework provides multiple types of tests to ensure the transpiler's correctness, performance, and reliability.
 
 ### Test Framework Architecture
 
 ```
-FlowLang.Tests/
+Cadenza.Tests/
 ├── unit/              # Component-level tests
 ├── integration/       # End-to-end tests
 ├── golden/           # Expected output validation
@@ -56,7 +56,7 @@ Test individual components in isolation:
 
 Test complete transpilation pipeline:
 
-- **End-to-end transpilation**: FlowLang → C# → compilation
+- **End-to-end transpilation**: Cadenza → C# → compilation
 - **Cross-component interaction**: Multiple components working together
 - **Real-world scenarios**: Practical use cases and workflows
 
@@ -64,7 +64,7 @@ Test complete transpilation pipeline:
 
 Validate exact output matches expected results:
 
-- **Input/Expected pairs**: FlowLang source and expected C# output
+- **Input/Expected pairs**: Cadenza source and expected C# output
 - **Feature coverage**: All language constructs tested
 - **Regression prevention**: Changes don't break existing functionality
 
@@ -89,7 +89,7 @@ Prevent breaking changes:
 ### Prerequisites
 
 - .NET 8.0 SDK or later
-- FlowLang source code built successfully
+- Cadenza source code built successfully
 - All NuGet packages restored
 
 ### Running All Tests
@@ -112,19 +112,19 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ```bash
 # Unit tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Unit"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Unit"
 
 # Integration tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Integration"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Integration"
 
 # Golden file tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Golden"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Golden"
 
 # Performance tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Performance"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Performance"
 
 # Regression tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Regression"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Regression"
 ```
 
 ### Running Individual Test Classes
@@ -158,15 +158,15 @@ dotnet test --logger "console;verbosity=detailed" --filter "Performance"
 
 ```csharp
 using NUnit.Framework;
-using FlowLang;
+using Cadenza;
 
-namespace FlowLang.Tests.Unit
+namespace Cadenza.Tests.Unit
 {
     [TestFixture]
     [Category("Unit")]
     public class LexerTests
     {
-        private FlowLangLexer _lexer;
+        private CadenzaLexer _lexer;
 
         [SetUp]
         public void SetUp()
@@ -185,7 +185,7 @@ namespace FlowLang.Tests.Unit
         {
             // Arrange
             var source = "42";
-            _lexer = new FlowLangLexer(source);
+            _lexer = new CadenzaLexer(source);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -204,7 +204,7 @@ namespace FlowLang.Tests.Unit
         public void Lexer_ShouldTokenizeCorrectly(string input, TokenType expectedType, string expectedValue)
         {
             // Arrange
-            _lexer = new FlowLangLexer(input);
+            _lexer = new CadenzaLexer(input);
 
             // Act
             var tokens = _lexer.Tokenize();
@@ -229,9 +229,9 @@ public class ParserTests
     {
         // Arrange
         var source = "pure function add(a: int, b: int) -> int { return a + b }";
-        var lexer = new FlowLangLexer(source);
+        var lexer = new CadenzaLexer(source);
         var tokens = lexer.Tokenize();
-        var parser = new FlowLangParser(tokens);
+        var parser = new CadenzaParser(tokens);
 
         // Act
         var program = parser.Parse();
@@ -252,9 +252,9 @@ public class ParserTests
     {
         // Arrange
         var source = "function divide(a: int, b: int) -> Result<int, string> { return Ok(a / b) }";
-        var lexer = new FlowLangLexer(source);
+        var lexer = new CadenzaLexer(source);
         var tokens = lexer.Tokenize();
-        var parser = new FlowLangParser(tokens);
+        var parser = new CadenzaParser(tokens);
 
         // Act
         var program = parser.Parse();
@@ -269,9 +269,9 @@ public class ParserTests
     {
         // Arrange
         var source = "function missing_params() -> int { return 42 }"; // Missing parameter list
-        var lexer = new FlowLangLexer(source);
+        var lexer = new CadenzaLexer(source);
         var tokens = lexer.Tokenize();
-        var parser = new FlowLangParser(tokens);
+        var parser = new CadenzaParser(tokens);
 
         // Act & Assert
         Assert.Throws<Exception>(() => parser.Parse());
@@ -364,12 +364,12 @@ public class CodeGeneratorTests
 [Category("Integration")]
 public class TranspilationTests
 {
-    private FlowLangTranspiler _transpiler;
+    private CadenzaTranspiler _transpiler;
 
     [SetUp]
     public void SetUp()
     {
-        _transpiler = new FlowLangTranspiler();
+        _transpiler = new CadenzaTranspiler();
     }
 
     [Test]
@@ -467,7 +467,7 @@ public class CliIntegrationTests
     [SetUp]
     public void SetUp()
     {
-        _testProjectDir = Path.Combine(Path.GetTempPath(), "flowlang_test_" + Guid.NewGuid());
+        _testProjectDir = Path.Combine(Path.GetTempPath(), "cadenza_test_" + Guid.NewGuid());
         Directory.CreateDirectory(_testProjectDir);
     }
 
@@ -492,8 +492,8 @@ public class CliIntegrationTests
         // Assert
         Assert.That(result.ExitCode, Is.EqualTo(0));
         Assert.That(Directory.Exists(Path.Combine(_testProjectDir, projectName)), Is.True);
-        Assert.That(File.Exists(Path.Combine(_testProjectDir, projectName, "flowc.json")), Is.True);
-        Assert.That(File.Exists(Path.Combine(_testProjectDir, projectName, "src", "main.flow")), Is.True);
+        Assert.That(File.Exists(Path.Combine(_testProjectDir, projectName, "cadenzac.json")), Is.True);
+        Assert.That(File.Exists(Path.Combine(_testProjectDir, projectName, "src", "main.cdz")), Is.True);
     }
 
     [Test]
@@ -537,8 +537,8 @@ public class CliIntegrationTests
 
     private string GetFlowcProjectPath()
     {
-        // Return path to flowc.csproj relative to test directory
-        return Path.Combine("..", "..", "src", "flowc.csproj");
+        // Return path to cadenzac.csproj relative to test directory
+        return Path.Combine("..", "..", "src", "cadenzac.csproj");
     }
 }
 ```
@@ -549,13 +549,13 @@ public class CliIntegrationTests
 
 ```
 tests/golden/
-├── inputs/                    # FlowLang source files
-│   ├── basic_functions.flow
-│   ├── result_types.flow
-│   ├── effect_system.flow
-│   ├── modules.flow
-│   ├── string_interpolation.flow
-│   └── control_flow.flow
+├── inputs/                    # Cadenza source files
+│   ├── basic_functions.cdz
+│   ├── result_types.cdz
+│   ├── effect_system.cdz
+│   ├── modules.cdz
+│   ├── string_interpolation.cdz
+│   └── control_flow.cdz
 └── expected/                  # Expected C# output
     ├── basic_functions.cs
     ├── result_types.cs
@@ -572,14 +572,14 @@ tests/golden/
 [Category("Golden")]
 public class GoldenFileTests
 {
-    private FlowLangTranspiler _transpiler;
+    private CadenzaTranspiler _transpiler;
     private string _inputDir;
     private string _expectedDir;
 
     [SetUp]
     public void SetUp()
     {
-        _transpiler = new FlowLangTranspiler();
+        _transpiler = new CadenzaTranspiler();
         _inputDir = Path.Combine("golden", "inputs");
         _expectedDir = Path.Combine("golden", "expected");
     }
@@ -593,7 +593,7 @@ public class GoldenFileTests
     public async Task GoldenFile_ShouldMatchExpectedOutput(string testName)
     {
         // Arrange
-        var inputPath = Path.Combine(_inputDir, $"{testName}.flow");
+        var inputPath = Path.Combine(_inputDir, $"{testName}.cdz");
         var expectedPath = Path.Combine(_expectedDir, $"{testName}.cs");
         
         Assert.That(File.Exists(inputPath), Is.True, $"Input file not found: {inputPath}");
@@ -617,7 +617,7 @@ public class GoldenFileTests
     public async Task GoldenFile_AllTestFilesExist()
     {
         // Verify that every input file has a corresponding expected file
-        var inputFiles = Directory.GetFiles(_inputDir, "*.flow");
+        var inputFiles = Directory.GetFiles(_inputDir, "*.cdz");
         
         foreach (var inputFile in inputFiles)
         {
@@ -643,8 +643,8 @@ public class GoldenFileTests
 ### Creating Golden File Tests
 
 1. **Create input file**:
-   ```flowlang
-   // tests/golden/inputs/new_feature.flow
+   ```cadenza
+   // tests/golden/inputs/new_feature.cdz
    pure function example(x: int) -> int {
        return x * 2
    }
@@ -652,7 +652,7 @@ public class GoldenFileTests
 
 2. **Generate expected output**:
    ```bash
-   dotnet run --project src/flowc.csproj -- run tests/golden/inputs/new_feature.flow
+   dotnet run --project src/cadenzac.csproj -- run tests/golden/inputs/new_feature.cdz
    # Copy generated output to tests/golden/expected/new_feature.cs
    ```
 
@@ -671,12 +671,12 @@ public class GoldenFileTests
 [Category("Performance")]
 public class PerformanceTests
 {
-    private FlowLangTranspiler _transpiler;
+    private CadenzaTranspiler _transpiler;
 
     [SetUp]
     public void SetUp()
     {
-        _transpiler = new FlowLangTranspiler();
+        _transpiler = new CadenzaTranspiler();
     }
 
     [Test]
@@ -801,12 +801,12 @@ public class PerformanceTests
 [Category("Regression")]
 public class RegressionTests
 {
-    private FlowLangTranspiler _transpiler;
+    private CadenzaTranspiler _transpiler;
 
     [SetUp]
     public void SetUp()
     {
-        _transpiler = new FlowLangTranspiler();
+        _transpiler = new CadenzaTranspiler();
     }
 
     [Test]
@@ -955,7 +955,7 @@ public class RegressionTests
 ```
 tests/
 ├── data/
-│   ├── valid_programs/        # Valid FlowLang programs
+│   ├── valid_programs/        # Valid Cadenza programs
 │   ├── invalid_programs/      # Programs that should fail
 │   ├── edge_cases/           # Boundary conditions
 │   └── large_programs/       # For performance testing
@@ -1004,7 +1004,7 @@ tests/
 
 ```yaml
 # Example GitHub Actions test workflow
-name: FlowLang Tests
+name: Cadenza Tests
 
 on: [push, pull_request]
 
@@ -1047,7 +1047,7 @@ jobs:
 
 ## Summary
 
-The FlowLang testing framework provides comprehensive coverage through:
+The Cadenza testing framework provides comprehensive coverage through:
 
 - **Multiple test types** for different validation needs
 - **Automated execution** in CI/CD pipelines
@@ -1055,4 +1055,4 @@ The FlowLang testing framework provides comprehensive coverage through:
 - **Performance monitoring** to prevent regressions
 - **Contribution guidelines** for community involvement
 
-Whether you're fixing bugs, adding features, or optimizing performance, the testing framework ensures FlowLang remains reliable and high-quality. Follow the guidelines in this document to contribute effective tests that help maintain FlowLang's quality standards.
+Whether you're fixing bugs, adding features, or optimizing performance, the testing framework ensures Cadenza remains reliable and high-quality. Follow the guidelines in this document to contribute effective tests that help maintain Cadenza's quality standards.

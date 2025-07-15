@@ -1,6 +1,6 @@
 # Effect System Examples
 
-This document provides comprehensive examples of FlowLang's effect system, demonstrating how to explicitly declare and manage side effects in your code.
+This document provides comprehensive examples of Cadenza's effect system, demonstrating how to explicitly declare and manage side effects in your code.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ This document provides comprehensive examples of FlowLang's effect system, demon
 
 Pure functions have no side effects and always return the same output for the same input:
 
-```flowlang
+```cadenza
 // Mathematical operations are naturally pure
 pure function add(a: int, b: int) -> int {
     return a + b
@@ -52,7 +52,7 @@ pure function isInRange(value: int, min: int, max: int) -> bool {
 
 ### Pure Function Composition
 
-```flowlang
+```cadenza
 pure function calculateTax(amount: int, rate: int) -> int {
     return amount * rate / 100
 }
@@ -78,7 +78,7 @@ pure function processOrderTotal(subtotal: int, taxRate: int) -> string {
 
 Functions declare their side effects using the `uses` keyword:
 
-```flowlang
+```cadenza
 // Function with single effect
 function logMessage(message: string) uses [Logging] -> Result<string, string> {
     // Would actually log the message in real implementation
@@ -108,7 +108,7 @@ function complexOperation(data: string)
 
 When a function calls other functions with effects, it must declare all used effects:
 
-```flowlang
+```cadenza
 function writeLog(message: string) uses [Logging] -> Result<string, string> {
     return Ok("Logged: " + message)
 }
@@ -132,7 +132,7 @@ function saveWithLogging(data: string)
 
 ### Database Effect
 
-```flowlang
+```cadenza
 // Simple database operations
 function createUser(name: string) uses [Database] -> Result<int, string> {
     if name == "" {
@@ -172,7 +172,7 @@ function deleteUser(userId: int) uses [Database] -> Result<bool, string> {
 
 ### Network Effect
 
-```flowlang
+```cadenza
 // HTTP operations
 function fetchUserData(userId: int) uses [Network] -> Result<string, string> {
     if userId <= 0 {
@@ -207,7 +207,7 @@ function downloadFile(url: string) uses [Network] -> Result<string, string> {
 
 ### Logging Effect
 
-```flowlang
+```cadenza
 // Logging operations
 function logInfo(message: string) uses [Logging] -> Result<string, string> {
     // Would write to log file or service
@@ -233,7 +233,7 @@ function auditLog(action: string, userId: int) uses [Logging] -> Result<string, 
 
 ### FileSystem Effect
 
-```flowlang
+```cadenza
 // File operations
 function readFile(filename: string) uses [FileSystem] -> Result<string, string> {
     if filename == "" {
@@ -273,7 +273,7 @@ function listFiles(directory: string) uses [FileSystem] -> Result<string, string
 
 ### Memory Effect
 
-```flowlang
+```cadenza
 // Memory allocation operations
 function allocateBuffer(size: int) uses [Memory] -> Result<string, string> {
     if size <= 0 {
@@ -302,7 +302,7 @@ function cacheData(key: string, value: string) uses [Memory] -> Result<bool, str
 
 ### IO Effect
 
-```flowlang
+```cadenza
 // Input/output operations
 function readUserInput() uses [IO] -> Result<string, string> {
     // Would read from stdin
@@ -327,7 +327,7 @@ function readEnvironmentVariable(name: string) uses [IO] -> Result<string, strin
 
 ### Combining Multiple Effects
 
-```flowlang
+```cadenza
 // User service combining multiple effects
 function createUserWithAudit(name: string, email: string) 
     uses [Database, Logging] 
@@ -392,7 +392,7 @@ function completeUserWorkflow(name: string, email: string)
 
 ### Effect Propagation
 
-```flowlang
+```cadenza
 // Low-level operations
 function writeToLog(level: string, message: string) uses [Logging] -> Result<bool, string> {
     return Ok(true)
@@ -434,7 +434,7 @@ The effect system enforces these rules:
 3. **Functions must declare all effects they use**
 4. **Effect declarations are validated at compile time**
 
-```flowlang
+```cadenza
 // ✅ Valid: Pure function calling pure function
 pure function validPureFunction(x: int) -> int {
     return add(x, 5)  // add is pure, so this is allowed
@@ -463,7 +463,7 @@ function validEffectFunction(message: string) uses [Logging] -> Result<string, s
 
 ### Effect Checking Examples
 
-```flowlang
+```cadenza
 // Helper functions with different effects
 function dbOperation() uses [Database] -> Result<int, string> {
     return Ok(42)
@@ -498,7 +498,7 @@ function correctEffectUsage() uses [Database, Logging, Network] -> Result<string
 
 ### E-commerce Order Processing
 
-```flowlang
+```cadenza
 function processOrder(customerId: int, items: string, total: int) 
     uses [Database, Network, Logging, FileSystem] 
     -> Result<int, string> {
@@ -556,7 +556,7 @@ function generateInvoice(orderId: int, items: string, total: int)
 
 ### User Authentication System
 
-```flowlang
+```cadenza
 function authenticateUser(username: string, password: string) 
     uses [Database, Logging, Memory] 
     -> Result<int, string> {
@@ -611,7 +611,7 @@ function createSession(userId: int) uses [Memory] -> Result<string, string> {
 
 ### Data Backup System
 
-```flowlang
+```cadenza
 function performBackup(dataType: string, destination: string) 
     uses [Database, FileSystem, Network, Logging] 
     -> Result<string, string> {
@@ -676,7 +676,7 @@ function verifyBackup(destination: string, dataType: string)
 
 ### Configuration Management
 
-```flowlang
+```cadenza
 function loadApplicationConfig(environment: string) 
     uses [FileSystem, Network, Logging, Memory] 
     -> Result<string, string> {

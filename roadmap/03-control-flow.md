@@ -1,7 +1,7 @@
 # Control Flow Implementation
 
 ## Overview
-Add if/else statements, boolean expressions, and basic control flow constructs to FlowLang.
+Add if/else statements, boolean expressions, and basic control flow constructs to Cadenza.
 
 ## Goals
 - Support if/else statements with proper nesting
@@ -37,8 +37,8 @@ Add if/else statements, boolean expressions, and basic control flow constructs t
 - Generate guard clauses as if statements
 - Handle logical operator precedence
 
-## Example FlowLang Code
-```flowlang
+## Example Cadenza Code
+```cadenza
 function validate_age(age: int) -> Result<string, string> {
     guard age >= 0 else {
         return Error("Age cannot be negative")

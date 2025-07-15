@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Cadenza Compiler Wrapper
+# Routes to cadenzac-core for basic compilation, tools for advanced features
+
+# Build core compiler if not already built
+if [ ! -f "src/Cadenza.Core/bin/Debug/net8.0/cadenzac-core.dll" ]; then
+    echo "Building Cadenza core compiler..."
+    cd src/Cadenza.Core && dotnet build cadenzac-core.csproj >/dev/null
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to build core compiler"
+        exit 1
+    fi
+    cd ../..
+fi
+
+# Function to run core compiler
+run_core() {
+    local orig_dir=$(pwd)
+    cd src/Cadenza.Core
+    # Convert relative paths to absolute from original directory
+    local args=()
+    for arg in "$@"; do
+        if [[ "$arg" == *.cdz ]] && [[ ! "$arg" == /* ]]; then
+            args+=("$orig_dir/$arg")
+        else
+            args+=("$arg")
+        fi
+    done
+    dotnet run -- "${args[@]}"
+    cd "$orig_dir"
+}
+
+# Parse command and arguments
+if [ $# -eq 0 ]; then
+    echo "Cadenza Compiler Toolchain"
+    echo ""
+    echo "Usage:"
+    echo "  cadenzac <input.cdz> <output.cs>              # Compile to C#"
+    echo "  cadenzac compile <input.cdz> <output.cs>      # Explicit compile"
+    echo "  cadenzac compile --target js <input.cdz> <output.js>  # Compile to JavaScript"
+    echo "  cadenzac dev [--port 8080]                     # Start development server (TODO)"
+    echo "  cadenzac lint <files...>                       # Run linter (TODO)"
+    echo "  cadenzac --help                                # Show help"
+    echo "  cadenzac --version                             # Show version"
+    echo ""
+    echo "Core compiler commands:"
+    run_core --help
+    exit 0
+fi
+
+case "$1" in
+    "--help" | "-h")
+        run_core --help
+        ;;
+    "--version" | "-v")
+        echo "Cadenza Toolchain v1.0.0"
+        run_core --version
+        ;;
+    "compile")
+        shift
+        run_core "$@"
+        ;;
+    "dev")
+        echo "🚧 Development server not yet implemented in pure Cadenza"
+        echo "Use the Cadenza tools for now: src/Cadenza.Tools/dev-server.cdz"
+        exit 1
+        ;;
+    "lint")
+        echo "🚧 Linter not yet implemented in pure Cadenza"
+        echo "Use the Cadenza tools for now: src/Cadenza.Tools/linter.cdz"
+        exit 1
+        ;;
+    "lsp")
+        echo "🚧 Language server not yet implemented in pure Cadenza"
+        echo "Use the original LSP implementation for now"
+        exit 1
+        ;;
+    *)
+        # Default: treat as input/output files for compilation
+        run_core "$@"
+        ;;
+esac

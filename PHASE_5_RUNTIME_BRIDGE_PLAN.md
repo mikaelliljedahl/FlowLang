@@ -1,32 +1,32 @@
 # Phase 5 - Runtime Bridge Fixes Plan
 
 ## Overview
-Fix the FlowLang.Runtime bridge to enable .flow tools compilation. This is the critical path blocker for self-hosting migration.
+Fix the Cadenza.Runtime bridge to enable .cdz tools compilation. This is the critical path blocker for self-hosting migration.
 
 ## Current Issues
-1. **Namespace Access**: Generated C# code can't access `FlowLang.Runtime` namespace
-2. **Missing Methods**: Runtime lacks methods that .flow tools expect
-3. **Syntax Incompatibilities**: FlowLang syntax doesn't transpile correctly to C#
+1. **Namespace Access**: Generated C# code can't access `Cadenza.Runtime` namespace
+2. **Missing Methods**: Runtime lacks methods that .cdz tools expect
+3. **Syntax Incompatibilities**: Cadenza syntax doesn't transpile correctly to C#
 4. **Result Type Integration**: Match expressions and Result patterns broken
 
 ## Tasks
 
 ### Task 1: Fix Namespace Integration
-**Problem**: `FlowLang.Runtime` not accessible from generated C# code
+**Problem**: `Cadenza.Runtime` not accessible from generated C# code
 **Solution**: 
-- Add proper `using FlowLang.Runtime;` to generated C# files
+- Add proper `using Cadenza.Runtime;` to generated C# files
 - Ensure runtime namespace is included in compilation references
 - Test with simple runtime call
 
 ### Task 2: Add Missing Runtime Methods
-**Missing from analysis of linter.flow compilation errors**:
-- `FlowLang.Runtime.StringRuntime.ToString(int)` ✅ ADDED
-- `FlowLang.Runtime.FileSystemRuntime.FindFiles()` ✅ ADDED  
-- `FlowLang.Runtime.ProcessRuntime.GetExitCode()` ✅ ADDED
-- `FlowLang.Runtime.ProcessRuntime.GetErrorOutput()` ✅ ADDED
-- `FlowLang.Runtime.ConsoleRuntime.WriteLine()` ✅ ADDED
+**Missing from analysis of linter.cdz compilation errors**:
+- `Cadenza.Runtime.StringRuntime.ToString(int)` ✅ ADDED
+- `Cadenza.Runtime.FileSystemRuntime.FindFiles()` ✅ ADDED  
+- `Cadenza.Runtime.ProcessRuntime.GetExitCode()` ✅ ADDED
+- `Cadenza.Runtime.ProcessRuntime.GetErrorOutput()` ✅ ADDED
+- `Cadenza.Runtime.ConsoleRuntime.WriteLine()` ✅ ADDED
 
-### Task 3: Fix FlowLang Transpiler Issues
+### Task 3: Fix Cadenza Transpiler Issues
 **Problems identified**:
 - `List<T>.length` → should be `List<T>.Count` in C#
 - `true`/`false` literals not recognized
@@ -35,37 +35,37 @@ Fix the FlowLang.Runtime bridge to enable .flow tools compilation. This is the c
 - Variable scoping in match blocks
 
 ### Task 4: Test Runtime Bridge
-**Test with existing .flow tools**:
+**Test with existing .cdz tools**:
 ```bash
 # Target: Get these to compile
-./bin/release/flowc-core --compile src/FlowLang.Tools/linter.flow -o bin/linter.exe
-./bin/release/flowc-core --compile src/FlowLang.Tools/dev-server.flow -o bin/dev-server.exe
-./bin/release/flowc-core --compile src/FlowLang.Tools/simple-dev-server.flow -o bin/simple-dev-server.exe
+./bin/release/cadenzac-core --compile src/Cadenza.Tools/linter.cdz -o bin/linter.exe
+./bin/release/cadenzac-core --compile src/Cadenza.Tools/dev-server.cdz -o bin/dev-server.exe
+./bin/release/cadenzac-core --compile src/Cadenza.Tools/simple-dev-server.cdz -o bin/simple-dev-server.exe
 ```
 
 ### Task 5: Runtime Bridge Testing
-**Create test .flow file**:
-```flowlang
+**Create test .cdz file**:
+```cadenza
 function test_runtime() uses [Logging, FileSystem] -> Result<string, string> {
-    FlowLang.Runtime.LoggingRuntime.LogInfo("Testing runtime bridge")
-    let files = FlowLang.Runtime.FileSystemRuntime.FindFiles(".", "*.flow", true)
-    FlowLang.Runtime.ConsoleRuntime.WriteLine("Found files: " + files.length.ToString())
+    Cadenza.Runtime.LoggingRuntime.LogInfo("Testing runtime bridge")
+    let files = Cadenza.Runtime.FileSystemRuntime.FindFiles(".", "*.cdz", true)
+    Cadenza.Runtime.ConsoleRuntime.WriteLine("Found files: " + files.length.ToString())
     return Ok("Runtime bridge working")
 }
 ```
 
 ## Expected Outcomes
-- All .flow tools compile successfully
+- All .cdz tools compile successfully
 - Runtime bridge methods work correctly
 - Foundation for self-hosting migration complete
 - Can proceed with tooling migration
 
 ## Success Criteria
-- [ ] `linter.flow` compiles to working executable
-- [ ] `dev-server.flow` compiles to working executable  
-- [ ] `simple-dev-server.flow` compiles to working executable
+- [ ] `linter.cdz` compiles to working executable
+- [ ] `dev-server.cdz` compiles to working executable  
+- [ ] `simple-dev-server.cdz` compiles to working executable
 - [ ] Runtime bridge test passes
-- [ ] All FlowLang.Runtime methods accessible from .flow code
+- [ ] All Cadenza.Runtime methods accessible from .cdz code
 
 ## Priority
 **HIGH** - This is the critical path for Phase 5 self-hosting migration.

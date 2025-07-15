@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="src/flowc.cs" />
+    <Compile Include="src/cadenzac.cs" />
   </ItemGroup>
 
 </Project>

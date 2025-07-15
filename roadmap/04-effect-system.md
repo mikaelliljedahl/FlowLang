@@ -1,7 +1,7 @@
 # Effect System Implementation
 
 ## Overview
-Implement FlowLang's effect tracking system to explicitly declare and track side effects in functions.
+Implement Cadenza's effect tracking system to explicitly declare and track side effects in functions.
 
 ## Goals
 - Add `uses` effect annotations to function signatures
@@ -30,8 +30,8 @@ Implement FlowLang's effect tracking system to explicitly declare and track side
 - Add effect information to method documentation
 - Future: Generate effect checking code
 
-## Example FlowLang Code
-```flowlang
+## Example Cadenza Code
+```cadenza
 function save_user(user: User) 
     uses [Database, Logging] 
     -> Result<UserId, DatabaseError> {

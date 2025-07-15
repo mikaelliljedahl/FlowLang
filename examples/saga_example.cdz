@@ -1,0 +1,214 @@
+// Cadenza Saga Pattern Example
+// Demonstrates distributed transaction support with automatic compensation
+
+// Define saga steps with compensation logic
+step reservePayment(amount: int, cardId: string) uses [Payment] -> Result<string, string>
+compensate cancelPaymentReservation(amount: int, cardId: string, reservationId: string?) uses [Payment] -> Result<string, string>
+{
+    // Reserve payment - main logic
+    let reservation = payment_service_reserve(cardId, amount)?
+    return Ok(reservation.id)
+}
+{
+    // Compensation logic - cancel the reservation if saga fails
+    if reservationId != null {
+        let cancelResult = payment_service_cancel_reservation(reservationId)?
+        return Ok($"Cancelled payment reservation: {reservationId}")
+    }
+    return Ok("No payment reservation to cancel")
+}
+
+step bookHotelRoom(hotelId: string, checkIn: string, checkOut: string) uses [Hotel] -> Result<string, string>
+compensate cancelHotelBooking(hotelId: string, checkIn: string, checkOut: string, bookingId: string?) uses [Hotel] -> Result<string, string>
+{
+    // Book hotel room - main logic
+    let booking = hotel_service_book(hotelId, checkIn, checkOut)?
+    return Ok(booking.confirmationNumber)
+}
+{
+    // Compensation logic - cancel the booking if saga fails
+    if bookingId != null {
+        let cancelResult = hotel_service_cancel(bookingId)?
+        return Ok($"Cancelled hotel booking: {bookingId}")
+    }
+    return Ok("No hotel booking to cancel")
+}
+
+step bookFlight(fromCity: string, toCity: string, departDate: string) uses [Airline] -> Result<string, string>
+compensate cancelFlightBooking(fromCity: string, toCity: string, departDate: string, ticketNumber: string?) uses [Airline] -> Result<string, string>
+{
+    // Book flight - main logic
+    let ticket = airline_service_book(fromCity, toCity, departDate)?
+    return Ok(ticket.number)
+}
+{
+    // Compensation logic - cancel the flight if saga fails
+    if ticketNumber != null {
+        let cancelResult = airline_service_cancel(ticketNumber)?
+        return Ok($"Cancelled flight booking: {ticketNumber}")
+    }
+    return Ok("No flight booking to cancel")
+}
+
+step sendConfirmationEmail(email: string, details: string) uses [Email] -> Result<string, string>
+compensate sendCancellationEmail(email: string, details: string, confirmationId: string?) uses [Email] -> Result<string, string>
+{
+    // Send confirmation email - main logic
+    let emailId = email_service_send(email, "Trip Confirmation", details)?
+    return Ok(emailId)
+}
+{
+    // Compensation logic - send cancellation notice
+    if confirmationId != null {
+        let cancelEmail = email_service_send(email, "Trip Cancellation", "Your trip has been cancelled due to booking issues")?
+        return Ok($"Sent cancellation email: {cancelEmail}")
+    }
+    return Ok("No confirmation email to counter")
+}
+
+// Main saga definition
+saga bookTravelPackage(
+    customerEmail: string,
+    paymentCard: string, 
+    totalAmount: int,
+    hotelId: string,
+    checkIn: string,
+    checkOut: string,
+    fromCity: string,
+    toCity: string,
+    departDate: string
+) uses [Payment, Hotel, Airline, Email] -> Result<TravelPackage, string> {
+    
+    // Step 1: Reserve payment (this happens first to ensure we can charge)
+    let paymentReservation = reservePayment(totalAmount, paymentCard)?
+    
+    // Step 2: Book hotel room
+    let hotelBooking = bookHotelRoom(hotelId, checkIn, checkOut)?
+    
+    // Step 3: Book flight
+    let flightBooking = bookFlight(fromCity, toCity, departDate)?
+    
+    // Step 4: Send confirmation (this is the final step)
+    let confirmationDetails = $"Hotel: {hotelBooking}, Flight: {flightBooking}, Payment: {paymentReservation}"
+    let emailConfirmation = sendConfirmationEmail(customerEmail, confirmationDetails)?
+    
+    // Create final result
+    let travelPackage = TravelPackage {
+        paymentReservation: paymentReservation,
+        hotelBooking: hotelBooking,
+        flightBooking: flightBooking,
+        emailConfirmation: emailConfirmation
+    }
+    
+    return Ok(travelPackage)
+}
+
+// Data structure for travel package
+type TravelPackage {
+    paymentReservation: string,
+    hotelBooking: string,
+    flightBooking: string,
+    emailConfirmation: string
+}
+
+// Usage example
+function bookCustomerTrip(customerRequest: TripRequest) uses [Payment, Hotel, Airline, Email] -> Result<TravelPackage, string> {
+    // Execute the saga - if any step fails, all previous steps will be compensated automatically
+    let package = bookTravelPackage(
+        customerRequest.email,
+        customerRequest.creditCard,
+        customerRequest.totalAmount,
+        customerRequest.hotelId,
+        customerRequest.checkInDate,
+        customerRequest.checkOutDate,
+        customerRequest.originCity,
+        customerRequest.destinationCity,
+        customerRequest.departureDate
+    )?
+    
+    return Ok(package)
+}
+
+// Alternative: Manual saga execution for more control
+function bookCustomerTripWithManualControl(customerRequest: TripRequest) uses [Payment, Hotel, Airline, Email, Saga] -> Result<string, string> {
+    // Initialize saga runtime
+    saga_runtime_init()
+    
+    // Execute saga with explicit step control
+    let sagaResult = execute_saga("TravelBookingSaga", [
+        ("reservePayment", {
+            "amount": customerRequest.totalAmount,
+            "cardId": customerRequest.creditCard
+        }),
+        ("bookHotelRoom", {
+            "hotelId": customerRequest.hotelId,
+            "checkIn": customerRequest.checkInDate,
+            "checkOut": customerRequest.checkOutDate
+        }),
+        ("bookFlight", {
+            "fromCity": customerRequest.originCity,
+            "toCity": customerRequest.destinationCity,
+            "departDate": customerRequest.departureDate
+        }),
+        ("sendConfirmationEmail", {
+            "email": customerRequest.email,
+            "details": "Your travel package has been booked successfully"
+        })
+    ])?
+    
+    return Ok(sagaResult.sagaId)
+}
+
+// Saga status monitoring
+function checkSagaStatus(sagaId: string) uses [Saga] -> Result<SagaStatus, string> {
+    let status = get_saga_status(sagaId)?
+    return Ok(status)
+}
+
+// Supporting type
+type TripRequest {
+    email: string,
+    creditCard: string,
+    totalAmount: int,
+    hotelId: string,
+    checkInDate: string,
+    checkOutDate: string,
+    originCity: string,
+    destinationCity: string,
+    departureDate: string
+}
+
+type SagaStatus {
+    id: string,
+    name: string,
+    status: string,
+    startedAt: string,
+    completedAt: string?,
+    error: string?,
+    stepCount: int,
+    completedSteps: int,
+    failedSteps: int
+}
+
+// Example of how this would be used in a real application
+function main() -> string {
+    let request = TripRequest {
+        email: "customer@example.com",
+        creditCard: "1234-5678-9012-3456",
+        totalAmount: 1500,
+        hotelId: "hotel_123",
+        checkInDate: "2024-06-01",
+        checkOutDate: "2024-06-05",
+        originCity: "New York",
+        destinationCity: "Paris",
+        departureDate: "2024-06-01"
+    }
+    
+    let result = bookCustomerTrip(request)
+    
+    if result.IsOk {
+        return $"Travel package booked successfully: {result.Value.emailConfirmation}"
+    } else {
+        return $"Booking failed: {result.Error}"
+    }
+}

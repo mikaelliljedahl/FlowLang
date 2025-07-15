@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using FlowLang.Analysis;
+using Cadenza.Analysis;
 using Xunit;
 
-namespace FlowLang.Tests.Integration.Analysis;
+namespace Cadenza.Tests.Integration.Analysis;
 
 public class StaticAnalysisIntegrationTests
 {
@@ -15,7 +15,7 @@ public class StaticAnalysisIntegrationTests
     {
         // Arrange
         var sourceCode = @"
-// Complete FlowLang program with various issues
+// Complete Cadenza program with various issues
 module TestModule {
     // Missing effect declaration (should trigger effect-completeness)
     function process_user_data(user_id: string) -> Result<string, string> {
@@ -52,7 +52,7 @@ module TestModule {
         var analyzer = new StaticAnalyzer();
 
         // Act
-        var report = analyzer.AnalyzeFile("test.flow", sourceCode);
+        var report = analyzer.AnalyzeFile("test.cdz", sourceCode);
 
         // Assert
         Assert.True(report.Diagnostics.Count > 0, "Should find multiple issues in the test code");
@@ -105,8 +105,8 @@ function test_func() -> int {
         var lenientAnalyzer = new StaticAnalyzer(lenientConfig);
 
         // Act
-        var strictReport = strictAnalyzer.AnalyzeFile("test.flow", sourceCode);
-        var lenientReport = lenientAnalyzer.AnalyzeFile("test.flow", sourceCode);
+        var strictReport = strictAnalyzer.AnalyzeFile("test.cdz", sourceCode);
+        var lenientReport = lenientAnalyzer.AnalyzeFile("test.cdz", sourceCode);
 
         // Assert
         Assert.True(strictReport.Diagnostics.Count >= lenientReport.Diagnostics.Count,
@@ -125,7 +125,7 @@ function bad_function() -> Result<int, string> {
         var analyzer = new StaticAnalyzer();
 
         // Act
-        var report = analyzer.AnalyzeFile("test.flow", sourceCode);
+        var report = analyzer.AnalyzeFile("test.cdz", sourceCode);
         var json = report.ToJson();
 
         // Assert
@@ -151,7 +151,7 @@ function security_issue() -> string {
         var analyzer = new StaticAnalyzer();
 
         // Act
-        var report = analyzer.AnalyzeFile("test.flow", sourceCode);
+        var report = analyzer.AnalyzeFile("test.cdz", sourceCode);
         var sarif = report.ToSarif();
 
         // Assert
@@ -167,7 +167,7 @@ function security_issue() -> string {
     [Fact]
     public async Task StaticAnalyzer_ShouldAnalyzeRealWorldExample()
     {
-        // Arrange - A more realistic FlowLang program
+        // Arrange - A more realistic Cadenza program
         var sourceCode = @"
 module UserService {
     function authenticate_user(username: string, password: string) 
@@ -212,7 +212,7 @@ module UserService {
         var analyzer = new StaticAnalyzer();
 
         // Act
-        var report = analyzer.AnalyzeFile("user_service.flow", sourceCode);
+        var report = analyzer.AnalyzeFile("user_service.cdz", sourceCode);
 
         // Assert
         Assert.Equal(1, report.FilesAnalyzed);
@@ -238,17 +238,17 @@ module UserService {
     [Fact]
     public async Task StaticAnalyzer_ShouldHandleParseErrors()
     {
-        // Arrange - Invalid FlowLang syntax
+        // Arrange - Invalid Cadenza syntax
         var invalidSourceCode = @"
 function invalid syntax here {
-    this is not valid FlowLang
+    this is not valid Cadenza
     missing return type and other issues
 ";
 
         var analyzer = new StaticAnalyzer();
 
         // Act
-        var report = analyzer.AnalyzeFile("invalid.flow", invalidSourceCode);
+        var report = analyzer.AnalyzeFile("invalid.cdz", invalidSourceCode);
 
         // Assert
         Assert.Equal(1, report.FilesAnalyzed);
@@ -281,7 +281,7 @@ function risky_operation(user_input: string) uses [Database] -> Result<string, s
         var analyzer = new StaticAnalyzer();
 
         // Act
-        var report = analyzer.AnalyzeFile("risky.flow", sourceCode);
+        var report = analyzer.AnalyzeFile("risky.cdz", sourceCode);
 
         // Assert
         var securityIssues = report.GetDiagnosticsByCategory(AnalysisCategories.Security).ToList();
@@ -306,7 +306,7 @@ function example() -> Result<string, string> {
         var analyzer = new StaticAnalyzer();
 
         // Act
-        var report = analyzer.AnalyzeFile("example.flow", sourceCode);
+        var report = analyzer.AnalyzeFile("example.cdz", sourceCode);
 
         // Assert
         var diagnosticsWithFixes = report.Diagnostics.Where(d => !string.IsNullOrEmpty(d.FixSuggestion)).ToList();

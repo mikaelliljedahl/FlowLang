@@ -13,12 +13,12 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 
-// Minimal FlowLang Dev Server Test
+// Minimal Cadenza Dev Server Test
 class DevServerTest
 {
     public static async Task Main(string[] args)
     {
-        Console.WriteLine("🧪 Testing FlowLang Development Server Components");
+        Console.WriteLine("🧪 Testing Cadenza Development Server Components");
         
         // Test 1: HTTP Server
         await TestHttpServer();
@@ -77,13 +77,13 @@ class DevServerTest
     {
         Console.WriteLine("👀 Testing File Watcher...");
         
-        var testDir = Path.Combine(Path.GetTempPath(), "flowlang_test");
+        var testDir = Path.Combine(Path.GetTempPath(), "cadenza_test");
         Directory.CreateDirectory(testDir);
         
         var changeDetected = false;
         var watcher = new FileSystemWatcher(testDir)
         {
-            Filter = "*.flow",
+            Filter = "*.cdz",
             IncludeSubdirectories = true,
             NotifyFilter = NotifyFilters.LastWrite
         };
@@ -95,7 +95,7 @@ class DevServerTest
         watcher.EnableRaisingEvents = true;
         
         // Create a test file
-        var testFile = Path.Combine(testDir, "test.flow");
+        var testFile = Path.Combine(testDir, "test.cdz");
         await File.WriteAllTextAsync(testFile, "function test() -> int { return 42 }");
         
         // Give the watcher time to detect the change

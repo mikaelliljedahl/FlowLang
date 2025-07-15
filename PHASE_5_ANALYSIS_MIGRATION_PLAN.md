@@ -1,26 +1,26 @@
 # Phase 5 - Analysis Tools Migration Plan
 
 ## Overview
-Migrate FlowLang analysis tools from incomplete C# implementations to working .flow implementations. This will provide comprehensive static analysis capabilities.
+Migrate Cadenza analysis tools from incomplete C# implementations to working .cdz implementations. This will provide comprehensive static analysis capabilities.
 
 ## Current State
 **Existing C# files** (incomplete, no .csproj, untested):
-- `src/FlowLang.Analysis/StaticAnalyzer.cs`
-- `src/FlowLang.Analysis/LintRuleEngine.cs`
-- `src/FlowLang.Analysis/EffectAnalyzer.cs`
-- `src/FlowLang.Analysis/ResultTypeAnalyzer.cs`
-- `src/FlowLang.Analysis/CodeQualityAnalyzer.cs`
-- `src/FlowLang.Analysis/PerformanceAnalyzer.cs`
-- `src/FlowLang.Analysis/SecurityAnalyzer.cs`
-- `src/FlowLang.Analysis/AnalysisReport.cs`
+- `src/Cadenza.Analysis/StaticAnalyzer.cs`
+- `src/Cadenza.Analysis/LintRuleEngine.cs`
+- `src/Cadenza.Analysis/EffectAnalyzer.cs`
+- `src/Cadenza.Analysis/ResultTypeAnalyzer.cs`
+- `src/Cadenza.Analysis/CodeQualityAnalyzer.cs`
+- `src/Cadenza.Analysis/PerformanceAnalyzer.cs`
+- `src/Cadenza.Analysis/SecurityAnalyzer.cs`
+- `src/Cadenza.Analysis/AnalysisReport.cs`
 
-**Existing .flow tool** (partial implementation):
-- `src/FlowLang.Tools/linter.flow` (298 lines) - Basic analysis patterns
+**Existing .cdz tool** (partial implementation):
+- `src/Cadenza.Tools/linter.cdz` (298 lines) - Basic analysis patterns
 
 ## Tasks
 
 ### Task 1: Extend Existing Linter
-**Enhance `src/FlowLang.Tools/linter.flow`**:
+**Enhance `src/Cadenza.Tools/linter.cdz`**:
 - Add comprehensive rule engine
 - Support multiple analysis types
 - Improve error reporting
@@ -28,7 +28,7 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
 
 ### Task 2: Create Specialized Analyzers
 **Effect System Analyzer**:
-- File: `src/FlowLang.Tools/analysis/effect-analyzer.flow`
+- File: `src/Cadenza.Tools/analysis/effect-analyzer.cdz`
 - Replace: `EffectAnalyzer.cs`
 - Rules:
   - Effect completeness (all side effects declared)
@@ -37,7 +37,7 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
   - Effect consistency (consistent effect usage)
 
 **Result Type Analyzer**:
-- File: `src/FlowLang.Tools/analysis/result-analyzer.flow`
+- File: `src/Cadenza.Tools/analysis/result-analyzer.cdz`
 - Replace: `ResultTypeAnalyzer.cs`
 - Rules:
   - Result type usage (functions with effects should return Result)
@@ -46,7 +46,7 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
   - Error message quality (descriptive error messages)
 
 **Code Quality Analyzer**:
-- File: `src/FlowLang.Tools/analysis/quality-analyzer.flow`
+- File: `src/Cadenza.Tools/analysis/quality-analyzer.cdz`
 - Replace: `CodeQualityAnalyzer.cs`
 - Rules:
   - Function complexity (cyclomatic complexity)
@@ -55,7 +55,7 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
   - Code duplication detection
 
 **Security Analyzer**:
-- File: `src/FlowLang.Tools/analysis/security-analyzer.flow`
+- File: `src/Cadenza.Tools/analysis/security-analyzer.cdz`
 - Replace: `SecurityAnalyzer.cs`
 - Rules:
   - SQL injection detection
@@ -64,7 +64,7 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
   - Hardcoded secrets detection
 
 **Performance Analyzer**:
-- File: `src/FlowLang.Tools/analysis/performance-analyzer.flow`
+- File: `src/Cadenza.Tools/analysis/performance-analyzer.cdz`
 - Replace: `PerformanceAnalyzer.cs`
 - Rules:
   - Inefficient string concatenation
@@ -74,7 +74,7 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
 
 ### Task 3: Create Analysis Engine
 **Main Analysis Coordinator**:
-- File: `src/FlowLang.Tools/analysis/analysis-engine.flow`
+- File: `src/Cadenza.Tools/analysis/analysis-engine.cdz`
 - Replace: `StaticAnalyzer.cs`
 - Functionality:
   - Coordinate all analyzers
@@ -84,7 +84,7 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
 
 ### Task 4: Analysis Reporting
 **Report Generator**:
-- File: `src/FlowLang.Tools/analysis/report-generator.flow`
+- File: `src/Cadenza.Tools/analysis/report-generator.cdz`
 - Replace: `AnalysisReport.cs`
 - Formats:
   - Human-readable text output
@@ -94,7 +94,7 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
 
 ### Task 5: Configuration System
 **Analysis Configuration**:
-- File: `src/FlowLang.Tools/analysis/config-manager.flow`
+- File: `src/Cadenza.Tools/analysis/config-manager.cdz`
 - Functionality:
   - Load `flowlint.json` configuration
   - Rule enable/disable
@@ -104,12 +104,12 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
 ### Task 6: Integration with CLI
 **CLI Integration**:
 - Extend main CLI with analysis commands
-- Support `flowc-core --lint` command
+- Support `cadenzac-core --lint` command
 - Integration with existing linter tool
 - Batch analysis of multiple files
 
 ## Expected Outcomes
-- Comprehensive static analysis for FlowLang code
+- Comprehensive static analysis for Cadenza code
 - Multiple analysis types (effects, results, quality, security, performance)
 - Configurable rule engine
 - Multiple output formats
@@ -126,21 +126,21 @@ Migrate FlowLang analysis tools from incomplete C# implementations to working .f
 - [ ] CLI integration provides seamless analysis workflow
 
 ## Dependencies
-- **Runtime Bridge Fixes**: Need working .flow tools for file operations
-- **Existing Linter**: Build on existing `linter.flow` implementation
+- **Runtime Bridge Fixes**: Need working .cdz tools for file operations
+- **Existing Linter**: Build on existing `linter.cdz` implementation
 
 ## Priority
 **MEDIUM** - Important for code quality but not critical path for self-hosting
 
 ## File Structure
 ```
-src/FlowLang.Tools/analysis/
-├── analysis-engine.flow         # Main coordinator
-├── effect-analyzer.flow         # Effect system analysis
-├── result-analyzer.flow         # Result type analysis
-├── quality-analyzer.flow        # Code quality analysis
-├── security-analyzer.flow       # Security analysis
-├── performance-analyzer.flow    # Performance analysis
-├── report-generator.flow        # Report generation
-└── config-manager.flow          # Configuration management
+src/Cadenza.Tools/analysis/
+├── analysis-engine.cdz         # Main coordinator
+├── effect-analyzer.cdz         # Effect system analysis
+├── result-analyzer.cdz         # Result type analysis
+├── quality-analyzer.cdz        # Code quality analysis
+├── security-analyzer.cdz       # Security analysis
+├── performance-analyzer.cdz    # Performance analysis
+├── report-generator.cdz        # Report generation
+└── config-manager.cdz          # Configuration management
 ```
