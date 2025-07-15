@@ -209,9 +209,10 @@ function validateAge(age: int) -> Result<string, string> {
 ### 📖 Comprehensive Guides
 1. **[Getting Started Guide](docs/getting-started.md)** - Detailed installation and first steps
 2. **[Language Reference](docs/language-reference.md)** - Complete language documentation
-3. **[Transpiler Architecture](docs/transpiler-architecture.md)** - How Cadenza uses Roslyn to generate C# code
-4. **[Examples](docs/examples/)** - [Basic Syntax](docs/examples/basic-syntax.md) | [Result Types](docs/examples/result-types.md) | [Effect System](docs/examples/effect-system.md) | [Specification Blocks](examples/specification_example.cdz)
-5. **[Tools](docs/)** - [CLI Reference](docs/cli-reference.md) | [LSP Integration](docs/lsp-integration.md) | [Package Manager](docs/package-manager.md)
+3. **[Philosophy and FAQ](Philosophy_and_FAQ.md)** - The "why" behind Cadenza
+4. **[Transpiler Architecture](docs/transpiler-architecture.md)** - How Cadenza uses Roslyn to generate C# code
+5. **[Examples](docs/examples/)** - [Basic Syntax](docs/examples/basic-syntax.md) | [Result Types](docs/examples/result-types.md) | [Effect System](docs/examples/effect-system.md) | [Specification Blocks](examples/specification_example.cdz)
+6. **[Tools](docs/)** - [CLI Reference](docs/cli-reference.md) | [LSP Integration](docs/lsp-integration.md) | [Package Manager](docs/package-manager.md)
 
 ## 🔧 IDE Integration
 

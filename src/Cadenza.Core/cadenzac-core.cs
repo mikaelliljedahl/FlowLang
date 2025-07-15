@@ -676,7 +676,7 @@ public class CadenzaLexer
                 
                 // Extract the expression (excluding the closing '}')
                 var expression = _source.Substring(expressionStart, _current - expressionStart - 1);
-                parts.Add(new { IsExpression = true, Value = expression });
+                parts.Add(new Dictionary<string, object> { ["IsExpression"] = true, ["Value"] = expression });
             }
             else
             {
@@ -2413,9 +2413,9 @@ public class CSharpGenerator
             var stmt = func.Body[i];
             var isLastStatement = i == func.Body.Count - 1;
             
-            // If this is the last statement and it's an expression (not a return statement),
+            // If this is the last statement and it's an expression (not a return statement or control flow statement),
             // wrap it in a return statement
-            if (isLastStatement && stmt is not ReturnStatement && func.ReturnType != null && func.ReturnType != "void")
+            if (isLastStatement && stmt is not ReturnStatement && stmt is not IfStatement && stmt is not GuardStatement && func.ReturnType != null && func.ReturnType != "void")
             {
                 var returnStmt = ReturnStatement(GenerateExpression(stmt));
                 statements.Add(returnStmt);
@@ -2744,25 +2744,27 @@ public class CSharpGenerator
     
     private ExpressionSyntax GenerateStringInterpolation(StringInterpolation interpolation)
     {
-        // For now, convert to string concatenation
-        ExpressionSyntax result = LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(""));
+        // Generate proper C# string interpolation
+        var interpolationParts = new List<InterpolatedStringContentSyntax>();
         
         foreach (var part in interpolation.Parts)
         {
-            ExpressionSyntax partExpr;
             if (part is StringLiteral str)
             {
-                partExpr = LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(str.Value));
+                if (!string.IsNullOrEmpty(str.Value))
+                {
+                    interpolationParts.Add(InterpolatedStringText(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, str.Value, str.Value, TriviaList())));
+                }
             }
             else
             {
-                partExpr = GenerateExpression(part);
+                var expr = GenerateExpression(part);
+                interpolationParts.Add(Interpolation(expr));
             }
-            
-            result = BinaryExpression(SyntaxKind.AddExpression, result, partExpr);
         }
         
-        return result;
+        return InterpolatedStringExpression(Token(SyntaxKind.InterpolatedStringStartToken))
+            .WithContents(List(interpolationParts));
     }
     
     private List<SyntaxTrivia> GenerateXmlDocumentation(FunctionDeclaration func)
@@ -2842,14 +2844,14 @@ public class CSharpGenerator
         // Add parameter documentation
         foreach (var param in func.Parameters)
         {
-            trivia.Add(Comment($"/// <param name=\"{param.Name}\">Parameter of type {param.Type}</param>"));
+            trivia.Add(Comment($"/// <param name=\"{param.Name}\">Parameter of type {MapCadenzaTypeToCSharp(param.Type)}</param>"));
             trivia.Add(EndOfLine("\n"));
         }
         
         // Add return documentation
         if (!string.IsNullOrEmpty(func.ReturnType))
         {
-            trivia.Add(Comment($"/// <returns>Returns {func.ReturnType}</returns>"));
+            trivia.Add(Comment($"/// <returns>Returns {MapCadenzaTypeToCSharp(func.ReturnType)}</returns>"));
             trivia.Add(EndOfLine("\n"));
         }
         

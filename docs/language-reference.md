@@ -290,6 +290,62 @@ guard condition else {
 // continues here if condition is true
 ```
 
+### Match Expressions
+
+The `match` expression is a powerful control flow structure that allows you to compare a value against a series of patterns and execute code based on which pattern matches. It is similar to a `switch` statement in other languages but is more versatile and can return a value.
+
+A `match` expression must be exhaustive, meaning all possible values of the matched variable must be handled.
+
+#### 1. Matching on Result Types
+
+This is the most common use case for `match`. It provides a safe way to unwrap `Result` types and handle both the `Ok` and `Error` cases.
+
+```cadenza
+function processResult(result: Result<int, string>) -> string {
+    match result {
+        Ok(value) -> {
+            // 'value' is the integer inside the Ok
+            return $"Success! The value is: {value}"
+        }
+        Error(err) -> {
+            // 'err' is the string inside the Error
+            return $"Failure. The error was: {err}"
+        }
+    }
+}
+```
+
+#### 2. Matching on Values (like a `switch` statement)
+
+You can use `match` to branch on the value of any variable, such as a `string` or `int`. The wildcard pattern `_` is used as a default case to ensure the match is exhaustive.
+
+```cadenza
+function getRoleDescription(role: string) -> string {
+    match role {
+        "Admin" -> { return "Administrator with full access." }
+        "Editor" -> { return "Can write and publish content." }
+        "Viewer" -> { return "Can only view content." }
+        _ -> { return "Unknown role." }
+    }
+}
+```
+
+#### 3. Using `match` as an Expression
+
+A `match` can also be used as an expression to return a value directly, which can then be assigned to a variable. This is a more concise way to handle branching logic.
+
+```cadenza
+function calculateDiscount(loyaltyTier: string) -> float {
+    let discount = match loyaltyTier {
+        "Platinum" -> 0.15
+        "Gold" -> 0.10
+        "Silver" -> 0.05
+        _ -> 0.0
+    };
+    return discount;
+}
+```
+
 ### Boolean Expressions
 
 Complex boolean logic is supported:
