@@ -4,7 +4,7 @@
 /*spec
 intent: "Coordinate all Cadenza analyzers and provide comprehensive static analysis"
 rules:
-  - "Load and validate configuration from flowlint.json"
+  - "Load and validate configuration from cadenzalint.json"
   - "Discover and process all Cadenza files in the project"
   - "Run all enabled analyzers on each file"
   - "Collect and merge results from all analyzers"

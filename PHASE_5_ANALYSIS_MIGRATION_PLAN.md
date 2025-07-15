@@ -96,7 +96,7 @@ Migrate Cadenza analysis tools from incomplete C# implementations to working .cd
 **Analysis Configuration**:
 - File: `src/Cadenza.Tools/analysis/config-manager.cdz`
 - Functionality:
-  - Load `flowlint.json` configuration
+  - Load `cadenzalint.json` configuration
   - Rule enable/disable
   - Severity level configuration
   - Custom rule parameters

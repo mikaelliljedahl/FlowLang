@@ -1,10 +1,10 @@
 // Cadenza Analysis Configuration Manager
-// Manages flowlint.json configuration and rule settings
+// Manages cadenzalint.json configuration and rule settings
 
 /*spec
 intent: "Load and manage Cadenza static analysis configuration"
 rules:
-  - "Load flowlint.json configuration file with proper error handling"
+  - "Load cadenzalint.json configuration file with proper error handling"
   - "Provide rule enable/disable functionality"
   - "Support severity level configuration (error, warning, info)"
   - "Handle rule parameters for complex rules"
@@ -30,11 +30,11 @@ struct AnalysisConfig {
     output_format: string
 }
 
-// Load configuration from flowlint.json
+// Load configuration from cadenzalint.json
 function load_config() uses [FileSystem, Logging] -> Result<AnalysisConfig, string> {
     Cadenza.Runtime.LoggingRuntime.LogInfo("Loading Cadenza analysis configuration...")
     
-    let configPath = "flowlint.json"
+    let configPath = "cadenzalint.json"
     let configResult = Cadenza.Runtime.FileSystemRuntime.ReadFile(configPath)
     
     match configResult {

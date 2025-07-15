@@ -56,6 +56,30 @@ Cadenza prioritizes explicitness, predictability, and safety while maintaining c
 | [Static Analysis](static-analysis.md) | Linting rules and configuration | All users |
 | [Package Manager](package-manager.md) | Dependency management and .NET integration | All users |
 
+### Core Concepts
+
+| Document | Description | Audience |
+|----------|-------------|----------|
+| [Language Fundamentals](language-fundamentals.md) | The foundational principles of the Cadenza language. | All users |
+| [Philosophy and FAQ](Philosophy_and_FAQ.md) | The reasoning behind Cadenza's design and frequently asked questions. | All users |
+| [Problem Statement](problem-statement.md) | The problems Cadenza aims to solve. | All users |
+| [Specifications](specifications.md) | The language specification. | Advanced users |
+| [Transpiler Architecture](transpiler-architecture.md) | A deep-dive into the transpiler's architecture. | Contributors |
+
+### User Guides
+
+| Document | Description | Audience |
+|----------|-------------|----------|
+| [Syntax Cheat Sheet](SYNTAX_CHEAT_SHEET.md) | A quick reference for Cadenza syntax. | All users |
+| [UI Components](ui-components.md) | A guide to using UI components. | All users |
+
+### Development
+
+| Document | Description | Audience |
+|----------|-------------|----------|
+| [Roadmap Next Phase](roadmap-next-phase.md) | The roadmap for the next phase of development. | All users |
+| [Self-Hosting Progress](self-hosting-progress.md) | The progress on self-hosting the Cadenza compiler. | All users |
+
 ### Examples and Tutorials
 
 | Document | Description | Features Covered |
@@ -246,11 +270,26 @@ Cadenza is in active development with these features implemented:
 - 🔄 Multiple Target Support
 
 ### Documentation Roadmap
+
 - ✅ **Phase 2 Documentation Complete** - LSP, linting, package management guides
 - 📝 Video tutorials
 - 📝 Interactive examples  
 - 📝 Real-world case studies
 - 📝 Performance benchmarking guides
+
+### Roadmap
+
+| Document | Description |
+|----------|-------------|
+| [Result Types](../roadmap/01-result-types.md) | The plan for implementing result types. |
+| [String Literals](../roadmap/02-string-literals.md) | The plan for implementing string literals. |
+| [Control Flow](../roadmap/03-control-flow.md) | The plan for implementing control flow. |
+| [Effect System](../roadmap/04-effect-system.md) | The plan for implementing the effect system. |
+| [Enhanced CLI](../roadmap/05-enhanced-cli.md) | The plan for enhancing the CLI. |
+| [Module System](../roadmap/06-module-system.md) | The plan for implementing the module system. |
+| [Testing Framework](../roadmap/07-testing-framework.md) | The plan for implementing the testing framework. |
+| [Documentation](../roadmap/08-documentation.md) | The plan for improving the documentation. |
+
 
 ## Document Maintenance
 

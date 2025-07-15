@@ -28,9 +28,9 @@ public record LintConfiguration
     public string OutputFormat { get; set; } = "text";
     
     /// <summary>
-    /// Load configuration from flowlint.json file
+    /// Load configuration from cadenzalint.json file
     /// </summary>
-    public static LintConfiguration LoadFromFile(string configPath = "flowlint.json")
+    public static LintConfiguration LoadFromFile(string configPath = "cadenzalint.json")
     {
         if (!File.Exists(configPath))
         {
@@ -146,7 +146,7 @@ public record LintConfiguration
     /// <summary>
     /// Save configuration to file
     /// </summary>
-    public void SaveToFile(string configPath = "flowlint.json")
+    public void SaveToFile(string configPath = "cadenzalint.json")
     {
         var json = JsonSerializer.Serialize(this, new JsonSerializerOptions
         {

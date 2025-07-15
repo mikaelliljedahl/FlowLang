@@ -804,7 +804,7 @@ cadenzac lint [paths...] [options]
 #### Parameters
 
 - `[paths...]` (optional): Files or directories to analyze (default: current directory)
-- `--config <file>` (optional): Custom configuration file (default: flowlint.json)
+- `--config <file>` (optional): Custom configuration file (default: cadenzalint.json)
 - `--format <format>` (optional): Output format (text|json|sarif, default: text)
 - `--fix` (optional): Auto-fix issues where possible
 - `--effects` (optional): Run only effect system rules
@@ -845,7 +845,7 @@ cadenzac lint --effects
 
 #### Configuration
 
-Create `flowlint.json` to customize rules:
+Create `cadenzalint.json` to customize rules:
 
 ```json
 {

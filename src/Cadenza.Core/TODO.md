@@ -58,12 +58,17 @@ During Phase 5 self-hosting migration testing (July 2025), discovered that all e
 
 ### 🚨 CRITICAL ISSUES FOUND
 
-#### Issue 1: Pattern Matching Syntax (`match` statements)
-- **Files affected**: `linter.cdz`, `dev-server.cdz`, `simple-dev-server.cdz`
-- **Problem**: Using `match` syntax that doesn't exist in Cadenza language
-- **Example**: `match result { Ok(value) -> ..., Error(err) -> ... }`
-- **Status**: **BLOCKING** - Cadenza doesn't support pattern matching
-- **Fix needed**: Replace with if-else and `?` operator
+#### Issue 1: Implement `match` Expression
+- **Files affected**: `linter.cdz`, `dev-server.cdz`, `simple-dev-server.cdz` (and many examples)
+- **Problem**: The `match` expression, a critical feature for control flow, is not implemented in the compiler. It is used in multiple tool and documentation examples, but is not supported by the language.
+- **Status**: **BLOCKING**
+- **Requirements**: The implementation must support the full semantics as defined in `docs/language-reference.md`. This includes:
+  1. **Result Type Matching**: Correctly handling `Ok(value)` and `Error(err)` branches, unwrapping the inner value for use in the corresponding block.
+  2. **General Value Matching**: Functioning like a `switch` statement for other types (e.g., `int`, `string`).
+  3. **Exhaustiveness**: The compiler must enforce that all possible cases are handled.
+  4. **Wildcard `_`**: Support for a default case to ensure exhaustiveness.
+  5. **Expression-based**: The `match` structure must be able to return a value that can be assigned to a variable.
+- **Fix needed**: Implement the `match` expression in the parser and compiler. Update all examples and tools that currently use invalid `if/else` workarounds.
 
 #### Issue 2: List Types and Array Access
 - **Files affected**: `linter.cdz` (uses `List<string>` and `files[0]` syntax)

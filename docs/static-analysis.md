@@ -298,9 +298,9 @@ function safe_query(user_name: string) uses [Database] -> Result<string, string>
 
 ## Configuration
 
-### flowlint.json
+### cadenzalint.json
 
-Create a `flowlint.json` file in your project root to customize linting behavior:
+Create a `cadenzalint.json` file in your project root to customize linting behavior:
 
 ```json
 {
@@ -526,7 +526,7 @@ The static analyzer is designed for speed:
 **Configuration not loading:**
 ```bash
 # Verify config file path
-cadenzac lint --config ./flowlint.json
+cadenzac lint --config ./cadenzalint.json
 ```
 
 **Too many false positives:**
