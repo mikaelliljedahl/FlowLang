@@ -1,6 +1,6 @@
-# FlowLang Troubleshooting Guide
+# Cadenza Troubleshooting Guide
 
-This guide helps you diagnose and fix common issues when using FlowLang. It covers installation problems, compilation errors, runtime issues, and performance concerns.
+This guide helps you diagnose and fix common issues when using Cadenza. It covers installation problems, compilation errors, runtime issues, and performance concerns.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ This guide helps you diagnose and fix common issues when using FlowLang. It cove
 3. Add .NET to your PATH if necessary
 4. Restart your terminal/command prompt
 
-### FlowLang Build Fails
+### Cadenza Build Fails
 
 **Problem**: Compilation errors when building the transpiler
 
@@ -63,8 +63,8 @@ dotnet build
 1. **Windows**: Run as Administrator
 2. **Linux/macOS**: Check file permissions:
    ```bash
-   chmod +x flowc
-   sudo chown -R $USER:$USER /path/to/flowlang
+   chmod +x cadenzac
+   sudo chown -R $USER:$USER /path/to/cadenza
    ```
 3. Avoid running in system directories
 
@@ -75,7 +75,7 @@ dotnet build
 **Problem**: "Unexpected character" errors
 
 **Common Issues**:
-```flowlang
+```cadenza
 // ❌ Invalid: Single quotes not supported
 let message = 'Hello'
 
@@ -83,7 +83,7 @@ let message = 'Hello'
 let message = "Hello"
 ```
 
-```flowlang
+```cadenza
 // ❌ Invalid: Underscore in numbers not supported
 let big_number = 1_000_000
 
@@ -91,7 +91,7 @@ let big_number = 1_000_000
 let bigNumber = 1000000
 ```
 
-**Solution**: Check FlowLang syntax rules in the [Language Reference](language-reference.md)
+**Solution**: Check Cadenza syntax rules in the [Language Reference](language-reference.md)
 
 ### Syntax Errors
 
@@ -100,7 +100,7 @@ let bigNumber = 1000000
 **Common Issues**:
 
 1. **Missing type annotations**:
-   ```flowlang
+   ```cadenza
    // ❌ Invalid: Missing parameter types
    function add(a, b) -> int {
        return a + b
@@ -113,7 +113,7 @@ let bigNumber = 1000000
    ```
 
 2. **Missing return type**:
-   ```flowlang
+   ```cadenza
    // ❌ Invalid: Missing return type
    function greet(name: string) {
        return "Hello, " + name
@@ -126,7 +126,7 @@ let bigNumber = 1000000
    ```
 
 3. **Incorrect function syntax**:
-   ```flowlang
+   ```cadenza
    // ❌ Invalid: Missing function keyword
    greet(name: string) -> string {
        return "Hello"
@@ -145,7 +145,7 @@ let bigNumber = 1000000
 **Common Issues**:
 
 1. **Result type syntax**:
-   ```flowlang
+   ```cadenza
    // ❌ Invalid: Incorrect Result syntax
    function divide(a: int, b: int) -> Result(int, string) {
        return Ok(a / b)
@@ -158,7 +158,7 @@ let bigNumber = 1000000
    ```
 
 2. **Effect system violations**:
-   ```flowlang
+   ```cadenza
    // ❌ Invalid: Pure function cannot have effects
    pure function saveData(data: string) uses [Database] -> int {
        return 42
@@ -179,7 +179,7 @@ let bigNumber = 1000000
 **Common Issues**:
 
 1. **Not using error propagation**:
-   ```flowlang
+   ```cadenza
    // ❌ Inefficient: Manual error checking
    function complexOperation() -> Result<int, string> {
        let result1 = step1()
@@ -202,11 +202,11 @@ let bigNumber = 1000000
    ```
 
 2. **Mixing error handling paradigms**:
-   ```flowlang
+   ```cadenza
    // ❌ Don't mix exceptions with Results
    function riskyOperation() -> Result<int, string> {
        try {
-           // Exception-based code doesn't work in FlowLang
+           // Exception-based code doesn't work in Cadenza
            return Ok(42)
        } catch {
            return Error("Failed")
@@ -229,7 +229,7 @@ let bigNumber = 1000000
 **Common Issues**:
 
 1. **Undeclared effects**:
-   ```flowlang
+   ```cadenza
    // ❌ Error: Function uses Database effect without declaring it
    function saveUser(name: string) -> Result<int, string> {
        return DatabaseService.save(name)  // DatabaseService.save uses [Database]
@@ -242,7 +242,7 @@ let bigNumber = 1000000
    ```
 
 2. **Invalid effect names**:
-   ```flowlang
+   ```cadenza
    // ❌ Invalid: CustomEffect is not a known effect
    function customOperation() uses [CustomEffect] -> int {
        return 42
@@ -255,7 +255,7 @@ let bigNumber = 1000000
    ```
 
 3. **Pure functions calling effectful functions**:
-   ```flowlang
+   ```cadenza
    // ❌ Invalid: Pure function cannot call effectful function
    pure function calculate() -> int {
        return effectfulOperation()  // effectfulOperation uses effects
@@ -274,7 +274,7 @@ let bigNumber = 1000000
 **Common Issues**:
 
 1. **Missing $ prefix**:
-   ```flowlang
+   ```cadenza
    // ❌ Invalid: Missing $ for interpolation
    let message = "Hello, {name}!"
    
@@ -283,7 +283,7 @@ let bigNumber = 1000000
    ```
 
 2. **Unmatched braces**:
-   ```flowlang
+   ```cadenza
    // ❌ Invalid: Unmatched brace
    let message = $"Value: {calculate(x}"
    
@@ -295,35 +295,35 @@ let bigNumber = 1000000
 
 ### Command Not Found
 
-**Problem**: `flowc` command not recognized
+**Problem**: `cadenzac` command not recognized
 
 **Solution**:
 1. Use the full dotnet command:
    ```bash
-   dotnet run --project src/flowc.csproj -- --version
+   dotnet run --project src/cadenzac.csproj -- --version
    ```
 2. Create an alias for convenience:
    ```bash
    # Linux/macOS
-   alias flowc="dotnet run --project /path/to/flowlang/src/flowc.csproj --"
+   alias cadenzac="dotnet run --project /path/to/cadenza/src/cadenzac.csproj --"
    
    # Windows PowerShell
-   function flowc { dotnet run --project C:\path\to\flowlang\src\flowc.csproj -- $args }
+   function cadenzac { dotnet run --project C:\path\to\cadenza\src\cadenzac.csproj -- $args }
    ```
 
 ### Project Creation Fails
 
-**Problem**: `flowc new` command fails
+**Problem**: `cadenzac new` command fails
 
 **Common Issues**:
 1. **Directory already exists**:
    ```bash
-   flowc new my-project
+   cadenzac new my-project
    # Error: Directory 'my-project' already exists
    
    # Solution: Use different name or remove existing directory
    rm -rf my-project
-   flowc new my-project
+   cadenzac new my-project
    ```
 
 2. **Permission issues**:
@@ -335,47 +335,47 @@ let bigNumber = 1000000
 
 ### Build Command Issues
 
-**Problem**: `flowc build` fails
+**Problem**: `cadenzac build` fails
 
 **Common Issues**:
-1. **No flowc.json found**:
+1. **No cadenzac.json found**:
    ```bash
-   # Solution: Create project first or add flowc.json
-   flowc new my-project
+   # Solution: Create project first or add cadenzac.json
+   cadenzac new my-project
    cd my-project
-   flowc build
+   cadenzac build
    ```
 
-2. **No .flow files found**:
+2. **No .cdz files found**:
    ```bash
-   # Solution: Add FlowLang files to src/ directory
-   echo 'function main() -> string { return "Hello" }' > src/main.flow
-   flowc build
+   # Solution: Add Cadenza files to src/ directory
+   echo 'function main() -> string { return "Hello" }' > src/main.cdz
+   cadenzac build
    ```
 
 ### Test Command Problems
 
-**Problem**: `flowc test` doesn't find tests
+**Problem**: `cadenzac test` doesn't find tests
 
 **Solution**:
 1. Create tests directory:
    ```bash
    mkdir tests
-   echo 'function test_example() -> bool { return true }' > tests/example_test.flow
+   echo 'function test_example() -> bool { return true }' > tests/example_test.cdz
    ```
-2. Ensure test files have `.flow` extension
+2. Ensure test files have `.cdz` extension
 3. Check test file syntax
 
 ## Performance Issues
 
 ### Slow Compilation
 
-**Problem**: FlowLang compilation is taking too long
+**Problem**: Cadenza compilation is taking too long
 
 **Diagnosis**:
 ```bash
 # Time the compilation
-time dotnet run --project src/flowc.csproj -- build
+time dotnet run --project src/cadenzac.csproj -- build
 ```
 
 **Solutions**:
@@ -397,8 +397,8 @@ top -p $(pgrep dotnet)
 1. **Process files individually**:
    ```bash
    # Instead of building everything at once
-   flowc run src/file1.flow
-   flowc run src/file2.flow
+   cadenzac run src/file1.cdz
+   cadenzac run src/file2.cdz
    ```
 2. **Increase available memory**
 3. **Check for memory leaks** in complex expressions
@@ -412,7 +412,7 @@ top -p $(pgrep dotnet)
    ```bash
    dotnet run --configuration Release
    ```
-2. **Optimize FlowLang algorithms**
+2. **Optimize Cadenza algorithms**
 3. **Check for unnecessary string concatenations**
 4. **Use appropriate data structures**
 
@@ -425,7 +425,7 @@ top -p $(pgrep dotnet)
 **Diagnosis**:
 1. **Examine generated code**:
    ```bash
-   flowc run myfile.flow
+   cadenzac run myfile.cdz
    # Check the generated C# output for issues
    ```
 
@@ -436,8 +436,8 @@ top -p $(pgrep dotnet)
 
 **Solutions**:
 1. **Report transpiler bugs** if generated code is invalid
-2. **Workaround**: Modify FlowLang source to avoid problematic patterns
-3. **Check FlowLang syntax** for compliance with language rules
+2. **Workaround**: Modify Cadenza source to avoid problematic patterns
+3. **Check Cadenza syntax** for compliance with language rules
 
 ### Runtime Errors in Generated Code
 
@@ -445,12 +445,12 @@ top -p $(pgrep dotnet)
 
 **Common Issues**:
 1. **Null reference exceptions**: Usually indicates transpiler bugs
-2. **Type cast exceptions**: Check FlowLang type usage
+2. **Type cast exceptions**: Check Cadenza type usage
 3. **Index out of range**: Review array/string operations
 
 **Solutions**:
-1. **Debug the FlowLang source** rather than generated C#
-2. **Add validation** in FlowLang code
+1. **Debug the Cadenza source** rather than generated C#
+2. **Add validation** in Cadenza code
 3. **Use Result types** for error handling
 
 ## Module System Problems
@@ -461,7 +461,7 @@ top -p $(pgrep dotnet)
 
 **Common Issues**:
 1. **Module not found**:
-   ```flowlang
+   ```cadenza
    // ❌ Error: Module doesn't exist
    import NonExistentModule.{function1}
    
@@ -470,7 +470,7 @@ top -p $(pgrep dotnet)
    ```
 
 2. **Function not exported**:
-   ```flowlang
+   ```cadenza
    // ❌ Error: Function not in export list
    import MyModule.{privateFunction}
    
@@ -483,7 +483,7 @@ top -p $(pgrep dotnet)
 **Problem**: Modules importing each other
 
 **Example**:
-```flowlang
+```cadenza
 // Module A imports Module B
 // Module B imports Module A
 // This creates a circular dependency
@@ -500,7 +500,7 @@ top -p $(pgrep dotnet)
 
 **Solution**:
 1. **Use qualified imports**:
-   ```flowlang
+   ```cadenza
    import ModuleA
    import ModuleB
    
@@ -510,7 +510,7 @@ top -p $(pgrep dotnet)
    ```
 
 2. **Use selective imports**:
-   ```flowlang
+   ```cadenza
    import ModuleA.{calculate as calculateA}
    import ModuleB.{calculate as calculateB}
    ```
@@ -524,15 +524,15 @@ top -p $(pgrep dotnet)
 **Solutions**:
 1. **Use generic syntax highlighting**: Set file type to "JavaScript" or "TypeScript" for basic highlighting
 2. **Create custom highlighting**: Use your editor's syntax definition features
-3. **Wait for official extension**: FlowLang language server is planned
+3. **Wait for official extension**: Cadenza language server is planned
 
 ### Debugging Generated Code
 
 **Problem**: Difficult to debug transpiled C# code
 
 **Solutions**:
-1. **Debug at FlowLang level**: Add debugging statements in FlowLang
-2. **Use flowc run**: Examine generated code structure
+1. **Debug at Cadenza level**: Add debugging statements in Cadenza
+2. **Use cadenzac run**: Examine generated code structure
 3. **Add logging**: Use effect system with Logging effect
 4. **Step through transpiler**: Debug the transpilation process
 
@@ -543,8 +543,8 @@ top -p $(pgrep dotnet)
 **Recommendations**:
 ```gitignore
 # Include in Git
-*.flow
-flowc.json
+*.cdz
+cadenzac.json
 README.md
 docs/
 
@@ -559,14 +559,14 @@ obj/
 
 ### General Questions
 
-**Q: Is FlowLang production-ready?**
-A: FlowLang is in active development. It's suitable for experimental projects and learning, but not recommended for production systems yet.
+**Q: Is Cadenza production-ready?**
+A: Cadenza is in active development. It's suitable for experimental projects and learning, but not recommended for production systems yet.
 
-**Q: How does FlowLang compare to other functional languages?**
-A: FlowLang focuses specifically on LLM-assisted development with explicit effects and safety. It transpiles to C# for ecosystem compatibility.
+**Q: How does Cadenza compare to other functional languages?**
+A: Cadenza focuses specifically on LLM-assisted development with explicit effects and safety. It transpiles to C# for ecosystem compatibility.
 
 **Q: Can I use existing .NET libraries?**
-A: Future versions will support .NET interop. Currently, FlowLang is self-contained.
+A: Future versions will support .NET interop. Currently, Cadenza is self-contained.
 
 ### Language Features
 
@@ -574,28 +574,28 @@ A: Future versions will support .NET interop. Currently, FlowLang is self-contai
 A: Result types make error handling explicit and predictable, which is better for LLM understanding and code safety.
 
 **Q: Can I disable the effect system?**
-A: No, the effect system is core to FlowLang's design philosophy of making side effects explicit.
+A: No, the effect system is core to Cadenza's design philosophy of making side effects explicit.
 
-**Q: Will FlowLang support generics?**
+**Q: Will Cadenza support generics?**
 A: Generics are planned for future versions, but the current focus is on core language stability.
 
 ### Performance
 
-**Q: How fast is FlowLang compared to C#?**
-A: Since FlowLang transpiles to C#, runtime performance should be similar. Compilation time is currently slower.
+**Q: How fast is Cadenza compared to C#?**
+A: Since Cadenza transpiles to C#, runtime performance should be similar. Compilation time is currently slower.
 
 **Q: Can I optimize the generated C# code?**
 A: The transpiler generates standard C# that can be optimized by the .NET compiler. Specific optimizations are planned.
 
 ### Development
 
-**Q: How can I contribute to FlowLang?**
+**Q: How can I contribute to Cadenza?**
 A: See the [Contributing Guide](contributing.md) for detailed information on how to help.
 
 **Q: Where can I report bugs?**
 A: Report bugs through GitHub issues with detailed reproduction steps and example code.
 
-**Q: Is there a roadmap for FlowLang?**
+**Q: Is there a roadmap for Cadenza?**
 A: Yes, check the `roadmap/` directory for detailed development plans.
 
 ### Troubleshooting Checklist
@@ -604,7 +604,7 @@ When encountering issues, work through this checklist:
 
 1. **Environment Check**:
    - [ ] .NET 8.0+ SDK installed
-   - [ ] FlowLang transpiler builds successfully
+   - [ ] Cadenza transpiler builds successfully
    - [ ] Path and permissions configured correctly
 
 2. **Syntax Check**:
@@ -614,7 +614,7 @@ When encountering issues, work through this checklist:
    - [ ] String interpolation uses $ prefix
 
 3. **Project Structure**:
-   - [ ] flowc.json exists (for projects)
+   - [ ] cadenzac.json exists (for projects)
    - [ ] Source files in correct directories
    - [ ] Module imports/exports are correct
 
@@ -639,6 +639,6 @@ If issues persist after checking these items, consider:
 2. **Examples**: Review working code in the `examples/` directory
 3. **Community**: Engage with other developers through GitHub discussions
 4. **Issues**: Report bugs and request features through GitHub issues
-5. **Contributing**: Help improve FlowLang by contributing code or documentation
+5. **Contributing**: Help improve Cadenza by contributing code or documentation
 
-Remember that FlowLang is actively developed, so issues you encounter may be fixed in newer versions. Always check for the latest release before troubleshooting.
+Remember that Cadenza is actively developed, so issues you encounter may be fixed in newer versions. Always check for the latest release before troubleshooting.

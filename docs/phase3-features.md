@@ -1,6 +1,6 @@
-# FlowLang Phase 3 Advanced Features 🚀
+# Cadenza Phase 3 Advanced Features 🚀
 
-**Phase 3 introduces unique FlowLang features that set it apart as the premier language for distributed systems, observability, and multi-platform development.**
+**Phase 3 introduces unique Cadenza features that set it apart as the premier language for distributed systems, observability, and multi-platform development.**
 
 ## 🎯 Phase 3 Overview
 
@@ -16,18 +16,18 @@ Phase 3 focuses on advanced features and optimizations:
 
 ### Overview
 
-FlowLang includes built-in support for the Saga pattern, enabling reliable distributed transactions with automatic compensation.
+Cadenza includes built-in support for the Saga pattern, enabling reliable distributed transactions with automatic compensation.
 
 ### Key Features
 
 - **Automatic Compensation**: Failed saga steps automatically trigger compensation of completed steps
 - **State Persistence**: Saga state is automatically persisted for recovery
-- **Effect Integration**: Sagas work seamlessly with FlowLang's effect system
+- **Effect Integration**: Sagas work seamlessly with Cadenza's effect system
 - **Observability**: Full tracing and monitoring of saga execution
 
 ### Basic Saga Syntax
 
-```flowlang
+```cadenza
 // Define saga steps with compensation logic
 step reservePayment(amount: int, cardId: string) uses [Payment] -> Result<string, string>
 compensate cancelPaymentReservation(amount: int, cardId: string, reservationId: string?) uses [Payment] -> Result<string, string>
@@ -68,7 +68,7 @@ saga bookTravelPackage(
 
 ### Advanced Saga Features
 
-```flowlang
+```cadenza
 // Manual saga execution with monitoring
 function executeBookingWithMonitoring(request: BookingRequest) uses [Saga] -> Result<string, string> {
     let sagaResult = execute_saga("TravelBookingSaga", [
@@ -88,11 +88,11 @@ function executeBookingWithMonitoring(request: BookingRequest) uses [Saga] -> Re
 
 ### Overview
 
-FlowLang automatically instruments all functions with comprehensive observability without any code changes required.
+Cadenza automatically instruments all functions with comprehensive observability without any code changes required.
 
 ### Automatic Instrumentation
 
-Every FlowLang function is automatically instrumented with:
+Every Cadenza function is automatically instrumented with:
 
 - **Metrics**: Function invocation count, duration, success/error rates
 - **Tracing**: Distributed trace spans with correlation IDs
@@ -101,7 +101,7 @@ Every FlowLang function is automatically instrumented with:
 
 ### Zero-Config Observability
 
-```flowlang
+```cadenza
 // This function is automatically instrumented
 function processUser(userId: string) uses [Database, Network] -> Result<User, string> {
     // Automatically logged: function entry with parameters
@@ -121,7 +121,7 @@ function processUser(userId: string) uses [Database, Network] -> Result<User, st
 
 ### Custom Observability
 
-```flowlang
+```cadenza
 function businessLogicWithCustomMetrics(data: BusinessData) uses [Database, Logging] -> Result<string, string> {
     // Custom metric recording
     record_metric("business_data_size", data.items.length, {"category": "processing"})
@@ -142,7 +142,7 @@ function businessLogicWithCustomMetrics(data: BusinessData) uses [Database, Logg
 
 ### Observability Dashboard
 
-```flowlang
+```cadenza
 function getObservabilityMetrics() -> ObservabilitySummary {
     let summary = get_function_summary("processUser", 60)  // Last 60 minutes
     
@@ -161,24 +161,24 @@ function getObservabilityMetrics() -> ObservabilitySummary {
 
 ### Overview
 
-FlowLang automatically analyzes code and applies performance optimizations without changing the source code.
+Cadenza automatically analyzes code and applies performance optimizations without changing the source code.
 
 ### Automatic Parallelization
 
-```flowlang
+```cadenza
 // Original code - sequential processing
 function processDataItems(items: List<DataItem>) uses [Database] -> Result<List<ProcessedItem>, string> {
     let results = []
     
     for item in items {
-        let processed = processDataItem(item)?  // FlowLang detects this can be parallelized
+        let processed = processDataItem(item)?  // Cadenza detects this can be parallelized
         results.append(processed)
     }
     
     return Ok(results)
 }
 
-// FlowLang optimizer automatically generates parallel version:
+// Cadenza optimizer automatically generates parallel version:
 // - Independent operations run concurrently
 // - Configurable concurrency limits
 // - Automatic error handling and aggregation
@@ -186,7 +186,7 @@ function processDataItems(items: List<DataItem>) uses [Database] -> Result<List<
 
 ### Async/Await Optimization
 
-```flowlang
+```cadenza
 // Original code - sequential I/O operations
 function fetchUserProfile(userId: string) uses [Database, Network] -> Result<UserProfile, string> {
     let userInfo = database_get_user(userId)?           // I/O operation 1
@@ -196,7 +196,7 @@ function fetchUserProfile(userId: string) uses [Database, Network] -> Result<Use
     return Ok(UserProfile { info: userInfo, prefs: preferences, activity: activity })
 }
 
-// FlowLang optimizer automatically converts to async:
+// Cadenza optimizer automatically converts to async:
 // - Independent I/O operations run concurrently
 // - Automatic async/await generation
 // - Maintains original error handling semantics
@@ -204,20 +204,20 @@ function fetchUserProfile(userId: string) uses [Database, Network] -> Result<Use
 
 ### Effect Batching
 
-```flowlang
+```cadenza
 // Original code - individual database calls
 function updateMultipleUsers(updates: List<UserUpdate>) uses [Database] -> Result<List<string>, string> {
     let results = []
     
     for update in updates {
-        let result = database_update_user(update)?  // FlowLang detects batching opportunity
+        let result = database_update_user(update)?  // Cadenza detects batching opportunity
         results.append(result)
     }
     
     return Ok(results)
 }
 
-// FlowLang optimizer automatically generates batched version:
+// Cadenza optimizer automatically generates batched version:
 // - Multiple similar operations are batched together
 // - Reduces network round trips
 // - Maintains transactional semantics
@@ -225,19 +225,19 @@ function updateMultipleUsers(updates: List<UserUpdate>) uses [Database] -> Resul
 
 ### Memory Optimizations
 
-```flowlang
+```cadenza
 // Original code - string concatenation
 function generateReport(data: List<ReportItem>) -> Result<string, string> {
     let report = ""
     
     for item in data {
-        report = report + $"Item: {item.name}\n"  // FlowLang detects string builder pattern
+        report = report + $"Item: {item.name}\n"  // Cadenza detects string builder pattern
     }
     
     return Ok(report)
 }
 
-// FlowLang optimizer automatically uses StringBuilder:
+// Cadenza optimizer automatically uses StringBuilder:
 // - Efficient string building
 // - Reduced memory allocations
 // - Better performance for large strings
@@ -247,7 +247,7 @@ function generateReport(data: List<ReportItem>) -> Result<string, string> {
 
 ### Overview
 
-FlowLang can compile to multiple target platforms while maintaining the same source code and semantics.
+Cadenza can compile to multiple target platforms while maintaining the same source code and semantics.
 
 ### Supported Targets
 
@@ -261,17 +261,17 @@ FlowLang can compile to multiple target platforms while maintaining the same sou
 
 ```bash
 # Compile to specific target
-flowc compile --target csharp program.flow -o output/csharp/
-flowc compile --target java program.flow -o output/java/
-flowc compile --target wasm program.flow -o output/wasm/
+cadenzac compile --target csharp program.cdz -o output/csharp/
+cadenzac compile --target java program.cdz -o output/java/
+cadenzac compile --target wasm program.cdz -o output/wasm/
 
 # Compile to all targets
-flowc compile --all-targets program.flow -o output/
+cadenzac compile --all-targets program.cdz -o output/
 
 # Generated structure:
 output/
 ├── csharp/Program.cs
-├── java/FlowLangProgram.java  
+├── java/CadenzaProgram.java  
 ├── wasm/program.wat
 ├── javascript/program.js
 └── native/program.cpp
@@ -279,8 +279,8 @@ output/
 
 ### Target-Specific Features
 
-```flowlang
-// FlowLang code that works across all targets
+```cadenza
+// Cadenza code that works across all targets
 pure function calculateHash(input: string) -> int {
     let hash = 0
     for char in input {
@@ -319,58 +319,58 @@ Each target has different capabilities:
 
 ```bash
 # Execute saga with monitoring
-flowc saga run my-saga.flow --monitor
+cadenzac saga run my-saga.cdz --monitor
 
 # Check saga status
-flowc saga status <saga-id>
+cadenzac saga status <saga-id>
 
 # Resume failed saga
-flowc saga resume <saga-id>
+cadenzac saga resume <saga-id>
 
 # List running sagas
-flowc saga list
+cadenzac saga list
 ```
 
 ### Observability Commands
 
 ```bash
 # View function metrics
-flowc observe metrics --function processUser --time 1h
+cadenzac observe metrics --function processUser --time 1h
 
 # Export traces
-flowc observe traces --export jaeger --output traces.json
+cadenzac observe traces --export jaeger --output traces.json
 
 # Generate observability report
-flowc observe report --format html --output report.html
+cadenzac observe report --format html --output report.html
 ```
 
 ### Optimization Commands
 
 ```bash
 # Analyze optimization opportunities
-flowc optimize analyze myfile.flow
+cadenzac optimize analyze myfile.cdz
 
 # Apply optimizations
-flowc optimize apply myfile.flow --parallel --async --batching
+cadenzac optimize apply myfile.cdz --parallel --async --batching
 
 # Benchmark optimizations
-flowc optimize benchmark myfile.flow --iterations 1000
+cadenzac optimize benchmark myfile.cdz --iterations 1000
 ```
 
 ### Multi-Target Commands
 
 ```bash
 # List available targets
-flowc targets list
+cadenzac targets list
 
 # Show target capabilities
-flowc targets info --target java
+cadenzac targets info --target java
 
 # Compile to multiple targets
-flowc compile --targets csharp,java,wasm myfile.flow -o output/
+cadenzac compile --targets csharp,java,wasm myfile.cdz -o output/
 
 # Target-specific optimization
-flowc compile --target native --optimize-for speed myfile.flow
+cadenzac compile --target native --optimize-for speed myfile.cdz
 ```
 
 ## 📈 Performance Improvements
@@ -410,7 +410,7 @@ Phase 3 optimizations provide significant performance improvements:
 
 ## 🚀 Getting Started with Phase 3
 
-1. **Update FlowLang**: Ensure you have the latest version
+1. **Update Cadenza**: Ensure you have the latest version
 2. **Try examples**: Run the Phase 3 example files
 3. **Enable features**: Use new CLI flags and configuration
 4. **Monitor usage**: Set up observability dashboards
@@ -420,10 +420,10 @@ Phase 3 optimizations provide significant performance improvements:
 
 See the comprehensive examples:
 
-- [Saga Example](../examples/saga_example.flow) - Complete saga pattern implementation
-- [Observability Example](../examples/observability_example.flow) - Built-in observability features
-- [Pipeline Optimization Example](../examples/pipeline_optimization_example.flow) - Performance optimizations
-- [Multi-Target Example](../examples/multi_target_example.flow) - Cross-platform compilation
+- [Saga Example](../examples/saga_example.cdz) - Complete saga pattern implementation
+- [Observability Example](../examples/observability_example.cdz) - Built-in observability features
+- [Pipeline Optimization Example](../examples/pipeline_optimization_example.cdz) - Performance optimizations
+- [Multi-Target Example](../examples/multi_target_example.cdz) - Cross-platform compilation
 
 ## 🛣️ Roadmap to Phase 4
 
@@ -434,4 +434,4 @@ Phase 3 sets the foundation for Phase 4 Frontend Integration:
 - **Observability** extends to frontend monitoring
 - **Effect system** tracks frontend side effects (DOM, Network, Storage)
 
-Phase 3 makes FlowLang a complete platform for both backend and distributed systems development with unmatched observability and multi-platform support! 🎉
+Phase 3 makes Cadenza a complete platform for both backend and distributed systems development with unmatched observability and multi-platform support! 🎉

@@ -31,7 +31,7 @@ public class Result<T, E>
 
 public static class WeatherHttpApi
 {
-    // FlowLang generated functions (cleaned up)
+    // Cadenza generated functions (cleaned up)
     public static int celsius_to_fahrenheit(int celsius)
     {
         return celsius * 9 / 5 + 32;
@@ -76,7 +76,7 @@ public static class WeatherHttpApi
         listener.Prefixes.Add("http://localhost:8080/");
         listener.Start();
         
-        Console.WriteLine("FlowLang Weather API Server");
+        Console.WriteLine("Cadenza Weather API Server");
         Console.WriteLine("===========================");
         Console.WriteLine("Server running at: http://localhost:8080/");
         Console.WriteLine("Try: http://localhost:8080/weather?days=5");
@@ -136,7 +136,7 @@ public static class WeatherHttpApi
             {
                 response.StatusCode = 200;
                 await WriteResponse(response, @"{
-                    ""message"": ""FlowLang Weather API"",
+                    ""message"": ""Cadenza Weather API"",
                     ""endpoints"": {
                         ""/weather?days=N"": ""Get weather forecast for N days (1-10)""
                     }

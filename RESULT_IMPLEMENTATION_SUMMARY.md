@@ -1,7 +1,7 @@
-# FlowLang Result<T, E> Type Implementation Summary
+# Cadenza Result<T, E> Type Implementation Summary
 
 ## Overview
-Successfully implemented the complete Result<T, E> type system for FlowLang as specified in the roadmap. The implementation includes lexer support, parser extensions, AST nodes, and C# code generation with proper error propagation.
+Successfully implemented the complete Result<T, E> type system for Cadenza as specified in the roadmap. The implementation includes lexer support, parser extensions, AST nodes, and C# code generation with proper error propagation.
 
 ## Implemented Features
 
@@ -33,7 +33,7 @@ Successfully implemented the complete Result<T, E> type system for FlowLang as s
 
 ## Generated C# Structure
 
-The FlowLang transpiler generates the following C# structure:
+The Cadenza transpiler generates the following C# structure:
 
 ```csharp
 public class Result<T, E>
@@ -56,8 +56,8 @@ public class Result<T, E>
 
 ## Error Propagation Implementation
 
-FlowLang code:
-```flowlang
+Cadenza code:
+```cadenza
 function calculate(x: int, y: int) -> Result<int, string> {
     let result = divide(x, y)?
     return Ok(result * 2)
@@ -96,9 +96,9 @@ public static Result<int, string> calculate(int x, int y)
 ## Validation and Testing
 
 ### Working Examples ✅
-- **examples/simple_result.flow**: Basic Result function
-- **examples/result_example.flow**: Error propagation example
-- **examples/complete_result_example.flow**: Comprehensive feature demonstration
+- **examples/simple_result.cdz**: Basic Result function
+- **examples/result_example.cdz**: Error propagation example
+- **examples/complete_result_example.cdz**: Comprehensive feature demonstration
 
 ### C# Compilation Test ✅
 - Generated C# code compiles without errors
@@ -109,7 +109,7 @@ public static Result<int, string> calculate(int x, int y)
 ## Usage Examples
 
 ### Basic Result Function
-```flowlang
+```cadenza
 function divide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")
@@ -119,7 +119,7 @@ function divide(a: int, b: int) -> Result<int, string> {
 ```
 
 ### Error Propagation Chain
-```flowlang
+```cadenza
 function complexCalculation(x: int, y: int, z: int) -> Result<int, string> {
     let divided = safeDivide(x, y)?
     let squared = safeSqrt(divided)?
@@ -132,25 +132,25 @@ function complexCalculation(x: int, y: int, z: int) -> Result<int, string> {
 
 All success criteria from the roadmap have been met:
 
-1. ✅ FlowLang can parse `Result<int, String>` types
-2. ✅ FlowLang can parse `Ok(42)` and `Error("message")` expressions
-3. ✅ FlowLang can parse `let result = someFunction()?` error propagation
+1. ✅ Cadenza can parse `Result<int, String>` types
+2. ✅ Cadenza can parse `Ok(42)` and `Error("message")` expressions
+3. ✅ Cadenza can parse `let result = someFunction()?` error propagation
 4. ✅ Generated C# includes Result class and proper error handling
 5. ✅ Example code transpiles and runs correctly
 
 ## Files Modified
 
 ### Core Implementation
-- **/mnt/c/code/LlmLang/src/flowc.cs**: Complete Result type implementation
+- **/mnt/c/code/LlmLang/src/cadenzac.cs**: Complete Result type implementation
 
 ### Test Examples  
-- **/mnt/c/code/LlmLang/examples/simple_result.flow**: Basic example
-- **/mnt/c/code/LlmLang/examples/result_example.flow**: Error propagation
-- **/mnt/c/code/LlmLang/examples/complete_result_example.flow**: Comprehensive demo
+- **/mnt/c/code/LlmLang/examples/simple_result.cdz**: Basic example
+- **/mnt/c/code/LlmLang/examples/result_example.cdz**: Error propagation
+- **/mnt/c/code/LlmLang/examples/complete_result_example.cdz**: Comprehensive demo
 
 ### Validation
 - **/mnt/c/code/LlmLang/test_result/**: Working C# validation project
 
 ## Implementation Status: COMPLETE ✅
 
-The Result<T, E> type system is fully implemented and ready for production use in FlowLang. All features work as specified, generate correct C# code, and have been validated through testing.
+The Result<T, E> type system is fully implemented and ready for production use in Cadenza. All features work as specified, generate correct C# code, and have been validated through testing.

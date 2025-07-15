@@ -5,7 +5,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace FlowLang.Tests.Unit
+namespace Cadenza.Tests.Unit
 {
     [TestFixture]
     public class CodeGeneratorTests

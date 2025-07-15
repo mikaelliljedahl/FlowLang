@@ -1,10 +1,10 @@
-# FlowLang Language Server Protocol (LSP) Integration
+# Cadenza Language Server Protocol (LSP) Integration
 
-The FlowLang Language Server provides rich IDE integration for the FlowLang programming language, offering real-time diagnostics, intelligent auto-completion, hover information, and navigation features.
+The Cadenza Language Server provides rich IDE integration for the Cadenza programming language, offering real-time diagnostics, intelligent auto-completion, hover information, and navigation features.
 
 ## Overview
 
-The FlowLang LSP server implements the [Language Server Protocol specification](https://microsoft.github.io/language-server-protocol/) to provide IDE-agnostic language support. It leverages FlowLang's existing lexer and parser infrastructure to deliver accurate and fast language services.
+The Cadenza LSP server implements the [Language Server Protocol specification](https://microsoft.github.io/language-server-protocol/) to provide IDE-agnostic language support. It leverages Cadenza's existing lexer and parser infrastructure to deliver accurate and fast language services.
 
 ## Features
 
@@ -16,7 +16,7 @@ The FlowLang LSP server implements the [Language Server Protocol specification](
 - **Go-to-Definition**: Navigate to function, module, and variable definitions
 - **Document Symbols**: Outline view for functions and modules
 
-### 🎯 FlowLang-Specific Features
+### 🎯 Cadenza-Specific Features
 - **Effect System Integration**: Validation and suggestions for effect annotations
 - **Result Type Support**: Error propagation analysis with `?` operator
 - **Module System**: Import resolution and cross-module navigation
@@ -27,17 +27,17 @@ The FlowLang LSP server implements the [Language Server Protocol specification](
 
 ### Prerequisites
 - .NET 8.0 or later
-- FlowLang transpiler (flowc)
+- Cadenza transpiler (cadenzac)
 
 ### Build the Language Server
 ```bash
 cd src/
-dotnet build flowc.csproj
+dotnet build cadenzac.csproj
 ```
 
 ### Start the Language Server
 ```bash
-flowc lsp
+cadenzac lsp
 ```
 
 The server communicates via stdin/stdout using JSON-RPC.
@@ -46,36 +46,36 @@ The server communicates via stdin/stdout using JSON-RPC.
 
 ### VS Code Extension (Recommended)
 
-Create a VS Code extension for FlowLang:
+Create a VS Code extension for Cadenza:
 
 **package.json:**
 ```json
 {
-  "name": "flowlang",
-  "displayName": "FlowLang",
-  "description": "FlowLang language support",
+  "name": "cadenza",
+  "displayName": "Cadenza",
+  "description": "Cadenza language support",
   "version": "1.0.0",
   "engines": {
     "vscode": "^1.60.0"
   },
   "main": "./out/extension.js",
   "activationEvents": [
-    "onLanguage:flowlang"
+    "onLanguage:cadenza"
   ],
   "contributes": {
     "languages": [
       {
-        "id": "flowlang",
-        "aliases": ["FlowLang", "flowlang"],
-        "extensions": [".flow"],
+        "id": "cadenza",
+        "aliases": ["Cadenza", "cadenza"],
+        "extensions": [".cdz"],
         "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
       {
-        "language": "flowlang",
-        "scopeName": "source.flowlang",
-        "path": "./syntaxes/flowlang.tmGrammar.json"
+        "language": "cadenza",
+        "scopeName": "source.cadenza",
+        "path": "./syntaxes/cadenza.tmGrammar.json"
       }
     ]
   },
@@ -99,21 +99,21 @@ let client: LanguageClient;
 
 export function activate(context: vscode.ExtensionContext) {
   const serverOptions: ServerOptions = {
-    command: 'flowc',
+    command: 'cadenzac',
     args: ['lsp'],
     transport: TransportKind.stdio
   };
 
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme: 'file', language: 'flowlang' }],
+    documentSelector: [{ scheme: 'file', language: 'cadenza' }],
     synchronize: {
-      fileEvents: vscode.workspace.createFileSystemWatcher('**/.flow')
+      fileEvents: vscode.workspace.createFileSystemWatcher('**/.cdz')
     }
   };
 
   client = new LanguageClient(
-    'flowlang',
-    'FlowLang Language Server',
+    'cadenza',
+    'Cadenza Language Server',
     serverOptions,
     clientOptions
   );
@@ -133,26 +133,26 @@ export function deactivate(): Thenable<void> | undefined {
 
 #### Neovim with nvim-lspconfig
 ```lua
-require'lspconfig'.flowlang.setup{
-  cmd = {'flowc', 'lsp'},
-  filetypes = {'flowlang'},
-  root_dir = require'lspconfig'.util.root_pattern('flowc.json', '.git'),
+require'lspconfig'.cadenza.setup{
+  cmd = {'cadenzac', 'lsp'},
+  filetypes = {'cadenza'},
+  root_dir = require'lspconfig'.util.root_pattern('cadenzac.json', '.git'),
 }
 ```
 
 #### Emacs with lsp-mode
 ```elisp
-(add-to-list 'lsp-language-id-configuration '(flowlang-mode . "flowlang"))
+(add-to-list 'lsp-language-id-configuration '(cadenza-mode . "cadenza"))
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection '("flowc" "lsp"))
-                  :major-modes '(flowlang-mode)
-                  :server-id 'flowlang))
+ (make-lsp-client :new-connection (lsp-stdio-connection '("cadenzac" "lsp"))
+                  :major-modes '(cadenza-mode)
+                  :server-id 'cadenza))
 ```
 
 ## Configuration
 
 ### Server Capabilities
-The FlowLang LSP server supports the following capabilities:
+The Cadenza LSP server supports the following capabilities:
 
 ```json
 {
@@ -180,9 +180,9 @@ Recommended client settings for optimal experience:
 
 ```json
 {
-  "flowlang.server.path": "flowc",
-  "flowlang.server.args": ["lsp"],
-  "flowlang.trace.server": "verbose"
+  "cadenza.server.path": "cadenzac",
+  "cadenza.server.args": ["lsp"],
+  "cadenza.trace.server": "verbose"
 }
 ```
 
@@ -193,7 +193,7 @@ Recommended client settings for optimal experience:
 The LSP server provides real-time error detection:
 
 #### Syntax Errors
-```flowlang
+```cadenza
 function test( -> int {  // Missing closing parenthesis
     return 42
 }
@@ -201,7 +201,7 @@ function test( -> int {  // Missing closing parenthesis
 ```
 
 #### Effect System Violations
-```flowlang
+```cadenza
 pure function test() uses [Database] -> int {
     return 42
 }
@@ -209,7 +209,7 @@ pure function test() uses [Database] -> int {
 ```
 
 #### Unknown Effects
-```flowlang
+```cadenza
 function test() uses [InvalidEffect] -> int {
     return 42
 }
@@ -226,7 +226,7 @@ Context-aware completion suggestions:
 - Function declarations: suggests `function`, `pure function`
 
 #### Module Access
-```flowlang
+```cadenza
 module Math {
     export function add(a: int, b: int) -> int { return a + b }
 }
@@ -237,7 +237,7 @@ function test() -> int {
 ```
 
 #### Function Parameters
-```flowlang
+```cadenza
 function calculate(x: int, y: int) -> int {
     return x + y
 }
@@ -252,7 +252,7 @@ function test() -> int {
 Rich hover information displays:
 
 #### Function Signatures
-```flowlang
+```cadenza
 function process_data(data: string) uses [Database, Logging] -> Result<int, string>
 ```
 
@@ -302,15 +302,15 @@ dotnet test tests/unit/lsp/
 Test with a real LSP client:
 ```bash
 # Start the server
-flowc lsp
+cadenzac lsp
 
 # In another terminal, test with a simple LSP client
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' | flowc lsp
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' | cadenzac lsp
 ```
 
 ### Manual Testing with VS Code
-1. Install the FlowLang VS Code extension
-2. Open a `.flow` file
+1. Install the Cadenza VS Code extension
+2. Open a `.cdz` file
 3. Test features:
    - Type errors should appear with red squiggles
    - Auto-completion should work when typing
@@ -320,7 +320,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}
 ## Performance
 
 ### Benchmarks
-- **Parsing Speed**: <100ms for typical FlowLang files
+- **Parsing Speed**: <100ms for typical Cadenza files
 - **Diagnostic Response**: <50ms for real-time error detection
 - **Completion Response**: <10ms for auto-completion suggestions
 - **Memory Usage**: <50MB for moderate-sized projects
@@ -337,11 +337,11 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}
 
 #### Server Won't Start
 ```bash
-# Check if flowc is in PATH
-which flowc
+# Check if cadenzac is in PATH
+which cadenzac
 
-# Test flowc directly
-flowc --version
+# Test cadenzac directly
+cadenzac --version
 
 # Check dependencies
 dotnet --version
@@ -350,7 +350,7 @@ dotnet --version
 #### No IntelliSense
 1. Verify the language server is running
 2. Check VS Code output panel for errors
-3. Ensure file has `.flow` extension
+3. Ensure file has `.cdz` extension
 4. Restart the language server
 
 #### Slow Performance
@@ -362,7 +362,7 @@ dotnet --version
 ### Debug Mode
 Enable verbose logging:
 ```bash
-flowc lsp --verbose
+cadenzac lsp --verbose
 ```
 
 ### Known Limitations
@@ -374,7 +374,7 @@ flowc lsp --verbose
 ## Roadmap
 
 ### Phase 2 Enhancements
-- **Code Formatting**: Automatic FlowLang code formatting
+- **Code Formatting**: Automatic Cadenza code formatting
 - **Rename Support**: Rename symbols across files
 - **Find All References**: Locate all uses of a symbol
 - **Code Actions**: Quick fixes and refactoring
@@ -390,9 +390,9 @@ flowc lsp --verbose
 ## Contributing
 
 ### Development Setup
-1. Clone the FlowLang repository
+1. Clone the Cadenza repository
 2. Install .NET 8.0 SDK
-3. Build the project: `dotnet build src/flowc.csproj`
+3. Build the project: `dotnet build src/cadenzac.csproj`
 4. Run tests: `dotnet test tests/`
 
 ### Adding New Features
@@ -410,10 +410,10 @@ flowc lsp --verbose
 
 ## Support
 
-- **GitHub Issues**: [FlowLang Issues](https://github.com/flowlang/flowlang/issues)
-- **Discussions**: [FlowLang Discussions](https://github.com/flowlang/flowlang/discussions)
-- **Documentation**: [FlowLang Docs](https://github.com/flowlang/flowlang/docs)
+- **GitHub Issues**: [Cadenza Issues](https://github.com/cadenza/cadenza/issues)
+- **Discussions**: [Cadenza Discussions](https://github.com/cadenza/cadenza/discussions)
+- **Documentation**: [Cadenza Docs](https://github.com/cadenza/cadenza/docs)
 
 ## License
 
-The FlowLang Language Server is released under the same license as the FlowLang project.
+The Cadenza Language Server is released under the same license as the Cadenza project.

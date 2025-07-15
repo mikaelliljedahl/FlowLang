@@ -1,38 +1,38 @@
-# FlowLang Transpiler Architecture
+# Cadenza Transpiler Architecture
 
 ## Overview
 
-The FlowLang transpiler uses **Microsoft.CodeAnalysis.CSharp** (Roslyn) to transform FlowLang source code into executable C# code through a sophisticated multi-stage process. This document explains how the transpiler works internally and how it leverages Roslyn for code generation.
+The Cadenza transpiler uses **Microsoft.CodeAnalysis.CSharp** (Roslyn) to transform Cadenza source code into executable C# code through a sophisticated multi-stage process. This document explains how the transpiler works internally and how it leverages Roslyn for code generation.
 
 ## Pipeline Architecture
 
 ```
-FlowLang Source → Lexer → Parser → AST → Import Resolution → Roslyn Generator → C# Syntax Tree → C# Code
+Cadenza Source → Lexer → Parser → AST → Import Resolution → Roslyn Generator → C# Syntax Tree → C# Code
 ```
 
 ### Multi-Module Compilation Flow (December 2024)
 
-FlowLang now supports multi-module compilation with proper import resolution:
+Cadenza now supports multi-module compilation with proper import resolution:
 
 ```
-1. Parse all FlowLang files into AST nodes
+1. Parse all Cadenza files into AST nodes
 2. Process import statements to build symbol mapping
 3. Generate qualified C# calls for imported functions
 4. Combine all modules into single C# compilation unit
 ```
 
-The transpiler follows this flow in `FlowLangTranspiler.TranspileAsync()` (`src/FlowLang.Core/flowc-core.cs:2841+`):
+The transpiler follows this flow in `CadenzaTranspiler.TranspileAsync()` (`src/Cadenza.Core/cadenzac-core.cs:2841+`):
 
 ```csharp
 // Read source file
 var source = await File.ReadAllTextAsync(sourceFile);
 
 // Lex: Convert text to tokens
-var lexer = new FlowLangLexer(source);
+var lexer = new CadenzaLexer(source);
 var tokens = lexer.ScanTokens();
 
 // Parse: Convert tokens to AST
-var parser = new FlowLangParser(tokens);
+var parser = new CadenzaParser(tokens);
 var ast = parser.Parse();
 
 // Generate: Convert AST to C# using Roslyn
@@ -47,7 +47,7 @@ var csharpCode = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
 
 ### Import Statement Processing
 
-**Location**: `src/FlowLang.Core/flowc-core.cs:2845+`
+**Location**: `src/Cadenza.Core/cadenzac-core.cs:2845+`
 
 The transpiler implements a two-pass system for handling imports:
 
@@ -79,7 +79,7 @@ private void ProcessImportStatement(ImportStatement import)
     // Handle specific imports like: import Math.{add, multiply}
     if (import.SpecificImports != null)
     {
-        var moduleNamespace = $"FlowLang.Modules.{import.ModuleName}.{import.ModuleName}";
+        var moduleNamespace = $"Cadenza.Modules.{import.ModuleName}.{import.ModuleName}";
         
         foreach (var symbol in import.SpecificImports)
         {
@@ -92,13 +92,13 @@ private void ProcessImportStatement(ImportStatement import)
 
 ### Qualified Call Generation
 
-**Location**: `src/FlowLang.Core/flowc-core.cs:2525+`
+**Location**: `src/Cadenza.Core/cadenzac-core.cs:2525+`
 
 ```csharp
 // In GenerateCallExpression:
 if (_importedSymbols.ContainsKey(call.Name))
 {
-    // Generate qualified call: FlowLang.Modules.Math.Math.add
+    // Generate qualified call: Cadenza.Modules.Math.Math.add
     var qualifiedName = _importedSymbols[call.Name];
     var parts = qualifiedName.Split('.');
     expression = IdentifierName(parts[0]);
@@ -115,8 +115,8 @@ if (_importedSymbols.ContainsKey(call.Name))
 
 ### Import Resolution Example
 
-**FlowLang Input**:
-```flowlang
+**Cadenza Input**:
+```cadenza
 import Math.{add, multiply}
 
 function main() -> int {
@@ -130,8 +130,8 @@ function main() -> int {
 ```csharp
 public static int main()
 {
-    var result = FlowLang.Modules.Math.Math.add(5, 3);
-    var product = FlowLang.Modules.Math.Math.multiply(result, 2);
+    var result = Cadenza.Modules.Math.Math.add(5, 3);
+    var product = Cadenza.Modules.Math.Math.multiply(result, 2);
     return product;
 }
 ```
@@ -163,16 +163,16 @@ public SyntaxTree GenerateFromAST(Program program)
 
 ## AST Node Translation
 
-Each FlowLang AST node type is systematically translated to equivalent C# syntax:
+Each Cadenza AST node type is systematically translated to equivalent C# syntax:
 
 ### Function Declarations
 
-**Location**: `src/FlowLang.Core/flowc-core.cs:2250+`
+**Location**: `src/Cadenza.Core/cadenzac-core.cs:2250+`
 
 ```csharp
 private MethodDeclarationSyntax GenerateFunctionDeclaration(FunctionDeclaration func)
 {
-    // Convert FlowLang function to C# static method
+    // Convert Cadenza function to C# static method
     var method = MethodDeclaration(returnType, func.Name)
         .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
         .AddParameterListParameters(parameters.ToArray())
@@ -182,7 +182,7 @@ private MethodDeclarationSyntax GenerateFunctionDeclaration(FunctionDeclaration 
 
 ### Method Calls
 
-**Location**: `src/FlowLang.Core/flowc-core.cs:2476+`
+**Location**: `src/Cadenza.Core/cadenzac-core.cs:2476+`
 
 ```csharp
 private InvocationExpressionSyntax GenerateMethodCallExpression(MethodCallExpression methodCall)
@@ -223,11 +223,11 @@ private ExpressionSyntax GenerateExpression(ASTNode expression)
 
 ## Type System Generation
 
-FlowLang's advanced types are generated as C# structs and helper classes:
+Cadenza's advanced types are generated as C# structs and helper classes:
 
 ### Result&lt;T,E&gt; Types
 
-**Location**: `src/FlowLang.Core/flowc-core.cs:2100+`
+**Location**: `src/Cadenza.Core/cadenzac-core.cs:2100+`
 
 ```csharp
 private MemberDeclarationSyntax[] GenerateResultTypes()
@@ -263,13 +263,13 @@ Similar pattern for Option types with `Some(value)` and `None()` constructors.
 
 ### Top-Level Statements
 
-**Location**: `src/FlowLang.Core/flowc-core.cs:2076+`
+**Location**: `src/Cadenza.Core/cadenzac-core.cs:2076+`
 
 ```csharp
 private GlobalStatementSyntax GenerateTopLevelStatement(string mainNamespace)
 {
-    // Generate: FlowLang.Modules.ModuleName.ClassName.main();
-    var moduleName = mainNamespace.Replace("FlowLang.Modules.", "");
+    // Generate: Cadenza.Modules.ModuleName.ClassName.main();
+    var moduleName = mainNamespace.Replace("Cadenza.Modules.", "");
     var statement = ExpressionStatement(
         InvocationExpression(
             MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
@@ -282,15 +282,15 @@ private GlobalStatementSyntax GenerateTopLevelStatement(string mainNamespace)
 
 This generates clean modern C# like:
 ```csharp
-FlowLang.Modules.GeminiExample.GeminiExample.main();
+Cadenza.Modules.GeminiExample.GeminiExample.main();
 ```
 
 ### Type Mapping
 
-FlowLang types are mapped to appropriate C# types:
+Cadenza types are mapped to appropriate C# types:
 
 ```csharp
-private string MapFlowLangTypeToCSharp(string flowLangType)
+private string MapCadenzaTypeToCSharp(string flowLangType)
 {
     return flowLangType switch
     {
@@ -305,7 +305,7 @@ private string MapFlowLangTypeToCSharp(string flowLangType)
 
 ## Binary Generation Process
 
-**Important**: FlowLang doesn't generate binaries directly. Instead:
+**Important**: Cadenza doesn't generate binaries directly. Instead:
 
 1. **Transpiler Output**: Generates complete, compilable C# source code
 2. **Runtime Compilation**: Uses `dotnet run` or `dotnet build` for actual binary creation
@@ -314,8 +314,8 @@ private string MapFlowLangTypeToCSharp(string flowLangType)
 ### Execution Workflow
 
 ```bash
-# 1. Transpile FlowLang to C#
-./flowc-core hello.flow hello.cs
+# 1. Transpile Cadenza to C#
+./cadenzac-core hello.cdz hello.cs
 
 # 2. Execute with .NET runtime
 dotnet run hello.cs
@@ -323,8 +323,8 @@ dotnet run hello.cs
 
 ## Complete Example
 
-### FlowLang Input
-```flowlang
+### Cadenza Input
+```cadenza
 module GeminiExample {
     pure function createGreeting(name: string) -> string {
         return "Hello, " + name + " from a pure function!"
@@ -343,8 +343,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-FlowLang.Modules.GeminiExample.GeminiExample.main();
-namespace FlowLang.Modules.GeminiExample
+Cadenza.Modules.GeminiExample.GeminiExample.main();
+namespace Cadenza.Modules.GeminiExample
 {
     public static class GeminiExample
     {
@@ -384,25 +384,25 @@ Hello, Gemini from a pure function!
 - **Type Safety**: Compile-time validation of generated syntax trees
 - **Modern Features**: Easy integration of latest C# language features
 - **Performance**: Roslyn's optimized syntax tree manipulation
-- **Debugging**: Generated code maintains FlowLang structure for debugging
+- **Debugging**: Generated code maintains Cadenza structure for debugging
 - **Extensibility**: Easy to add new language features by extending AST and generators
 
 ## Architecture Benefits
 
 The transpiler acts as a sophisticated **source-to-source compiler** that:
 
-1. **Preserves Intent**: FlowLang's high-level abstractions map clearly to C# equivalents
+1. **Preserves Intent**: Cadenza's high-level abstractions map clearly to C# equivalents
 2. **Maintains Performance**: Generated C# code is as fast as hand-written C#
-3. **Enables Debugging**: Generated code structure allows debugging FlowLang through C#
+3. **Enables Debugging**: Generated code structure allows debugging Cadenza through C#
 4. **Leverages Ecosystem**: Full access to .NET libraries and tooling
 5. **Future-Proof**: Easy to adapt to new C# language features
 
 ## Implementation Files
 
-- **Core Transpiler**: `src/FlowLang.Core/flowc-core.cs`
-- **Lexer**: `FlowLangLexer` class (lines 600+)
-- **Parser**: `FlowLangParser` class (lines 900+)
+- **Core Transpiler**: `src/Cadenza.Core/cadenzac-core.cs`
+- **Lexer**: `CadenzaLexer` class (lines 600+)
+- **Parser**: `CadenzaParser` class (lines 900+)
 - **Code Generator**: `CSharpGenerator` class (lines 1982+)
-- **Entry Point**: `FlowLangTranspiler` class (lines 2839+)
+- **Entry Point**: `CadenzaTranspiler` class (lines 2839+)
 
-The transpiler leverages Roslyn's powerful syntax manipulation capabilities to bridge FlowLang's high-level abstractions with C#'s execution model, providing a seamless development experience while maintaining the performance and ecosystem benefits of the .NET platform.
+The transpiler leverages Roslyn's powerful syntax manipulation capabilities to bridge Cadenza's high-level abstractions with C#'s execution model, providing a seamless development experience while maintaining the performance and ecosystem benefits of the .NET platform.

@@ -1,4 +1,4 @@
-# FlowLang Specification Examples
+# Cadenza Specification Examples
 
 This document provides practical examples of specification blocks across different domains and use cases, demonstrating how to effectively capture intent, business rules, and expected outcomes.
 
@@ -17,7 +17,7 @@ This document provides practical examples of specification blocks across differe
 
 ### Simple Validation Function
 
-```flowlang
+```cadenza
 /*spec
 intent: "Validate email address format for user registration"
 rules:
@@ -57,7 +57,7 @@ pure function validateEmail(email: string) -> bool {
 
 ### Mathematical Calculation
 
-```flowlang
+```cadenza
 /*spec
 intent: "Calculate compound interest for investment planning"
 rules:
@@ -103,7 +103,7 @@ pure function calculateCompoundInterest(
 
 ### Product Inventory Management
 
-```flowlang
+```cadenza
 /*spec
 intent: "Update product inventory after successful order processing"
 rules:
@@ -153,7 +153,7 @@ function updateInventory(
 
 ### Shopping Cart Operations
 
-```flowlang
+```cadenza
 /*spec
 intent: "Add product to user's shopping cart with validation and pricing"
 rules:
@@ -211,7 +211,7 @@ function addToCart(
 
 ### Loan Approval System
 
-```flowlang
+```cadenza
 /*spec
 intent: "Evaluate mortgage loan application using underwriting criteria"
 rules:
@@ -285,7 +285,7 @@ function evaluateMortgageApplication(application: MortgageApplication)
 
 ### Fraud Detection
 
-```flowlang
+```cadenza
 /*spec
 intent: "Analyze transaction for potential fraud using behavioral patterns"
 rules:
@@ -371,7 +371,7 @@ function analyzeFraudRisk(transaction: Transaction)
 
 ### Patient Data Management
 
-```flowlang
+```cadenza
 /*spec
 intent: "Update patient medical record with HIPAA compliance and audit trail"
 rules:
@@ -431,7 +431,7 @@ function updatePatientRecord(
 
 ### Multi-Factor Authentication
 
-```flowlang
+```cadenza
 /*spec
 intent: "Verify user identity using two-factor authentication"
 rules:
@@ -502,7 +502,7 @@ function verifyTwoFactorAuth(
 
 ### CSV Data Import
 
-```flowlang
+```cadenza
 /*spec
 intent: "Import customer data from CSV file with validation and error handling"
 rules:
@@ -597,7 +597,7 @@ function importCustomerCSV(filePath: string)
 
 ### External API Integration
 
-```flowlang
+```cadenza
 /*spec
 intent: "Fetch weather data from external API with caching and error handling"
 rules:
@@ -667,7 +667,7 @@ function getWeatherData(latitude: float, longitude: float)
 
 ### Complete E-Commerce Order Module
 
-```flowlang
+```cadenza
 /*spec
 intent: "Complete order processing module for e-commerce platform"
 rules:

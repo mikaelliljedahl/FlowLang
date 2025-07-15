@@ -1,10 +1,10 @@
-# FlowLang Testing Framework
+# Cadenza Testing Framework
 
-This directory contains the comprehensive testing framework for the FlowLang transpiler, implementing all the requirements specified in the roadmap.
+This directory contains the comprehensive testing framework for the Cadenza transpiler, implementing all the requirements specified in the roadmap.
 
 ## Overview
 
-The testing framework provides complete coverage of the FlowLang transpiler with multiple types of tests:
+The testing framework provides complete coverage of the Cadenza transpiler with multiple types of tests:
 
 - **Unit Tests**: Individual component testing for lexer, parser, and code generator
 - **Integration Tests**: End-to-end transpilation testing
@@ -24,13 +24,13 @@ tests/
 ├── integration/             # Integration tests
 │   └── TranspilationTests.cs # End-to-end transpilation tests
 ├── golden/                  # Golden file tests
-│   ├── inputs/             # FlowLang input files
-│   │   ├── basic_functions.flow
-│   │   ├── control_flow.flow
-│   │   ├── result_types.flow
-│   │   ├── modules.flow
-│   │   ├── string_interpolation.flow
-│   │   └── effect_system.flow
+│   ├── inputs/             # Cadenza input files
+│   │   ├── basic_functions.cdz
+│   │   ├── control_flow.cdz
+│   │   ├── result_types.cdz
+│   │   ├── modules.cdz
+│   │   ├── string_interpolation.cdz
+│   │   └── effect_system.cdz
 │   ├── expected/           # Expected C# output files
 │   │   ├── basic_functions.cs
 │   │   ├── control_flow.cs
@@ -75,19 +75,19 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ```bash
 # Unit tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Unit"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Unit"
 
 # Integration tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Integration"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Integration"
 
 # Golden file tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Golden"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Golden"
 
 # Performance tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Performance"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Performance"
 
 # Regression tests only
-dotnet test --filter "FullyQualifiedName~FlowLang.Tests.Regression"
+dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Regression"
 ```
 
 ### Running Performance Benchmarks
@@ -129,7 +129,7 @@ Integration tests verify end-to-end functionality:
 
 Golden file tests ensure consistent code generation:
 
-- **Input Files**: FlowLang source code covering all language features
+- **Input Files**: Cadenza source code covering all language features
 - **Expected Files**: Hand-verified C# output that should be generated
 - **Validation**: Exact string matching with normalization for whitespace
 - **Coverage**: All major language constructs and edge cases
@@ -172,7 +172,7 @@ Regression tests prevent breaking changes:
 
 The testing framework includes automated test data management:
 
-- **Automatic Generation**: Sample FlowLang files for testing
+- **Automatic Generation**: Sample Cadenza files for testing
 - **Result Caching**: Saving and loading test results for comparison
 - **Data Validation**: Ensuring test data integrity
 - **Cleanup**: Automatic cleanup of temporary test files
@@ -282,7 +282,7 @@ Automated quality checks ensure code quality:
    - Check for compilation errors
 
 2. **Golden File Test Failures**:
-   - Verify input files exist and are valid FlowLang
+   - Verify input files exist and are valid Cadenza
    - Check that expected output files match current transpiler output
    - Use test output to identify differences
 
@@ -336,4 +336,4 @@ The testing framework meets the following success criteria:
 ✅ **CI Integration**: Works with automated build pipelines
 ✅ **Clear Documentation**: Comprehensive testing guidelines and examples
 
-This testing framework ensures the FlowLang transpiler maintains high quality, performance, and reliability throughout its development lifecycle.
+This testing framework ensures the Cadenza transpiler maintains high quality, performance, and reliability throughout its development lifecycle.

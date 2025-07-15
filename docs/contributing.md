@@ -1,6 +1,6 @@
-# Contributing to FlowLang
+# Contributing to Cadenza
 
-Thank you for your interest in contributing to FlowLang! This document provides guidelines and information for developers who want to help improve the FlowLang programming language and transpiler.
+Thank you for your interest in contributing to Cadenza! This document provides guidelines and information for developers who want to help improve the Cadenza programming language and transpiler.
 
 ## Table of Contents
 
@@ -29,12 +29,12 @@ Thank you for your interest in contributing to FlowLang! This document provides 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/your-username/flowlang.git
-   cd flowlang
+   git clone https://github.com/your-username/cadenza.git
+   cd cadenza
    ```
 3. **Set up the upstream remote**:
    ```bash
-   git remote add upstream https://github.com/original-org/flowlang.git
+   git remote add upstream https://github.com/original-org/cadenza.git
    ```
 4. **Build the project**:
    ```bash
@@ -55,7 +55,7 @@ Thank you for your interest in contributing to FlowLang! This document provides 
 ```json
 // .vscode/settings.json
 {
-    "dotnet.defaultSolution": "FlowLang.sln",
+    "dotnet.defaultSolution": "Cadenza.sln",
     "omnisharp.enableRoslynAnalyzers": true,
     "csharp.format.enable": true,
     "editor.formatOnSave": true
@@ -78,7 +78,7 @@ insert_final_newline = true
 
 ### Development Tools
 
-- **Language Server**: FlowLang syntax highlighting (future)
+- **Language Server**: Cadenza syntax highlighting (future)
 - **Debugger**: Use C# debugging for transpiler
 - **Performance Profiler**: For optimization work
 - **Git Hooks**: Pre-commit formatting and tests
@@ -88,10 +88,10 @@ insert_final_newline = true
 ### Directory Overview
 
 ```
-flowlang/
+cadenza/
 ├── src/                    # Main transpiler source code
-│   ├── flowc.cs           # Single-file transpiler implementation
-│   └── flowc.csproj       # Project configuration
+│   ├── cadenzac.cs           # Single-file transpiler implementation
+│   └── cadenzac.csproj       # Project configuration
 ├── tests/                  # Comprehensive test suite
 │   ├── unit/              # Unit tests for components
 │   ├── integration/       # End-to-end tests
@@ -105,7 +105,7 @@ flowlang/
 │   ├── migration-guide.md
 │   ├── api-reference.md
 │   └── contributing.md    # This file
-├── examples/              # Example FlowLang programs
+├── examples/              # Example Cadenza programs
 ├── roadmap/               # Development roadmap documents
 └── README.md              # Project overview
 ```
@@ -114,11 +114,11 @@ flowlang/
 
 | Component | Location | Description |
 |-----------|----------|-------------|
-| **Lexer** | `src/flowc.cs` | Tokenization (lines 164-473) |
-| **Parser** | `src/flowc.cs` | Syntax analysis (lines 479-1217) |
-| **AST** | `src/flowc.cs` | Node definitions (lines 106-158) |
-| **Code Generator** | `src/flowc.cs` | C# generation (lines 1224-1818) |
-| **CLI** | `src/flowc.cs` | Command interface (lines 1846-2386) |
+| **Lexer** | `src/cadenzac.cs` | Tokenization (lines 164-473) |
+| **Parser** | `src/cadenzac.cs` | Syntax analysis (lines 479-1217) |
+| **AST** | `src/cadenzac.cs` | Node definitions (lines 106-158) |
+| **Code Generator** | `src/cadenzac.cs` | C# generation (lines 1224-1818) |
+| **CLI** | `src/cadenzac.cs` | Command interface (lines 1846-2386) |
 
 ## Code Style Guidelines
 
@@ -139,12 +139,12 @@ flowlang/
 // ✅ Good
 public record TokenLocation(int Line, int Column);
 
-public class FlowLangLexer
+public class CadenzaLexer
 {
     private readonly string _source;
     private int _position = 0;
 
-    public FlowLangLexer(string source)
+    public CadenzaLexer(string source)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
     }
@@ -177,11 +177,11 @@ public class bad_lexer  // Wrong naming
 }
 ```
 
-### FlowLang Language Style
+### Cadenza Language Style
 
-When writing FlowLang examples or tests:
+When writing Cadenza examples or tests:
 
-```flowlang
+```cadenza
 // ✅ Good - Clear, explicit
 pure function calculateTax(amount: int, rate: int) -> int {
     return amount * rate / 100
@@ -251,7 +251,7 @@ dotnet test --filter "FullyQualifiedName~Performance"
 
 # Test CLI commands
 cd examples
-dotnet run --project ../src/flowc.csproj -- run simple.flow
+dotnet run --project ../src/cadenzac.csproj -- run simple.cdz
 ```
 
 ### 4. Submitting Your Changes
@@ -397,7 +397,7 @@ public class LexerTests
     {
         // Arrange
         var source = "\"Hello, World!\"";
-        var lexer = new FlowLangLexer(source);
+        var lexer = new CadenzaLexer(source);
 
         // Act
         var tokens = lexer.Tokenize();
@@ -413,7 +413,7 @@ public class LexerTests
     [TestCase("function", TokenType.Function, "function")]
     public void Lexer_ShouldTokenizeCorrectly(string input, TokenType expectedType, string expectedValue)
     {
-        var lexer = new FlowLangLexer(input);
+        var lexer = new CadenzaLexer(input);
         var tokens = lexer.Tokenize();
         
         Assert.That(tokens[0].Type, Is.EqualTo(expectedType));
@@ -438,7 +438,7 @@ public class TranspilationTests
             }
             """;
 
-        var transpiler = new FlowLangTranspiler();
+        var transpiler = new CadenzaTranspiler();
 
         // Act
         var csharpCode = transpiler.TranspileToCS(flowLangCode);
@@ -466,13 +466,13 @@ public class GoldenFileTests
     public async Task GoldenFile_BasicFunctions()
     {
         // Arrange
-        var inputPath = "tests/golden/inputs/basic_functions.flow";
+        var inputPath = "tests/golden/inputs/basic_functions.cdz";
         var expectedPath = "tests/golden/expected/basic_functions.cs";
         
         var inputCode = await File.ReadAllTextAsync(inputPath);
         var expectedCode = await File.ReadAllTextAsync(expectedPath);
         
-        var transpiler = new FlowLangTranspiler();
+        var transpiler = new CadenzaTranspiler();
 
         // Act
         var actualCode = transpiler.TranspileToCS(inputCode);
@@ -497,15 +497,15 @@ public class GoldenFileTests
 tests/
 ├── golden/
 │   ├── inputs/
-│   │   ├── basic_functions.flow
-│   │   ├── result_types.flow
-│   │   └── effect_system.flow
+│   │   ├── basic_functions.cdz
+│   │   ├── result_types.cdz
+│   │   └── effect_system.cdz
 │   └── expected/
 │       ├── basic_functions.cs
 │       ├── result_types.cs
 │       └── effect_system.cs
 ├── data/
-│   ├── valid_programs/      # Valid FlowLang programs
+│   ├── valid_programs/      # Valid Cadenza programs
 │   ├── invalid_programs/    # Programs that should fail
 │   └── edge_cases/         # Boundary conditions
 └── fixtures/
@@ -529,15 +529,15 @@ tests/
 
 ```csharp
 /// <summary>
-/// Transpiles FlowLang source code to C# code.
+/// Transpiles Cadenza source code to C# code.
 /// </summary>
-/// <param name="flowLangSource">The FlowLang source code to transpile</param>
+/// <param name="flowLangSource">The Cadenza source code to transpile</param>
 /// <returns>Generated C# code as a string</returns>
 /// <exception cref="LexicalException">Thrown when source contains invalid tokens</exception>
 /// <exception cref="SyntaxException">Thrown when source contains syntax errors</exception>
 /// <example>
 /// <code>
-/// var transpiler = new FlowLangTranspiler();
+/// var transpiler = new CadenzaTranspiler();
 /// var csharpCode = transpiler.TranspileToCS("pure function add(a: int, b: int) -> int { return a + b }");
 /// </code>
 /// </example>
@@ -549,13 +549,13 @@ public string TranspileToCS(string flowLangSource)
 ```markdown
 # Function Declarations
 
-Functions are the primary building blocks in FlowLang. They can be pure (no side effects) or declare explicit effects.
+Functions are the primary building blocks in Cadenza. They can be pure (no side effects) or declare explicit effects.
 
 ## Pure Functions
 
 Pure functions have no side effects and always return the same output for the same input:
 
-```flowlang
+```cadenza
 pure function add(a: int, b: int) -> int {
     return a + b
 }
@@ -565,7 +565,7 @@ pure function add(a: int, b: int) -> int {
 
 Functions can declare side effects using the `uses` keyword:
 
-```flowlang
+```cadenza
 function saveUser(name: string) uses [Database] -> Result<int, string> {
     // Implementation would save to database
     return Ok(42)
@@ -577,7 +577,7 @@ function saveUser(name: string) uses [Database] -> Result<int, string> {
 
 1. **Use markdown** for all documentation files
 2. **Include code examples** for all features
-3. **Provide both FlowLang and C#** comparisons when helpful
+3. **Provide both Cadenza and C#** comparisons when helpful
 4. **Link between related sections**
 5. **Use tables** for reference information
 6. **Include troubleshooting** for common issues
@@ -586,7 +586,7 @@ function saveUser(name: string) uses [Database] -> Result<int, string> {
 
 ### Version Numbering
 
-FlowLang follows [Semantic Versioning](https://semver.org/):
+Cadenza follows [Semantic Versioning](https://semver.org/):
 
 - **MAJOR.MINOR.PATCH** (e.g., 1.2.3)
 - **MAJOR**: Breaking language changes
@@ -638,7 +638,7 @@ FlowLang follows [Semantic Versioning](https://semver.org/):
 - Corrected module export resolution
 
 ### Deprecated
-- Legacy --input CLI mode (use 'flowc run' instead)
+- Legacy --input CLI mode (use 'cadenzac run' instead)
 
 ## [1.1.0] - 2024-02-01
 ...
@@ -712,7 +712,7 @@ Contributors are recognized through:
 4. **Test thoroughly**:
    ```bash
    dotnet test
-   dotnet run --project src/flowc.csproj -- test
+   dotnet run --project src/cadenzac.csproj -- test
    ```
 
 5. **Create pull request** when ready
@@ -775,7 +775,7 @@ When proposing language changes, consider:
 
 ## Conclusion
 
-Contributing to FlowLang is a great way to:
+Contributing to Cadenza is a great way to:
 
 - **Learn compiler construction**
 - **Improve a useful tool**
@@ -806,4 +806,4 @@ For questions about contributing, please:
 - Create a new issue for discussion
 - Join the community discussion
 
-Thank you for helping make FlowLang better!
+Thank you for helping make Cadenza better!

@@ -1,0 +1,285 @@
+// Cadenza Multi-Target Compilation Example
+// This program can be compiled to C#, Java, WebAssembly, JavaScript, and Native code
+
+// Simple function suitable for all targets
+pure function add(a: int, b: int) -> int {
+    return a + b
+}
+
+// Function with basic logic - works well across all targets
+pure function factorial(n: int) -> int {
+    if n <= 1 {
+        return 1
+    } else {
+        return n * factorial(n - 1)
+    }
+}
+
+// Function with Result types - supported by most targets
+function safeDivide(a: int, b: int) -> Result<int, string> {
+    if b == 0 {
+        return Error("Division by zero")
+    }
+    return Ok(a / b)
+}
+
+// Function with guard clauses - good for demonstrating Cadenza syntax
+function validateInput(value: int) -> Result<string, string> {
+    guard value >= 0 else {
+        return Error("Value must be non-negative")
+    }
+    
+    guard value <= 1000 else {
+        return Error("Value must be <= 1000")
+    }
+    
+    return Ok("Valid input")
+}
+
+// Function with basic effects - may have different implementations per target
+function logMessage(message: string) uses [Logging] -> Result<string, string> {
+    // In C#: Uses Microsoft.Extensions.Logging
+    // In Java: Uses SLF4J
+    // In WebAssembly: Uses console.log via JS import
+    // In JavaScript: Uses console.log
+    // In Native: Uses stdio
+    
+    return Ok($"Logged: {message}")
+}
+
+// Complex calculation function - good for performance testing across targets
+pure function calculatePi(iterations: int) -> float {
+    let pi = 0.0
+    let i = 0
+    
+    while i < iterations {
+        let term = 1.0 / (2.0 * i + 1.0)
+        if i % 2 == 0 {
+            pi = pi + term
+        } else {
+            pi = pi - term
+        }
+        i = i + 1
+    }
+    
+    return pi * 4.0
+}
+
+// String processing function - tests string handling across targets
+pure function processText(input: string) -> string {
+    let result = input.ToUpper()
+    result = result.Replace(" ", "_")
+    return $"PROCESSED_{result}"
+}
+
+// Main function - entry point for all targets
+function main() -> int {
+    // Test basic arithmetic
+    let sum = add(5, 3)
+    
+    // Test factorial
+    let fact = factorial(5)
+    
+    // Test division with error handling
+    let divResult = safeDivide(10, 2)
+    let divValue = if divResult.IsOk then divResult.Value else 0
+    
+    // Test validation
+    let validation = validateInput(42)
+    
+    // Test logging
+    let logResult = logMessage($"Sum: {sum}, Factorial: {fact}, Division: {divValue}")
+    
+    // Test Pi calculation
+    let pi = calculatePi(1000)
+    
+    // Test string processing
+    let processed = processText("Hello World")
+    
+    // Return a composite result
+    return sum + fact + divValue
+}
+
+// Additional functions for target-specific testing
+
+// Memory-intensive function - good for testing native compilation
+pure function memoryTest(size: int) -> int {
+    let array = Array.new(size)
+    let i = 0
+    let sum = 0
+    
+    while i < size {
+        array[i] = i * 2
+        sum = sum + array[i]
+        i = i + 1
+    }
+    
+    return sum
+}
+
+// Recursion test - good for stack management across targets
+pure function fibonacci(n: int) -> int {
+    if n <= 1 {
+        return n
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+// Boolean logic test - good for testing boolean representations
+pure function booleanLogic(a: bool, b: bool, c: bool) -> bool {
+    return (a && b) || (c && !a) || (!b && c)
+}
+
+// Target-specific optimizations can be applied differently:
+
+// For C# target: Can use LINQ, async/await, .NET collections
+// For Java target: Can use Streams, CompletableFuture, Java collections  
+// For WebAssembly: Limited to basic operations, manual memory management
+// For JavaScript: Can use Promise, Array methods, dynamic typing bridges
+// For Native: Can use SIMD, direct memory access, zero-cost abstractions
+
+// Performance benchmark function
+function runBenchmarks() -> Result<BenchmarkResults, string> {
+    let startTime = getCurrentTime()
+    
+    // Arithmetic benchmark
+    let arithmeticResult = 0
+    for i in 1..10000 {
+        arithmeticResult = arithmeticResult + add(i, i * 2)
+    }
+    
+    let arithmeticTime = getCurrentTime() - startTime
+    
+    // Factorial benchmark
+    let factorialStartTime = getCurrentTime()
+    let factorialResult = factorial(10)
+    let factorialTime = getCurrentTime() - factorialStartTime
+    
+    // Pi calculation benchmark
+    let piStartTime = getCurrentTime()
+    let piResult = calculatePi(100000)
+    let piTime = getCurrentTime() - piStartTime
+    
+    // String processing benchmark
+    let stringStartTime = getCurrentTime()
+    let stringResult = ""
+    for i in 1..1000 {
+        stringResult = processText($"Test string {i}")
+    }
+    let stringTime = getCurrentTime() - stringStartTime
+    
+    return Ok(BenchmarkResults {
+        arithmetic_time: arithmeticTime,
+        arithmetic_result: arithmeticResult,
+        factorial_time: factorialTime,
+        factorial_result: factorialResult,
+        pi_time: piTime,
+        pi_result: piResult,
+        string_time: stringTime
+    })
+}
+
+// Target capability testing
+function testTargetCapabilities() -> TargetCapabilities {
+    return TargetCapabilities {
+        supports_async: canUseAsync(),
+        supports_parallel: canUseParallel(),
+        supports_gc: hasGarbageCollection(),
+        supports_reflection: hasReflection(),
+        max_memory: getMaxMemory(),
+        target_name: getTargetName()
+    }
+}
+
+// Supporting types
+type BenchmarkResults {
+    arithmetic_time: int,
+    arithmetic_result: int,
+    factorial_time: int,
+    factorial_result: int,
+    pi_time: int,
+    pi_result: float,
+    string_time: int
+}
+
+type TargetCapabilities {
+    supports_async: bool,
+    supports_parallel: bool,
+    supports_gc: bool,
+    supports_reflection: bool,
+    max_memory: int,
+    target_name: string
+}
+
+// Mock implementations for platform detection
+function canUseAsync() -> bool {
+    // Implementation would vary by target
+    return true
+}
+
+function canUseParallel() -> bool {
+    return true
+}
+
+function hasGarbageCollection() -> bool {
+    return true
+}
+
+function hasReflection() -> bool {
+    return true
+}
+
+function getMaxMemory() -> int {
+    return 1024000000  // 1GB default
+}
+
+function getTargetName() -> string {
+    return "Unknown"
+}
+
+function getCurrentTime() -> int {
+    return 1000  // Mock implementation
+}
+
+// Example usage showing how to compile to different targets:
+/*
+// Command line usage:
+cadenzac compile --target csharp multi_target_example.cdz -o output/csharp/
+cadenzac compile --target java multi_target_example.cdz -o output/java/
+cadenzac compile --target wasm multi_target_example.cdz -o output/wasm/
+cadenzac compile --target javascript multi_target_example.cdz -o output/js/
+cadenzac compile --target native multi_target_example.cdz -o output/native/
+
+// Or compile to all targets at once:
+cadenzac compile --all-targets multi_target_example.cdz -o output/
+
+// Generated files:
+output/
+├── csharp/
+│   ├── Program.cs
+│   ├── Program.csproj
+│   └── CadenzaRuntime.cs
+├── java/
+│   ├── CadenzaProgram.java
+│   ├── pom.xml
+│   └── CadenzaRuntime.java
+├── wasm/
+│   ├── program.wat
+│   ├── index.html
+│   └── loader.js
+├── javascript/
+│   ├── program.js
+│   ├── package.json
+│   └── runtime.js
+└── native/
+    ├── program.cpp
+    ├── CMakeLists.txt
+    └── runtime.h
+
+// Target-specific execution:
+// C#: dotnet run --project output/csharp/Program.csproj
+// Java: cd output/java && mvn compile exec:java
+// WASM: cd output/wasm && python3 -m http.server 8000
+// JavaScript: cd output/javascript && node program.js
+// Native: cd output/native && cmake . && make && ./program
+*/

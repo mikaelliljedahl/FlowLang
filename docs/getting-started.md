@@ -1,17 +1,17 @@
-# FlowLang Getting Started Guide
+# Cadenza Getting Started Guide
 
-Welcome to FlowLang! This guide will help you get up and running with FlowLang, a backend programming language designed specifically for LLM-assisted development.
+Welcome to Cadenza! This guide will help you get up and running with Cadenza, a backend programming language designed specifically for LLM-assisted development.
 
-## What is FlowLang?
+## What is Cadenza?
 
-FlowLang is a modern backend programming language that prioritizes:
+Cadenza is a modern backend programming language that prioritizes:
 
 - **Explicitness over implicitness**: Every operation, side effect, and dependency is clearly declared
 - **One way to do things**: Minimal choices reduce LLM confusion and increase code consistency
 - **Safety by default**: Null safety, effect tracking, and comprehensive error handling built-in
 - **Self-documenting**: Code structure serves as documentation
 
-FlowLang transpiles to C#, giving you immediate access to the entire .NET ecosystem while providing a safer, more predictable programming experience.
+Cadenza transpiles to C#, giving you immediate access to the entire .NET ecosystem while providing a safer, more predictable programming experience.
 
 ## Installation
 
@@ -20,17 +20,17 @@ FlowLang transpiles to C#, giving you immediate access to the entire .NET ecosys
 1. **Install .NET 8.0+**: [Download here](https://dotnet.microsoft.com/download)
 2. **Clone and setup**:
    ```bash
-   git clone https://github.com/mikaelliljedahl/FlowLang.git
-   cd FlowLang
+   git clone https://github.com/mikaelliljedahl/Cadenza.git
+   cd Cadenza
    bash setup.sh  # Automated setup script
    ```
 3. **Add alias** (makes life easier):
    ```bash
    # For bash
-   echo 'alias flowc="$HOME/.flowc"' >> ~/.bashrc && source ~/.bashrc
+   echo 'alias cadenzac="$HOME/.cadenzac"' >> ~/.bashrc && source ~/.bashrc
    
    # For zsh  
-   echo 'alias flowc="$HOME/.flowc"' >> ~/.zshrc && source ~/.zshrc
+   echo 'alias cadenzac="$HOME/.cadenzac"' >> ~/.zshrc && source ~/.zshrc
    ```
 
 ### Manual Setup
@@ -40,20 +40,20 @@ If you prefer manual setup:
 1. **Prerequisites**: .NET 8.0+ SDK ([download](https://dotnet.microsoft.com/download))
 2. **Clone and build**:
    ```bash
-   git clone https://github.com/mikaelliljedahl/FlowLang.git
-   cd FlowLang/src
+   git clone https://github.com/mikaelliljedahl/Cadenza.git
+   cd Cadenza/src
    dotnet build
    ```
 3. **Test installation**:
    ```bash
-   dotnet run --project flowc.csproj -- --version
+   dotnet run --project cadenzac.csproj -- --version
    ```
 
 ### ✅ Verify Installation
 ```bash
 # Test with a simple file
-echo 'function main() -> string { return "Hello!" }' > test.flow
-flowc run test.flow  # Should show generated C# code
+echo 'function main() -> string { return "Hello!" }' > test.cdz
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run test.cdz  # Should show "Hello!" output
 ```
 
 ## Your First Program
@@ -63,20 +63,20 @@ flowc run test.flow  # Should show generated C# code
 **Example 1: Hello World**
 ```bash
 # Create the file
-cat > hello.flow << 'EOF'
+cat > hello.cdz << 'EOF'
 function main() -> string {
-    return "Hello, FlowLang!"
+    return "Hello, Cadenza!"
 }
 EOF
 
-# Run it
-flowc run hello.flow
+# Run it (working as of July 2025)
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run hello.cdz
 ```
 
 **Example 2: String Interpolation**
 ```bash
 # Create the file
-cat > greet.flow << 'EOF'
+cat > greet.cdz << 'EOF'
 pure function greet(name: string, age: int) -> string {
     return $"Hello {name}! You are {age} years old."
 }
@@ -86,14 +86,14 @@ function main() -> string {
 }
 EOF
 
-# Run it
-flowc run greet.flow
+# Run it (working as of July 2025)
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run greet.cdz
 ```
 
 **Example 3: Result Types (Error Handling)**
 ```bash
 # Create the file
-cat > math.flow << 'EOF'
+cat > math.cdz << 'EOF'
 function safeDivide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Cannot divide by zero")
@@ -111,26 +111,28 @@ function main() -> string {
 }
 EOF
 
-# Run it
-flowc run math.flow
+# Run it (working as of July 2025)
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run math.cdz
 ```
 
 ### 🎯 Quick Commands to Remember
 
 ```bash
-# Run any FlowLang file
-flowc run myfile.flow
+# **WORKING as of July 2025**
+# Direct compilation and execution
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --compile myfile.cdz
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run myfile.cdz
 
-# Create a new project
-flowc new my-project
+# Traditional transpilation
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- myfile.cdz myfile.cs
 
 # Get help
-flowc --help
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --help
 ```
 
 ### Generated C# Output
 
-FlowLang generates clean, readable C# code:
+Cadenza generates clean, readable C# code:
 
 ```csharp
 /// <summary>
@@ -159,7 +161,7 @@ public static string main()
 
 Pure functions have no side effects and always return the same output for the same input:
 
-```flowlang
+```cadenza
 pure function add(a: int, b: int) -> int {
     return a + b
 }
@@ -171,9 +173,9 @@ pure function multiply(x: int, y: int) -> int {
 
 ### Result Types for Error Handling
 
-FlowLang uses Result types instead of exceptions for safer error handling:
+Cadenza uses Result types instead of exceptions for safer error handling:
 
-```flowlang
+```cadenza
 function safeDivide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Cannot divide by zero")
@@ -189,9 +191,9 @@ function calculate() -> Result<int, string> {
 
 ### String Interpolation
 
-FlowLang supports modern string interpolation:
+Cadenza supports modern string interpolation:
 
-```flowlang
+```cadenza
 function formatMessage(name: string, count: int) -> string {
     return $"User {name} has {count} messages"
 }
@@ -201,7 +203,7 @@ function formatMessage(name: string, count: int) -> string {
 
 Functions can declare their side effects, making them explicit:
 
-```flowlang
+```cadenza
 function saveUser(name: string) uses [Database, Logging] -> Result<int, string> {
     // Function that uses database and logging effects
     return Ok(42)
@@ -215,9 +217,9 @@ function fetchData() uses [Network] -> Result<string, string> {
 
 ### Control Flow
 
-FlowLang provides familiar control flow with guard clauses for early returns:
+Cadenza provides familiar control flow with guard clauses for early returns:
 
-```flowlang
+```cadenza
 function processUser(name: string, age: int) -> Result<string, string> {
     guard name != "" else {
         return Error("Name cannot be empty")
@@ -237,9 +239,9 @@ function processUser(name: string, age: int) -> Result<string, string> {
 
 ### Specification Blocks - Preserving Intent
 
-FlowLang allows you to embed specifications directly with your code, creating an atomic link between intent and implementation:
+Cadenza allows you to embed specifications directly with your code, creating an atomic link between intent and implementation:
 
-```flowlang
+```cadenza
 /*spec
 intent: "Process user registration with comprehensive validation"
 rules:
@@ -283,47 +285,48 @@ function registerUser(name: string, age: int, email: string)
 
 ### Using the CLI
 
-FlowLang provides a comprehensive CLI for project management:
+Cadenza provides a comprehensive CLI for project management:
 
 ```bash
-# Create a new project
-dotnet run --project src/flowc.csproj -- new my-awesome-app
-cd my-awesome-app
+# **WORKING as of July 2025**
+# Direct compilation and execution
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --compile my-awesome-app.cdz
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run my-awesome-app.cdz
 
-# Build the project
-dotnet run --project ../src/flowc.csproj -- build
+# Traditional transpilation
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- my-awesome-app.cdz my-awesome-app.cs
 
-# Run tests
-dotnet run --project ../src/flowc.csproj -- test
-
-# Run a specific file
-dotnet run --project ../src/flowc.csproj -- run examples/hello.flow
+# **NOT YET IMPLEMENTED** (Phase 5 - Self-hosting migration)
+# These commands will be available after .cdz tools are tested and fixed:
+# cadenzac new my-awesome-app
+# cadenzac build  
+# cadenzac test
 ```
 
 ### Project Structure
 
-A FlowLang project has this structure:
+A Cadenza project has this structure:
 
 ```
 my-awesome-app/
-├── flowc.json          # Project configuration
+├── cadenzac.json          # Project configuration
 ├── src/
-│   └── main.flow       # Main source files
+│   └── main.cdz       # Main source files
 ├── examples/
-│   └── hello.flow      # Example files
+│   └── hello.cdz      # Example files
 ├── tests/
-│   └── basic_test.flow # Test files
+│   └── basic_test.cdz # Test files
 ├── .gitignore
 └── README.md
 ```
 
-### Project Configuration (flowc.json)
+### Project Configuration (cadenzac.json)
 
 ```json
 {
   "Name": "my-awesome-app",
   "Version": "1.0.0",
-  "Description": "A FlowLang project",
+  "Description": "A Cadenza project",
   "Build": {
     "Source": "src/",
     "Output": "build/",
@@ -335,12 +338,12 @@ my-awesome-app/
 
 ## Module System
 
-FlowLang supports a comprehensive module system for organizing code:
+Cadenza supports a comprehensive module system for organizing code:
 
 ### Creating Modules
 
-**math_utils.flow**:
-```flowlang
+**math_utils.cdz**:
+```cadenza
 module MathUtils {
     pure function add(a: int, b: int) -> int {
         return a + b
@@ -356,7 +359,7 @@ module MathUtils {
 
 ### Using Modules
 
-```flowlang
+```cadenza
 import MathUtils.{add, multiply}  // Selective import
 import MathUtils.*                // Wildcard import
 
@@ -371,7 +374,7 @@ function calculate() -> int {
 
 ### 1. Use Pure Functions When Possible
 
-```flowlang
+```cadenza
 // ✅ Good - Pure function
 pure function calculateTax(amount: int, rate: int) -> int {
     return amount * rate / 100
@@ -385,7 +388,7 @@ function calculateTax(amount: int, rate: int) uses [Memory] -> int {
 
 ### 2. Handle Errors with Result Types
 
-```flowlang
+```cadenza
 // ✅ Good - Explicit error handling
 function parseNumber(input: string) -> Result<int, string> {
     if input == "" {
@@ -404,7 +407,7 @@ function parseNumber(input: string) -> int {
 
 ### 3. Use Guard Clauses for Validation
 
-```flowlang
+```cadenza
 // ✅ Good - Clear validation with guards
 function processUser(name: string, age: int) -> Result<string, string> {
     guard name != "" else {
@@ -421,7 +424,7 @@ function processUser(name: string, age: int) -> Result<string, string> {
 
 ### 4. Be Explicit About Effects
 
-```flowlang
+```cadenza
 // ✅ Good - Effects declared
 function saveUserData(user: string) uses [Database, Logging] -> Result<int, string> {
     // Clear what side effects this function has
@@ -435,7 +438,7 @@ function saveUserData(user: string) uses [Database, Logging] -> Result<int, stri
 
 Use the `?` operator to propagate errors up the call stack:
 
-```flowlang
+```cadenza
 function complexOperation() -> Result<int, string> {
     let step1 = validateInput("data")?
     let step2 = processData(step1)?
@@ -448,7 +451,7 @@ function complexOperation() -> Result<int, string> {
 
 Functions can call other functions with effects, and their effects combine:
 
-```flowlang
+```cadenza
 function logMessage(msg: string) uses [Logging] -> Result<string, string> {
     return Ok(msg)
 }
@@ -471,7 +474,7 @@ function processRequest(data: string)
 
 Organize related functions into modules:
 
-```flowlang
+```cadenza
 module UserService {
     function createUser(name: string) uses [Database] -> Result<int, string> {
         return Ok(42)
@@ -487,27 +490,28 @@ module UserService {
 
 ## Next Steps
 
-Now that you have FlowLang up and running:
+Now that you have Cadenza up and running:
 
-1. **Explore the Examples**: Check out the `examples/` directory, especially `specification_example.flow` to see how specification blocks preserve intent with code
+1. **Explore the Examples**: Check out the `examples/` directory, especially `specification_example.cdz` to see how specification blocks preserve intent with code
 2. **Read the Language Reference**: See `docs/language-reference.md` for complete syntax documentation
-3. **Try the CLI**: Experiment with `flowc new`, `build`, `run`, and `test` commands
-4. **Learn About Effects**: Understand FlowLang's effect system in `docs/examples/effect-system.md`
+3. **Try Direct Compilation**: Experiment with `--compile` and `--run` commands (working as of July 2025)
+4. **Learn About Effects**: Understand Cadenza's effect system in `docs/examples/effect-system.md`
 5. **Migration Guide**: If you're coming from C#, see `docs/migration-guide.md`
+6. **Phase 5 Development**: Follow the self-hosting migration progress in `NEXT_SPRINT_PLAN.md`
 
 ## Getting Help
 
 - **Documentation**: Check the `docs/` directory for comprehensive guides
 - **Examples**: Look at working examples in the `examples/` directory  
-- **CLI Help**: Run `dotnet run --project src/flowc.csproj -- help` for command help
+- **CLI Help**: Run `dotnet run --project src/cadenzac.csproj -- help` for command help
 - **Troubleshooting**: See `docs/troubleshooting.md` for common issues
 
 ## Resources
 
 - [Language Reference](language-reference.md) - Complete syntax and features
 - [CLI Reference](cli-reference.md) - All available commands and options
-- [Migration Guide](migration-guide.md) - Moving from C# to FlowLang
+- [Migration Guide](migration-guide.md) - Moving from C# to Cadenza
 - [Examples](examples/) - Working code examples
-- [Contributing](contributing.md) - How to contribute to FlowLang
+- [Contributing](contributing.md) - How to contribute to Cadenza
 
-Welcome to FlowLang! Happy coding! 🚀
+Welcome to Cadenza! Happy coding! 🚀

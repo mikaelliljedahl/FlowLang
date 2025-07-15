@@ -1,4 +1,4 @@
-# FlowLang Development Session Handoff 🚀
+# Cadenza Development Session Handoff 🚀
 
 ## Major Accomplishments This Session
 
@@ -20,7 +20,7 @@
 
 - **JavaScript Generator (`src/targets/JavaScriptGenerator.cs:1-573`)**: React output
   - Generates React components with hooks
-  - npm package.json, HTML templates, FlowLang runtime
+  - npm package.json, HTML templates, Cadenza runtime
   - Type-safe API clients, state management classes
 
 - **Native Generator (`src/targets/NativeGenerator.cs:1-574`)**: C++ high-performance
@@ -29,9 +29,9 @@
   - Memory arena allocation, effect tracking
 
 - **Enhanced CLI (`src/Program.cs:13-485`)**: Multi-target commands
-  - `flowc compile --target javascript/java/wasm/native`
-  - `flowc new --template ui/fullstack` project templates
-  - `flowc targets` command, auto-target detection
+  - `cadenzac compile --target javascript/java/wasm/native`
+  - `cadenzac new --template ui/fullstack` project templates
+  - `cadenzac targets` command, auto-target detection
 
 **📚 Complete Documentation:**
 - **UI Components Guide** (`docs/ui-components.md`): 1063 lines of LLM-optimized examples
@@ -40,9 +40,9 @@
 - **Next Phase Roadmap** (`docs/roadmap-next-phase.md`): Detailed implementation plan
 
 **🧪 Working Examples:**
-- **Complete E-Commerce App** (`examples/ui_components_example.flow`): 588 lines
-- **Simple UI Test** (`examples/simple_ui_test.flow`): Basic component compilation
-- **Multi-Target Example** (`examples/multi_target_example.flow`): Cross-platform code
+- **Complete E-Commerce App** (`examples/ui_components_example.cdz`): 588 lines
+- **Simple UI Test** (`examples/simple_ui_test.cdz`): Basic component compilation
+- **Multi-Target Example** (`examples/multi_target_example.cdz`): Cross-platform code
 
 ## Current Implementation Status
 
@@ -59,7 +59,7 @@
 1. **Development Server with Hot Reload** - In progress
    - File watching, WebSocket-based reload
    - Compilation error overlay, static file serving
-   - Integration with `flowc dev` command
+   - Integration with `cadenzac dev` command
 
 2. **Advanced Parser Features** - Needs completion
    - Conditional rendering (`if/else` in render blocks)
@@ -86,7 +86,7 @@
 - Unified Result types and effect system across all targets
 
 ### **Component System Design:**
-```flowlang
+```cadenza
 component ComponentName(parameters) 
     uses [effects]           // LLMs see all side effects
     state [state_vars]       // LLMs see all state
@@ -120,9 +120,9 @@ component ComponentName(parameters)
 - `docs/roadmap-next-phase.md` - NEW: Detailed next phase plan (437 lines)
 
 ### **Examples:**
-- `examples/ui_components_example.flow` - NEW: Complete e-commerce app (588 lines)
-- `examples/simple_ui_test.flow` - NEW: Basic component test (30 lines)
-- `examples/multi_target_example.flow` - Updated with UI capabilities
+- `examples/ui_components_example.cdz` - NEW: Complete e-commerce app (588 lines)
+- `examples/simple_ui_test.cdz` - NEW: Basic component test (30 lines)
+- `examples/multi_target_example.cdz` - Updated with UI capabilities
 
 ## Testing Status
 
@@ -141,7 +141,7 @@ component ComponentName(parameters)
 ## Next Session Priorities
 
 ### **Immediate (Week 1):**
-1. **Complete Development Server** (`flowc dev` command)
+1. **Complete Development Server** (`cadenzac dev` command)
    - File watching with chokidar/filesystem watcher
    - WebSocket-based hot reload
    - Compilation error overlay
@@ -160,7 +160,7 @@ component ComponentName(parameters)
    - Component composition and props passing
 
 ### **Medium Term (Week 2-3):**
-1. **CSS-in-FlowLang System**
+1. **CSS-in-Cadenza System**
 2. **Animation Framework**
 3. **Form Validation System**
 4. **Real-Time WebSocket Integration**
@@ -181,7 +181,7 @@ component ComponentName(parameters)
 
 ## Critical Context for Next Session
 
-**FlowLang is now the first language designed specifically for LLM-assisted full-stack development** with:
+**Cadenza is now the first language designed specifically for LLM-assisted full-stack development** with:
 - Maximum explicitness at every level
 - Predictable patterns for reliable AI code generation  
 - Complete type safety from backend to frontend

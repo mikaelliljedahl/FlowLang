@@ -1,34 +1,34 @@
-# FlowLang String Literals Implementation Summary
+# Cadenza String Literals Implementation Summary
 
 ## Overview
-Successfully implemented comprehensive string literal support for FlowLang based on the roadmap specification in `/mnt/c/code/LlmLang/roadmap/02-string-literals.md`.
+Successfully implemented comprehensive string literal support for Cadenza based on the roadmap specification in `/mnt/c/code/LlmLang/roadmap/02-string-literals.md`.
 
 ## Features Implemented
 
 ### 1. Basic String Literals
-- **FlowLang Syntax**: `"Hello, world!"`
+- **Cadenza Syntax**: `"Hello, world!"`
 - **Generated C#**: `"Hello, world!"`
 - **Status**: ✅ Complete
 
 ### 2. Escape Sequences
 - **Supported Sequences**: `\"`, `\\`, `\n`, `\t`, `\r`
-- **FlowLang Example**: `"Line 1\nLine 2"`
+- **Cadenza Example**: `"Line 1\nLine 2"`
 - **Generated C#**: Properly escaped C# string literals
 - **Status**: ✅ Complete
 
 ### 3. String Concatenation
-- **FlowLang Syntax**: `"Hello, " + name + "!"`
+- **Cadenza Syntax**: `"Hello, " + name + "!"`
 - **Generated C#**: `"Hello, " + name + "!"`
 - **Status**: ✅ Complete
 
 ### 4. String Interpolation
-- **FlowLang Syntax**: `$"User {user} has {count} items"`
+- **Cadenza Syntax**: `$"User {user} has {count} items"`
 - **Generated C#**: `string.Format("User {0} has {1} items", user, count)`
 - **Status**: ✅ Complete
 
 ## Implementation Details
 
-### Lexer Changes (`/mnt/c/code/LlmLang/src/flowc.cs`)
+### Lexer Changes (`/mnt/c/code/LlmLang/src/cadenzac.cs`)
 1. **Added TokenType**: `StringInterpolation` for `$"..."` syntax
 2. **Enhanced ReadString()**: Now handles escape sequences (`\"`, `\\`, `\n`, `\t`, `\r`)
 3. **Added ReadStringInterpolation()**: Tokenizes string interpolation literals
@@ -44,8 +44,8 @@ Successfully implemented comprehensive string literal support for FlowLang based
 2. **Added GenerateStringInterpolation()**: Generates `string.Format()` calls
 3. **Maintained string concatenation**: Uses C# `+` operator for concatenation
 
-## Example FlowLang Code
-```flowlang
+## Example Cadenza Code
+```cadenza
 function greet(name: string) -> string {
     return "Hello, " + name + "!"
 }
@@ -79,7 +79,7 @@ public static string get_error_message()
 
 ## Testing
 - **Manual Verification**: Created and ran manual C# test (`manual_string_test.cs`)
-- **Example Files**: Created comprehensive examples (`string_examples.flow`)
+- **Example Files**: Created comprehensive examples (`string_examples.cdz`)
 - **All Features Tested**: Basic literals, escape sequences, concatenation, interpolation
 
 ## Success Criteria Met
@@ -91,11 +91,11 @@ public static string get_error_message()
 ✅ **Works with existing Result types**: Compatible with error handling  
 
 ## Files Modified
-- `/mnt/c/code/LlmLang/src/flowc.cs` - Main transpiler implementation
+- `/mnt/c/code/LlmLang/src/cadenzac.cs` - Main transpiler implementation
 
 ## Files Created
-- `/mnt/c/code/LlmLang/examples/string_examples.flow` - Comprehensive examples
-- `/mnt/c/code/LlmLang/test_result/simple_string_test.flow` - Simple test case
+- `/mnt/c/code/LlmLang/examples/string_examples.cdz` - Comprehensive examples
+- `/mnt/c/code/LlmLang/test_result/simple_string_test.cdz` - Simple test case
 - `/mnt/c/code/LlmLang/test_result/manual_string_test.cs` - Manual verification
 
 ## Technical Notes

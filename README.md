@@ -1,8 +1,8 @@
-# FlowLang 🚀
+# Cadenza 🚀
 
 **A backend programming language designed specifically for LLM-assisted development**
 
-FlowLang prioritizes explicitness, predictability, and safety while transpiling to clean C# code. It's designed to be the ideal partner for AI coding assistants.
+Cadenza prioritizes explicitness, predictability, and safety while transpiling to clean C# code. It's designed to be the ideal partner for AI coding assistants.
 
 ## ⚡ Quick Start
 
@@ -12,14 +12,14 @@ FlowLang prioritizes explicitness, predictability, and safety while transpiling 
 
 ### 2. Clone and Build
 ```bash
-git clone https://github.com/mikaelliljedahl/FlowLang.git
-cd FlowLang
+git clone https://github.com/mikaelliljedahl/Cadenza.git
+cd Cadenza
 cd src && dotnet build
 ```
 
 ### 3. Your First Program
-Create `hello.flow`:
-```flowlang
+Create `hello.cdz`:
+```cadenza
 pure function greet(name: string) -> string {
     return $"Hello, {name}!"
 }
@@ -31,20 +31,25 @@ function main() -> string {
 
 ### 4. Run It
 ```bash
-# Quick transpilation (from FlowLang root directory)
-dotnet run --project src/FlowLang.Core/flowc-core.csproj -- hello.flow hello.cs
+# **WORKING: Direct compilation (Phase 4 - July 2025)**
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --compile hello.cdz
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run hello.cdz
+
+# **WORKING: Traditional transpilation**
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- hello.cdz hello.cs
 dotnet run hello.cs
 
-# Or use the simple flowc script:
-./flowc hello.flow
-flowc run hello.flow
+# **WORKING: Standalone executable**
+dotnet publish src/Cadenza.Core/cadenzac-core.csproj -c Release -o bin/release
+./bin/release/cadenzac-core --compile hello.cdz
+./bin/release/cadenzac-core --run hello.cdz
 ```
 
 ## 🔥 Core Features
 
-### Multi-Module System - Working as of December 2024! 🎉
-```flowlang
-// math.flow
+### Multi-Module System - Working as of July 2025! 🎉
+```cadenza
+// math.cdz
 module Math {
     pure function add(a: int, b: int) -> int {
         return a + b
@@ -57,18 +62,18 @@ module Math {
     export { add, multiply }
 }
 
-// main.flow
+// main.cdz
 import Math.{add, multiply}
 
 function main() -> int {
-    let result = add(5, 3)      // Resolves to FlowLang.Modules.Math.Math.add(5, 3)
+    let result = add(5, 3)      // Resolves to Cadenza.Modules.Math.Math.add(5, 3)
     let product = multiply(result, 2)  // Qualified namespace calls work!
     return product
 }
 ```
 
 ### Specification Blocks - Intent Preserved with Code
-```flowlang
+```cadenza
 /*spec
 intent: "Validate user data and calculate applicable tax rate"
 rules:
@@ -87,7 +92,7 @@ function calculateTax(age: int, location: string) -> Result<float, string> {
 ```
 
 ### Result Types - No More Exceptions
-```flowlang
+```cadenza
 function safeDivide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")
@@ -102,7 +107,7 @@ function calculate() -> Result<int, string> {
 ```
 
 ### Effect System - Explicit Side Effects
-```flowlang
+```cadenza
 // Pure function - no side effects
 pure function add(a: int, b: int) -> int {
     return a + b
@@ -117,14 +122,14 @@ function saveUser(name: string) uses [Database, Logging] -> Result<string, strin
 ```
 
 ### String Interpolation
-```flowlang
+```cadenza
 function welcome(name: string, age: int) -> string {
     return $"Welcome {name}! You are {age} years old."
 }
 ```
 
 ### Guard Clauses
-```flowlang
+```cadenza
 function validateAge(age: int) -> Result<string, string> {
     guard age >= 0 else {
         return Error("Age cannot be negative")
@@ -136,36 +141,46 @@ function validateAge(age: int) -> Result<string, string> {
 }
 ```
 
-## 📚 Common Commands
+## 📚 Current Implementation Status
 
+### ✅ **WORKING** (Phase 4 - July 2025)
 ```bash
-# Create new project
-flowc new my-project
+# **Direct compilation and execution**
+./bin/release/cadenzac-core --compile hello.cdz                 # → hello.exe
+./bin/release/cadenzac-core --run hello.cdz                     # Compile + run
+./bin/release/cadenzac-core --library utils.cdz                 # → utils.dll
 
-# Build project
-flowc build
+# **Traditional transpilation**
+./bin/release/cadenzac-core hello.cdz hello.cs                  # → C# source
+./bin/release/cadenzac-core --target javascript hello.cdz       # → JavaScript (basic)
+./bin/release/cadenzac-core --target blazor ui-component.cdz    # → Blazor component (NEW!)
 
-# Run single file (shows generated C#)
-flowc run examples/simple.flow
-
-# See specification blocks in action
-flowc run examples/specification_example.flow
-
-# Run tests
-flowc test
-
-# Static analysis/linting
-flowc lint
-
-# Security audit
-flowc audit
-
-# Get help
-flowc --help
-flowc help <command>
+# **Multi-module compilation**
+./bin/release/cadenzac-core --compile main.cdz                  # With imports working
 ```
 
-## 🎯 Why FlowLang?
+### ❌ **NOT WORKING** (Phase 5 - Self-Hosting Migration)
+```bash
+# **These .cdz tools exist but don't compile:**
+# - src/Cadenza.Tools/linter.cdz (298 lines)
+# - src/Cadenza.Tools/dev-server.cdz (66 lines)  
+# - src/Cadenza.Tools/simple-dev-server.cdz (165 lines)
+# Issue: Cadenza.Runtime bridge incomplete, syntax incompatibilities
+
+# **These C# tools exist but aren't integrated:**
+# - src/Cadenza.Analysis/ (8 files) - no .csproj
+# - src/Cadenza.LSP/ (6 files) - no .csproj
+# - src/Cadenza.Package/ (6 files) - no .csproj
+# Issue: Incomplete implementations, never tested
+
+# **Missing entirely:**
+# - Frontend/UI code generation (Blazor target planned)
+# - Package management (cadenzac add, cadenzac install)
+# - LSP server for IDE integration
+# - Comprehensive linting and analysis
+```
+
+## 🎯 Why Cadenza?
 
 **The Problem with LLMs and Traditional Languages:**
 - Multiple ways to do the same thing confuse AI
@@ -173,7 +188,7 @@ flowc help <command>
 - Implicit error handling leads to runtime crashes
 - Complex syntax requires constant context switching
 
-**FlowLang's Solution:**
+**Cadenza's Solution:**
 - ✅ **One way to do things** - reduces AI confusion
 - ✅ **Explicit effects** - `uses [Database, Network]` declares side effects
 - ✅ **Safe error handling** - Result types prevent crashes
@@ -188,23 +203,23 @@ flowc help <command>
 - **[setup.sh](setup.sh)** - One-command installation
 
 ### 🤖 For LLMs and AI
-- **[EXAMPLES_FOR_LLMS.md](EXAMPLES_FOR_LLMS.md)** - Shows why FlowLang is LLM-friendly
+- **[EXAMPLES_FOR_LLMS.md](EXAMPLES_FOR_LLMS.md)** - Shows why Cadenza is LLM-friendly
 - **[SYNTAX_CHEAT_SHEET.md](SYNTAX_CHEAT_SHEET.md)** - Perfect LLM reference
 
 ### 📖 Comprehensive Guides
 1. **[Getting Started Guide](docs/getting-started.md)** - Detailed installation and first steps
 2. **[Language Reference](docs/language-reference.md)** - Complete language documentation
-3. **[Transpiler Architecture](docs/transpiler-architecture.md)** - How FlowLang uses Roslyn to generate C# code
-4. **[Examples](docs/examples/)** - [Basic Syntax](docs/examples/basic-syntax.md) | [Result Types](docs/examples/result-types.md) | [Effect System](docs/examples/effect-system.md) | [Specification Blocks](examples/specification_example.flow)
+3. **[Transpiler Architecture](docs/transpiler-architecture.md)** - How Cadenza uses Roslyn to generate C# code
+4. **[Examples](docs/examples/)** - [Basic Syntax](docs/examples/basic-syntax.md) | [Result Types](docs/examples/result-types.md) | [Effect System](docs/examples/effect-system.md) | [Specification Blocks](examples/specification_example.cdz)
 5. **[Tools](docs/)** - [CLI Reference](docs/cli-reference.md) | [LSP Integration](docs/lsp-integration.md) | [Package Manager](docs/package-manager.md)
 
 ## 🔧 IDE Integration
 
-FlowLang includes a Language Server Protocol (LSP) implementation for rich IDE support:
+Cadenza includes a Language Server Protocol (LSP) implementation for rich IDE support:
 
 ```bash
 # Start LSP server for VS Code, JetBrains, etc.
-flowc lsp
+cadenzac lsp
 ```
 
 Features:
@@ -216,12 +231,12 @@ Features:
 
 See [LSP Integration Guide](docs/lsp-integration.md) for setup instructions.
 
-## 🏗️ What FlowLang Generates
+## 🏗️ What Cadenza Generates
 
-FlowLang transpiles to clean, idiomatic C#:
+Cadenza transpiles to clean, idiomatic C#:
 
-**FlowLang Input:**
-```flowlang
+**Cadenza Input:**
+```cadenza
 function processUser(id: string) uses [Database] -> Result<User, string> {
     let user = database_get_user(id)?
     return Ok(user)
@@ -245,18 +260,18 @@ public static Result<User, string> processUser(string id)
 
 ## 📦 Package Management
 
-FlowLang integrates seamlessly with the .NET ecosystem:
+Cadenza integrates seamlessly with the .NET ecosystem:
 
 ```bash
 # Add NuGet packages with automatic effect inference
-flowc add Newtonsoft.Json
-flowc add Microsoft.EntityFrameworkCore
+cadenzac add Newtonsoft.Json
+cadenzac add Microsoft.EntityFrameworkCore
 
 # Install dependencies
-flowc install
+cadenzac install
 
 # Security audit
-flowc audit
+cadenzac audit
 ```
 
 ## 🤝 Contributing
@@ -277,16 +292,16 @@ We welcome contributions! See [Contributing Guide](docs/contributing.md) for:
 ## 🆘 Need Help?
 
 - 📖 **Documentation:** [docs/](docs/)
-- 💬 **Issues:** [GitHub Issues](https://github.com/mikaelliljedahl/FlowLang/issues)
+- 💬 **Issues:** [GitHub Issues](https://github.com/mikaelliljedahl/Cadenza/issues)
 - 🐛 **Bug Reports:** Use the issue template
 - 💡 **Feature Requests:** Discussions tab
 
 ## ⚖️ License
 
-[MIT License](LICENSE) - feel free to use FlowLang in your projects!
+[MIT License](LICENSE) - feel free to use Cadenza in your projects!
 
 ---
 
-**Happy coding with FlowLang!** 🎉
+**Happy coding with Cadenza!** 🎉
 
 *Designed for humans, optimized for AI* ⚡

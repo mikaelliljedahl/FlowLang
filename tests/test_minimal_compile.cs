@@ -5,34 +5,34 @@ class MinimalTest
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("Testing minimal FlowLang compilation...");
+        Console.WriteLine("Testing minimal Cadenza compilation...");
         
         // Check if a file was provided as argument
         string flowCode;
         if (args.Length > 0 && File.Exists(args[0]))
         {
             flowCode = File.ReadAllText(args[0]);
-            Console.WriteLine($"Reading FlowLang code from: {args[0]}");
+            Console.WriteLine($"Reading Cadenza code from: {args[0]}");
         }
         else
         {
-            // Simple FlowLang code
+            // Simple Cadenza code
             flowCode = @"
 function test(a: int) -> int {
     return a
 }";
-            Console.WriteLine("Using default FlowLang code");
+            Console.WriteLine("Using default Cadenza code");
         }
 
         try 
         {
             // Test lexer
-            var lexer = new FlowLangLexer(flowCode);
+            var lexer = new CadenzaLexer(flowCode);
             var tokens = lexer.Tokenize();
             Console.WriteLine($"Lexer: Generated {tokens.Count} tokens");
             
             // Test parser  
-            var parser = new FlowLangParser(tokens);
+            var parser = new CadenzaParser(tokens);
             var ast = parser.Parse();
             Console.WriteLine($"Parser: Generated AST with {ast.Statements.Count} statements");
             

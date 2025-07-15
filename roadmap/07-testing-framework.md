@@ -1,7 +1,7 @@
 # Testing Framework Implementation
 
 ## Overview
-Create a comprehensive testing framework for the FlowLang transpiler with unit tests, integration tests, and golden file tests.
+Create a comprehensive testing framework for the Cadenza transpiler with unit tests, integration tests, and golden file tests.
 
 ## Goals
 - Add unit tests for lexer, parser, and code generator
@@ -49,7 +49,7 @@ tests/
 [Test]
 public void Lexer_ShouldTokenizeFunction()
 {
-    var lexer = new FlowLangLexer("function test() -> int");
+    var lexer = new CadenzaLexer("function test() -> int");
     var tokens = lexer.Tokenize();
     
     Assert.AreEqual(TokenType.Function, tokens[0].Type);
@@ -61,7 +61,7 @@ public void Lexer_ShouldTokenizeFunction()
 public void Parser_ShouldParseFunctionDeclaration()
 {
     var tokens = new List<Token> { /* ... */ };
-    var parser = new FlowLangParser(tokens);
+    var parser = new CadenzaParser(tokens);
     var ast = parser.Parse();
     
     Assert.IsInstanceOf<FunctionDeclaration>(ast.Statements[0]);
@@ -74,7 +74,7 @@ public void Parser_ShouldParseFunctionDeclaration()
 public void Transpiler_ShouldTranspileSimpleFunction()
 {
     var input = "function add(a: int, b: int) -> int { return a + b }";
-    var transpiler = new FlowLangTranspiler();
+    var transpiler = new CadenzaTranspiler();
     var output = transpiler.TranspileToCS(input);
     
     Assert.Contains("public static int add(int a, int b)", output);
@@ -87,10 +87,10 @@ public void Transpiler_ShouldTranspileSimpleFunction()
 [Test]
 public void GoldenFile_BasicFunctions()
 {
-    var inputFile = "tests/golden/inputs/basic_functions.flow";
+    var inputFile = "tests/golden/inputs/basic_functions.cdz";
     var expectedFile = "tests/golden/expected/basic_functions.cs";
     
-    var transpiler = new FlowLangTranspiler();
+    var transpiler = new CadenzaTranspiler();
     var input = File.ReadAllText(inputFile);
     var actual = transpiler.TranspileToCS(input);
     var expected = File.ReadAllText(expectedFile);
@@ -101,8 +101,8 @@ public void GoldenFile_BasicFunctions()
 
 ## Test Data Examples
 
-### Golden File Input (basic_functions.flow)
-```flowlang
+### Golden File Input (basic_functions.cdz)
+```cadenza
 function add(a: int, b: int) -> int {
     return a + b
 }

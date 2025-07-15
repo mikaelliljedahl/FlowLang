@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FlowLang.Analysis;
+using Cadenza.Analysis;
 using Xunit;
 
-namespace FlowLang.Tests.Unit.Analysis;
+namespace Cadenza.Tests.Unit.Analysis;
 
 public class EffectAnalyzerTests
 {
@@ -26,7 +26,7 @@ public class EffectAnalyzerTests
         });
 
         // Act
-        var diagnostics = rule.Analyze(ast, "test.flow", "pure function badPure() uses [Database] -> int {}").ToList();
+        var diagnostics = rule.Analyze(ast, "test.cdz", "pure function badPure() uses [Database] -> int {}").ToList();
 
         // Assert
         Assert.Single(diagnostics);
@@ -53,7 +53,7 @@ public class EffectAnalyzerTests
         });
 
         // Act
-        var diagnostics = rule.Analyze(ast, "test.flow", "pure function goodPure() -> int {}").ToList();
+        var diagnostics = rule.Analyze(ast, "test.cdz", "pure function goodPure() -> int {}").ToList();
 
         // Assert
         Assert.Empty(diagnostics);
@@ -82,7 +82,7 @@ public class EffectAnalyzerTests
         });
 
         // Act
-        var diagnostics = rule.Analyze(ast, "test.flow", 
+        var diagnostics = rule.Analyze(ast, "test.cdz", 
             "function testFunction() -> int { database_query() return 42 }").ToList();
 
         // Assert
@@ -114,7 +114,7 @@ public class EffectAnalyzerTests
         });
 
         // Act
-        var diagnostics = rule.Analyze(ast, "test.flow", 
+        var diagnostics = rule.Analyze(ast, "test.cdz", 
             "function testFunction() uses [Database, Network] -> int { return 42 }").ToList();
 
         // Assert
@@ -154,7 +154,7 @@ public class EffectAnalyzerTests
         var ast = new Program(new List<ASTNode> { dbFunction, callerFunction });
 
         // Act
-        var diagnostics = rule.Analyze(ast, "test.flow", "test source").ToList();
+        var diagnostics = rule.Analyze(ast, "test.cdz", "test source").ToList();
 
         // Assert
         Assert.Single(diagnostics);
@@ -194,7 +194,7 @@ public class EffectAnalyzerTests
         var ast = new Program(new List<ASTNode> { effectFunction, pureFunction });
 
         // Act
-        var diagnostics = rule.Analyze(ast, "test.flow", "test source").ToList();
+        var diagnostics = rule.Analyze(ast, "test.cdz", "test source").ToList();
 
         // Assert
         Assert.Single(diagnostics);
@@ -232,7 +232,7 @@ public class EffectAnalyzerTests
         var ast = new Program(new List<ASTNode> { dbFunction, callerFunction });
 
         // Act
-        var diagnostics = rule.Analyze(ast, "test.flow", "test source").ToList();
+        var diagnostics = rule.Analyze(ast, "test.cdz", "test source").ToList();
 
         // Assert
         Assert.Empty(diagnostics);
@@ -284,7 +284,7 @@ public class EffectAnalyzerTests
         });
 
         // Act
-        var diagnostics = rule.Analyze(ast, "test.flow", $"function testFunction() -> int {{ {functionName}() return 42 }}").ToList();
+        var diagnostics = rule.Analyze(ast, "test.cdz", $"function testFunction() -> int {{ {functionName}() return 42 }}").ToList();
 
         // Assert
         Assert.Single(diagnostics);

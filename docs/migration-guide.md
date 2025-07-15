@@ -1,6 +1,6 @@
-# C# to FlowLang Migration Guide
+# C# to Cadenza Migration Guide
 
-This guide helps C# developers understand FlowLang concepts and migrate existing C# code to FlowLang. FlowLang transpiles to C#, so you keep all the benefits of the .NET ecosystem while gaining FlowLang's safety and explicitness features.
+This guide helps C# developers understand Cadenza concepts and migrate existing C# code to Cadenza. Cadenza transpiles to C#, so you keep all the benefits of the .NET ecosystem while gaining Cadenza's safety and explicitness features.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ This guide helps C# developers understand FlowLang concepts and migrate existing
 
 ## Key Differences Overview
 
-| Aspect | C# | FlowLang |
+| Aspect | C# | Cadenza |
 |--------|----|---------| 
 | **Error Handling** | Exceptions | Result types |
 | **Side Effects** | Implicit | Explicit effect system |
@@ -46,8 +46,8 @@ public static string Greet(string name)
 }
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 pure function add(a: int, b: int) -> int {
     return a + b
 }
@@ -66,8 +66,8 @@ var message = "Hello";
 var result = CalculateValue();
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 let x = 42
 let message = "Hello"
 let result = calculateValue()
@@ -81,8 +81,8 @@ var sum = Add(5, 3);
 var greeting = Greet("Alice");
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 let sum = add(5, 3)
 let greeting = greet("Alice")
 ```
@@ -115,8 +115,8 @@ public static void ProcessData()
 }
 ```
 
-**FlowLang (Result-based):**
-```flowlang
+**Cadenza (Result-based):**
+```cadenza
 function divide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")
@@ -150,8 +150,8 @@ public static int ComplexCalculation(int x, int y, int z)
 }
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 function complexCalculation(x: int, y: int, z: int) -> Result<int, string> {
     let step1 = divide(x, y)?
     let step2 = divide(step1, z)?
@@ -163,13 +163,13 @@ function complexCalculation(x: int, y: int, z: int) -> Result<int, string> {
 
 ### Basic Types
 
-| C# Type | FlowLang Type | Notes |
+| C# Type | Cadenza Type | Notes |
 |---------|---------------|-------|
 | `int` | `int` | Same |
 | `string` | `string` | Same |
 | `bool` | `bool` | Same |
 | `void` | No equivalent | Use Result types or explicit returns |
-| `T?` | Not needed | No nulls in FlowLang |
+| `T?` | Not needed | No nulls in Cadenza |
 
 ### Generic Types
 
@@ -181,8 +181,8 @@ public static T Identity<T>(T value)
 }
 ```
 
-**FlowLang:** (Not directly supported, use specific types)
-```flowlang
+**Cadenza:** (Not directly supported, use specific types)
+```cadenza
 pure function identityInt(value: int) -> int {
     return value
 }
@@ -214,8 +214,8 @@ public static string ProcessUser(int userId)
 }
 ```
 
-**FlowLang (with Result types):**
-```flowlang
+**Cadenza (with Result types):**
+```cadenza
 function getUserName(userId: int) -> Result<string, string> {
     if userId <= 0 {
         return Error("Invalid user ID")
@@ -253,8 +253,8 @@ public static class UserService
 }
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 function saveUser(name: string) uses [Database] -> Result<int, string> {
     // Side effect explicitly declared
     return Ok(42)  // User ID
@@ -280,8 +280,8 @@ public static void ProcessOrder(int orderId)
 }
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 function processOrder(orderId: int) uses [Logging] -> Result<string, string> {
     // Logging effect declared
     let message = $"Processing order {orderId}"
@@ -303,8 +303,8 @@ public static int CalculateTax(int amount, int rate)
 }
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 // Explicitly marked as pure - compiler enforces it
 pure function calculateTax(amount: int, rate: int) -> int {
     return amount * rate / 100
@@ -340,10 +340,10 @@ namespace MyProject.Services
 }
 ```
 
-**FlowLang Modules:**
+**Cadenza Modules:**
 
-**math_utils.flow:**
-```flowlang
+**math_utils.cdz:**
+```cadenza
 module MathUtils {
     pure function add(a: int, b: int) -> int {
         return a + b
@@ -357,8 +357,8 @@ module MathUtils {
 }
 ```
 
-**calculation_service.flow:**
-```flowlang
+**calculation_service.cdz:**
+```cadenza
 import MathUtils.{add, multiply}
 
 function calculate(x: int, y: int) -> int {
@@ -375,8 +375,8 @@ using System.Collections.Generic;
 using static MyProject.Utils.MathHelper;
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 import MathUtils.*                    // Wildcard import
 import StringUtils.{reverse, upper}   // Selective import
 import ComplexModule                  // Simple import
@@ -396,8 +396,8 @@ var message = $"User {name} is {age} years old";
 var calculation = $"Result: {Add(5, 3)}";
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 let name = "Alice"
 let age = 30
 let message = $"User {name} is {age} years old"
@@ -414,8 +414,8 @@ var fullName = firstName + " " + lastName;
 var path = "C:\\Users\\" + username + "\\Documents";
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 let fullName = firstName + " " + lastName
 let path = "C:\\Users\\" + username + "\\Documents"
 ```
@@ -443,8 +443,8 @@ public static string ProcessUser(string name, int age)
 }
 ```
 
-**FlowLang (with guards):**
-```flowlang
+**Cadenza (with guards):**
+```cadenza
 function processUser(name: string, age: int) -> Result<string, string> {
     guard name != "" else {
         return Error("Name cannot be empty")
@@ -476,8 +476,8 @@ public static string GetUserType(int age)
 }
 ```
 
-**FlowLang:**
-```flowlang
+**Cadenza:**
+```cadenza
 function getUserType(age: int) -> string {
     if age < 13 {
         return "Child"
@@ -513,8 +513,8 @@ public static List<int> ProcessNumbers(List<int> numbers)
 }
 ```
 
-**FlowLang (functional style):**
-```flowlang
+**Cadenza (functional style):**
+```cadenza
 pure function doublePositive(num: int) -> int {
     return num * 2
 }
@@ -558,8 +558,8 @@ public class Calculator
 }
 ```
 
-**FlowLang (functional approach):**
-```flowlang
+**Cadenza (functional approach):**
+```cadenza
 pure function multiply(value: int, factor: int) -> int {
     return value * factor
 }
@@ -608,8 +608,8 @@ public class UserService
 }
 ```
 
-**FlowLang Module:**
-```flowlang
+**Cadenza Module:**
+```cadenza
 module UserService {
     function createUser(name: string, email: string) 
         uses [Logging, Database] 
@@ -656,8 +656,8 @@ public static class UserValidator
 }
 ```
 
-**FlowLang Validation:**
-```flowlang
+**Cadenza Validation:**
+```cadenza
 function validateUser(name: string, age: int, email: string) -> Result<string, string> {
     guard name != "" else {
         return Error("Name is required")
@@ -701,8 +701,8 @@ public class ConfigurationService
 }
 ```
 
-**FlowLang Configuration:**
-```flowlang
+**Cadenza Configuration:**
+```cadenza
 module Configuration {
     function loadConnectionString() uses [FileSystem] -> Result<string, string> {
         // Load from configuration file
@@ -758,8 +758,8 @@ public class UsersController : ControllerBase
 }
 ```
 
-**FlowLang API Module:**
-```flowlang
+**Cadenza API Module:**
+```cadenza
 module UsersApi {
     function createUser(name: string, email: string) 
         uses [Database, Logging, Network] 
@@ -816,8 +816,8 @@ public class DataProcessor
 }
 ```
 
-**FlowLang Processing Pipeline:**
-```flowlang
+**Cadenza Processing Pipeline:**
+```cadenza
 module DataProcessor {
     function processData(rawData: string) 
         uses [Database, Network, Logging] 
@@ -859,40 +859,40 @@ module DataProcessor {
 
 ## Gradual Migration Strategy
 
-### Phase 1: New Code in FlowLang
+### Phase 1: New Code in Cadenza
 
 1. **Start with utilities**: Migrate pure functions first
-2. **Create FlowLang modules** for new features
-3. **Use FlowLang for business logic** that doesn't require C# integration
+2. **Create Cadenza modules** for new features
+3. **Use Cadenza for business logic** that doesn't require C# integration
 
 ### Phase 2: Interface Boundaries
 
-1. **Create FlowLang services** that C# can call through transpiled code
-2. **Define clear boundaries** between C# and FlowLang code
+1. **Create Cadenza services** that C# can call through transpiled code
+2. **Define clear boundaries** between C# and Cadenza code
 3. **Use Result types** at interfaces for consistent error handling
 
 ### Phase 3: Core Migration
 
-1. **Migrate service classes** to FlowLang modules
+1. **Migrate service classes** to Cadenza modules
 2. **Convert validation logic** to use guard clauses and Result types
 3. **Refactor error handling** from exceptions to Results
 
 ### Phase 4: Complete Migration
 
-1. **Move remaining logic** to FlowLang
-2. **Optimize for FlowLang patterns** (immutability, effects)
+1. **Move remaining logic** to Cadenza
+2. **Optimize for Cadenza patterns** (immutability, effects)
 3. **Clean up** any remaining C# wrapper code
 
 ### Migration Checklist
 
 - [ ] Identify pure functions for easy migration
-- [ ] Map C# classes to FlowLang modules
+- [ ] Map C# classes to Cadenza modules
 - [ ] Convert exceptions to Result types
 - [ ] Make side effects explicit with effect annotations
 - [ ] Replace null checks with Result types
 - [ ] Convert validation logic to guard clauses
 - [ ] Organize code into proper modules with exports
-- [ ] Update string formatting to FlowLang interpolation
+- [ ] Update string formatting to Cadenza interpolation
 - [ ] Test transpiled C# code for compatibility
 
 ## Benefits After Migration
@@ -924,17 +924,17 @@ module DataProcessor {
 
 ## Conclusion
 
-Migrating from C# to FlowLang brings significant benefits in safety, explicitness, and maintainability. The migration can be gradual, starting with new code and moving existing code over time. The resulting FlowLang code transpiles to clean, efficient C#, so you maintain all the performance and ecosystem benefits while gaining FlowLang's safety features.
+Migrating from C# to Cadenza brings significant benefits in safety, explicitness, and maintainability. The migration can be gradual, starting with new code and moving existing code over time. The resulting Cadenza code transpiles to clean, efficient C#, so you maintain all the performance and ecosystem benefits while gaining Cadenza's safety features.
 
 Key takeaways:
 - **Start small**: Begin with pure functions and utilities
 - **Use Result types**: Replace exceptions with explicit error handling
 - **Make effects explicit**: Declare side effects in function signatures  
 - **Embrace immutability**: Prefer functional patterns over mutable state
-- **Organize with modules**: Use FlowLang's module system for clear boundaries
+- **Organize with modules**: Use Cadenza's module system for clear boundaries
 
 For more information, see:
-- [Getting Started Guide](getting-started.md) - Basic FlowLang usage
+- [Getting Started Guide](getting-started.md) - Basic Cadenza usage
 - [Language Reference](language-reference.md) - Complete syntax reference
 - [CLI Reference](cli-reference.md) - Development tools
 - [Examples](examples/) - Working code samples

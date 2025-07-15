@@ -1,6 +1,6 @@
-# FlowLang Transpiler API Reference
+# Cadenza Transpiler API Reference
 
-This document provides a comprehensive reference for the FlowLang transpiler's internal API, designed for developers who want to understand or extend the transpiler implementation.
+This document provides a comprehensive reference for the Cadenza transpiler's internal API, designed for developers who want to understand or extend the transpiler implementation.
 
 ## Table of Contents
 
@@ -20,17 +20,17 @@ This document provides a comprehensive reference for the FlowLang transpiler's i
 
 ## Architecture Overview
 
-The FlowLang transpiler follows a classic compiler architecture with these phases:
+The Cadenza transpiler follows a classic compiler architecture with these phases:
 
 ```
-FlowLang Source → Lexer → Parser → AST → Code Generator → C# Code
+Cadenza Source → Lexer → Parser → AST → Code Generator → C# Code
 ```
 
 ### Main Components
 
 | Component | Responsibility | Input | Output |
 |-----------|---------------|-------|--------|
-| **Lexer** | Tokenization | FlowLang source | Token stream |
+| **Lexer** | Tokenization | Cadenza source | Token stream |
 | **Parser** | Syntax analysis | Tokens | AST |
 | **Type Checker** | Type validation | AST | Validated AST |
 | **Code Generator** | C# generation | AST | C# syntax tree |
@@ -40,33 +40,33 @@ FlowLang Source → Lexer → Parser → AST → Code Generator → C# Code
 
 ```csharp
 // Main transpiler class
-public class FlowLangTranspiler
+public class CadenzaTranspiler
 {
     public string TranspileToCS(string flowLangSource)
     public async Task TranspileAsync(string inputPath, string? outputPath = null)
 }
 
 // Core pipeline components
-public class FlowLangLexer
-public class FlowLangParser  
+public class CadenzaLexer
+public class CadenzaParser  
 public class CSharpGenerator
 ```
 
 ## Core Components
 
-### FlowLangTranspiler Class
+### CadenzaTranspiler Class
 
 The main entry point for transpilation operations.
 
 ```csharp
-public class FlowLangTranspiler
+public class CadenzaTranspiler
 {
     public string TranspileToCS(string flowLangSource)
     {
-        var lexer = new FlowLangLexer(flowLangSource);
+        var lexer = new CadenzaLexer(flowLangSource);
         var tokens = lexer.Tokenize();
         
-        var parser = new FlowLangParser(tokens);
+        var parser = new CadenzaParser(tokens);
         var ast = parser.Parse();
         
         var generator = new CSharpGenerator();
@@ -135,10 +135,10 @@ public enum TokenType
 public record Token(TokenType Type, string Value, int Line, int Column);
 ```
 
-### FlowLangLexer Class
+### CadenzaLexer Class
 
 ```csharp
-public class FlowLangLexer
+public class CadenzaLexer
 {
     private readonly string _source;
     private int _position = 0;
@@ -146,7 +146,7 @@ public class FlowLangLexer
     private int _column = 1;
     private readonly Dictionary<string, TokenType> _keywords;
 
-    public FlowLangLexer(string source)
+    public CadenzaLexer(string source)
     {
         _source = source;
         // Initialize keyword dictionary
@@ -198,15 +198,15 @@ public class FlowLangLexer
 
 ## Syntax Analysis (Parser)
 
-### FlowLangParser Class
+### CadenzaParser Class
 
 ```csharp
-public class FlowLangParser
+public class CadenzaParser
 {
     private readonly List<Token> _tokens;
     private int _current = 0;
 
-    public FlowLangParser(List<Token> tokens)
+    public CadenzaParser(List<Token> tokens)
     {
         _tokens = tokens;
     }
@@ -275,7 +275,7 @@ public class FlowLangParser
 ### Parser Utility Methods
 
 ```csharp
-public class FlowLangParser
+public class CadenzaParser
 {
     private bool Match(params TokenType[] types)
     {
@@ -680,7 +680,7 @@ public abstract class Command
 public class NewCommand : Command
 {
     public override string Name => "new";
-    public override string Description => "Create a new FlowLang project";
+    public override string Description => "Create a new Cadenza project";
 
     public override async Task<int> ExecuteAsync(string[] args)
     {
@@ -704,12 +704,12 @@ public class NewCommand : Command
 public class BuildCommand : Command
 {
     public override string Name => "build";
-    public override string Description => "Build the current FlowLang project";
+    public override string Description => "Build the current Cadenza project";
 
     public override async Task<int> ExecuteAsync(string[] args)
     {
         var config = await LoadConfig();
-        var transpiler = new FlowLangTranspiler();
+        var transpiler = new CadenzaTranspiler();
 
         // Build implementation
         return 0;
@@ -720,7 +720,7 @@ public class BuildCommand : Command
 ### CLI Application Main
 
 ```csharp
-public class FlowLangTranspiler
+public class CadenzaTranspiler
 {
     private static readonly Dictionary<string, Command> Commands = new();
 
@@ -736,7 +736,7 @@ public class FlowLangTranspiler
         // Handle version and help flags
         if (args.Length > 0 && (args[0] == "--version" || args[0] == "-v"))
         {
-            Console.WriteLine("FlowLang Transpiler (flowc) v1.0.0");
+            Console.WriteLine("Cadenza Transpiler (cadenzac) v1.0.0");
             return 0;
         }
 
@@ -789,7 +789,7 @@ public record BuildConfig(
 ```csharp
 private async Task<FlowcConfig> LoadConfig()
 {
-    var configPath = "flowc.json";
+    var configPath = "cadenzac.json";
     if (!File.Exists(configPath))
     {
         return new FlowcConfig();
@@ -817,25 +817,25 @@ The testing infrastructure provides multiple types of tests:
 ```csharp
 // Base test class
 [TestFixture]
-public abstract class FlowLangTestBase
+public abstract class CadenzaTestBase
 {
-    protected FlowLangTranspiler Transpiler { get; private set; }
+    protected CadenzaTranspiler Transpiler { get; private set; }
     
     [SetUp]
     public void SetUp()
     {
-        Transpiler = new FlowLangTranspiler();
+        Transpiler = new CadenzaTranspiler();
     }
 }
 
 // Unit test example
 [TestFixture]
-public class LexerTests : FlowLangTestBase
+public class LexerTests : CadenzaTestBase
 {
     [Test]
     public void Lexer_ShouldTokenizeNumbers()
     {
-        var lexer = new FlowLangLexer("42");
+        var lexer = new CadenzaLexer("42");
         var tokens = lexer.Tokenize();
         
         Assert.That(tokens.Count, Is.EqualTo(2)); // Number + EOF
@@ -851,10 +851,10 @@ public class LexerTests : FlowLangTestBase
 
 The LSP implementation provides real-time IDE integration with comprehensive language services.
 
-#### FlowLangLanguageServer Class
+#### CadenzaLanguageServer Class
 
 ```csharp
-public class FlowLangLanguageServer
+public class CadenzaLanguageServer
 {
     private readonly DocumentManager _documentManager;
     private readonly DiagnosticsProvider _diagnosticsProvider;
@@ -880,15 +880,15 @@ public class FlowLangLanguageServer
 ```csharp
 public class DocumentManager
 {
-    private readonly Dictionary<string, FlowLangDocument> _documents;
+    private readonly Dictionary<string, CadenzaDocument> _documents;
     
     public void OpenDocument(string uri, string text)
     public void UpdateDocument(string uri, TextDocumentContentChangeEvent[] changes)
     public void CloseDocument(string uri)
-    public FlowLangDocument GetDocument(string uri)
+    public CadenzaDocument GetDocument(string uri)
 }
 
-public class FlowLangDocument
+public class CadenzaDocument
 {
     public string Uri { get; }
     public string Text { get; }
@@ -903,7 +903,7 @@ public class FlowLangDocument
 ```csharp
 public class DiagnosticsProvider
 {
-    public List<Diagnostic> GetDiagnostics(FlowLangDocument document)
+    public List<Diagnostic> GetDiagnostics(CadenzaDocument document)
     {
         var diagnostics = new List<Diagnostic>();
         
@@ -939,7 +939,7 @@ public class StaticAnalyzer
     public AnalysisReport AnalyzeProject(string projectPath, LintConfiguration config)
     {
         var report = new AnalysisReport();
-        var sourceFiles = FindFlowLangFiles(projectPath);
+        var sourceFiles = FindCadenzaFiles(projectPath);
         
         foreach (var file in sourceFiles)
         {
@@ -1013,7 +1013,7 @@ public class PackageManager
     private readonly DependencyResolver _resolver;
     private readonly NuGetIntegration _nugetClient;
     private readonly SecurityScanner _securityScanner;
-    private readonly FlowLangRegistry _registry;
+    private readonly CadenzaRegistry _registry;
 
     public async Task AddPackageAsync(string packageName, string version = "latest", bool isDev = false)
     {
@@ -1068,16 +1068,16 @@ public class NuGetIntegration
         // Search NuGet.org and configured feeds
     }
     
-    public async Task<FlowLangBinding> GenerateBindingAsync(NuGetPackage package)
+    public async Task<CadenzaBinding> GenerateBindingAsync(NuGetPackage package)
     {
         var assembly = await LoadAssemblyAsync(package);
         var types = ExtractPublicTypes(assembly);
         var effects = InferEffectsFromTypes(types);
         
-        return new FlowLangBinding
+        return new CadenzaBinding
         {
             Package = package,
-            GeneratedModule = GenerateFlowLangModule(types),
+            GeneratedModule = GenerateCadenzaModule(types),
             EffectMappings = effects
         };
     }
@@ -1120,17 +1120,17 @@ public class SecurityScanner
 ```csharp
 public class WorkspaceManager
 {
-    public async Task<List<FlowLangProject>> DiscoverProjectsAsync(string workspaceRoot)
+    public async Task<List<CadenzaProject>> DiscoverProjectsAsync(string workspaceRoot)
     {
         var config = await LoadWorkspaceConfigAsync(workspaceRoot);
-        var projects = new List<FlowLangProject>();
+        var projects = new List<CadenzaProject>();
         
         foreach (var pattern in config.Projects)
         {
             var matchingDirs = Glob.Expand(pattern);
             foreach (var dir in matchingDirs.Where(d => !config.Exclude.Any(e => Glob.IsMatch(d, e))))
             {
-                if (File.Exists(Path.Combine(dir, "flowc.json")))
+                if (File.Exists(Path.Combine(dir, "cadenzac.json")))
                 {
                     projects.Add(await LoadProjectAsync(dir));
                 }
@@ -1157,9 +1157,9 @@ public class WorkspaceManager
 ### Adding New Language Features
 
 1. **Add Token Types**: Extend `TokenType` enum
-2. **Update Lexer**: Add tokenization rules in `FlowLangLexer`
+2. **Update Lexer**: Add tokenization rules in `CadenzaLexer`
 3. **Add AST Nodes**: Create new record types inheriting from `ASTNode`
-4. **Update Parser**: Add parsing methods in `FlowLangParser`
+4. **Update Parser**: Add parsing methods in `CadenzaParser`
 5. **Update Code Generator**: Add generation logic in `CSharpGenerator`
 
 ### Adding New Effects
@@ -1172,7 +1172,7 @@ private static readonly HashSet<string> KnownEffects = new()
     "NewEffect" // Add your effect here
 };
 
-// In FlowLangLexer keywords
+// In CadenzaLexer keywords
 ["NewEffect"] = TokenType.NewEffect,
 
 // Add TokenType.NewEffect to enum
@@ -1296,7 +1296,7 @@ private void SynchronizeToNextStatement()
 Enable debug output for development:
 
 ```csharp
-public class FlowLangTranspiler
+public class CadenzaTranspiler
 {
     public bool EnableDebugOutput { get; set; } = false;
     
@@ -1339,7 +1339,7 @@ public static class ASTVisualizer
 
 ## Conclusion
 
-This API reference provides a comprehensive overview of the FlowLang transpiler's internal architecture. The modular design allows for easy extension and modification of language features. Key design principles include:
+This API reference provides a comprehensive overview of the Cadenza transpiler's internal architecture. The modular design allows for easy extension and modification of language features. Key design principles include:
 
 - **Separation of Concerns**: Each phase has a clear responsibility
 - **Immutable Data Structures**: AST nodes and tokens are immutable
@@ -1347,4 +1347,4 @@ This API reference provides a comprehensive overview of the FlowLang transpiler'
 - **Extensibility**: Clear extension points for new features
 - **Performance**: Efficient algorithms and data structures
 
-For implementation examples and usage patterns, see the source code in `/src/flowc.cs` and the test suite in `/tests/`.
+For implementation examples and usage patterns, see the source code in `/src/cadenzac.cs` and the test suite in `/tests/`.

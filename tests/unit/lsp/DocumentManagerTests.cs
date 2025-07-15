@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Xunit;
-using FlowLang.LSP;
+using Cadenza.LSP;
 
-namespace FlowLang.Tests.Unit.LSP
+namespace Cadenza.Tests.Unit.LSP
 {
     /// <summary>
     /// Tests for DocumentManager functionality
@@ -16,7 +16,7 @@ namespace FlowLang.Tests.Unit.LSP
         {
             // Arrange
             var manager = new DocumentManager();
-            var uri = "file:///test.flow";
+            var uri = "file:///test.cdz";
             var content = "function test() -> int { return 42 }";
 
             // Act
@@ -36,7 +36,7 @@ namespace FlowLang.Tests.Unit.LSP
         {
             // Arrange
             var manager = new DocumentManager();
-            var uri = "file:///test.flow";
+            var uri = "file:///test.cdz";
             var initialContent = "function test() -> int { return 42 }";
             var updatedContent = "function test() -> string { return \"hello\" }";
 
@@ -65,7 +65,7 @@ namespace FlowLang.Tests.Unit.LSP
         {
             // Arrange
             var manager = new DocumentManager();
-            var uri = "file:///test.flow";
+            var uri = "file:///test.cdz";
             var content = "function test() -> int { return 42 }";
 
             manager.OpenDocument(uri, content, 1);
@@ -97,7 +97,7 @@ namespace FlowLang.Tests.Unit.LSP
         {
             // Arrange
             var manager = new DocumentManager();
-            var uri = "file:///test.flow";
+            var uri = "file:///test.cdz";
             var content = "function test() -> int { return 42 }";
 
             manager.OpenDocument(uri, content, 1);
@@ -116,7 +116,7 @@ namespace FlowLang.Tests.Unit.LSP
         {
             // Arrange
             var manager = new DocumentManager();
-            var uri = "file:///test.flow";
+            var uri = "file:///test.cdz";
             var content = "function test() -> int { return 42 }";
 
             manager.OpenDocument(uri, content, 1);
@@ -136,7 +136,7 @@ namespace FlowLang.Tests.Unit.LSP
         {
             // Arrange
             var manager = new DocumentManager();
-            var uri = "file:///test.flow";
+            var uri = "file:///test.cdz";
             var content = "function test_function() -> int { return value }";
 
             manager.OpenDocument(uri, content, 1);

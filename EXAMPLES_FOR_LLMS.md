@@ -1,14 +1,14 @@
-# FlowLang Examples for LLMs 🤖
+# Cadenza Examples for LLMs 🤖
 
-**This guide shows LLMs how FlowLang solves common coding problems with explicit, predictable patterns.**
+**This guide shows LLMs how Cadenza solves common coding problems with explicit, predictable patterns.**
 
-## 🎯 Why FlowLang is LLM-Friendly
+## 🎯 Why Cadenza is LLM-Friendly
 
-Traditional languages have multiple ways to do everything. FlowLang has **one clear way** for each task.
+Traditional languages have multiple ways to do everything. Cadenza has **one clear way** for each task.
 
 ## 🔥 Side-by-Side Comparisons
 
-### Error Handling: FlowLang vs Others
+### Error Handling: Cadenza vs Others
 
 ❌ **C# - Multiple approaches confuse LLMs:**
 ```csharp
@@ -31,8 +31,8 @@ public bool TryDivide(int a, int b, out int result) {
 }
 ```
 
-✅ **FlowLang - One clear way:**
-```flowlang
+✅ **Cadenza - One clear way:**
+```cadenza
 // Only one way to handle errors - Result types
 function divide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
@@ -49,7 +49,7 @@ function chainedDivision(a: int, b: int, c: int) -> Result<int, string> {
 }
 ```
 
-### Side Effects: FlowLang vs Others
+### Side Effects: Cadenza vs Others
 
 ❌ **C# - Hidden side effects:**
 ```csharp
@@ -62,8 +62,8 @@ public string ProcessUser(string name) {
 }
 ```
 
-✅ **FlowLang - Explicit effects:**
-```flowlang
+✅ **Cadenza - Explicit effects:**
+```cadenza
 // All side effects are declared upfront
 function processUser(name: string) uses [Database, Logging, Network] -> Result<string, string> {
     log_info($"Processing {name}")         // Logging effect declared
@@ -73,7 +73,7 @@ function processUser(name: string) uses [Database, Logging, Network] -> Result<s
 }
 ```
 
-### String Operations: FlowLang vs Others
+### String Operations: Cadenza vs Others
 
 ❌ **Python - Multiple string approaches:**
 ```python
@@ -90,15 +90,15 @@ message = f"Hello {name}, you are {age} years old"
 message = "Hello " + name + ", you are " + str(age) + " years old"
 ```
 
-✅ **FlowLang - One clear way:**
-```flowlang
+✅ **Cadenza - One clear way:**
+```cadenza
 // Only string interpolation with $ syntax
 function greet(name: string, age: int) -> string {
     return $"Hello {name}, you are {age} years old"
 }
 ```
 
-### Module System: FlowLang vs Others
+### Module System: Cadenza vs Others
 
 ❌ **C# - Complex namespace management:**
 ```csharp
@@ -138,9 +138,9 @@ import math, { add } from './math';  // Mixed default/named
 // AMD, SystemJS, etc. - even more variations
 ```
 
-✅ **FlowLang - One clear module system:**
-```flowlang
-// math.flow - Module definition
+✅ **Cadenza - One clear module system:**
+```cadenza
+// math.cdz - Module definition
 module Math {
     pure function add(a: int, b: int) -> int {
         return a + b
@@ -154,7 +154,7 @@ module Math {
     export { add, multiply }
 }
 
-// main.flow - Module usage
+// main.cdz - Module usage
 import Math.{add, multiply}  // Selective imports (clear origin)
 
 function main() -> int {
@@ -179,10 +179,10 @@ function main() -> int {
 
 **Task:** Create a modular e-commerce system with user management, product catalog, and order processing.
 
-✅ **FlowLang forces clear module boundaries:**
+✅ **Cadenza forces clear module boundaries:**
 
-```flowlang
-// users.flow - User management module
+```cadenza
+// users.cdz - User management module
 module Users {
     function validateEmail(email: string) -> Result<string, string> {
         guard email.Contains("@") else {
@@ -200,7 +200,7 @@ module Users {
     export { createUser, validateEmail }
 }
 
-// products.flow - Product catalog module
+// products.cdz - Product catalog module
 module Products {
     function getProduct(id: string) uses [Database] -> Result<Product, string> {
         let product = database_get_product(id)?
@@ -215,7 +215,7 @@ module Products {
     export { getProduct, updateInventory }
 }
 
-// orders.flow - Order processing module
+// orders.cdz - Order processing module
 import Users.{createUser}
 import Products.{getProduct, updateInventory}
 
@@ -250,9 +250,9 @@ module Orders {
 
 **Task:** Create a user registration function that validates input and saves to database.
 
-✅ **FlowLang makes it impossible for LLMs to generate unsafe code:**
+✅ **Cadenza makes it impossible for LLMs to generate unsafe code:**
 
-```flowlang
+```cadenza
 function registerUser(email: string, password: string) uses [Database, Logging] -> Result<string, string> {
     // Input validation with guard clauses
     guard email != "" else {
@@ -281,9 +281,9 @@ function registerUser(email: string, password: string) uses [Database, Logging] 
 
 **Task:** Make an HTTP request with retry logic and error handling.
 
-✅ **FlowLang forces explicit error handling:**
+✅ **Cadenza forces explicit error handling:**
 
-```flowlang
+```cadenza
 function fetchUserData(userId: string, maxRetries: int) uses [Network, Logging] -> Result<string, string> {
     let attempts = 0
     
@@ -309,9 +309,9 @@ function fetchUserData(userId: string, maxRetries: int) uses [Network, Logging] 
 
 **Task:** Load configuration from file with validation.
 
-✅ **FlowLang prevents runtime crashes:**
+✅ **Cadenza prevents runtime crashes:**
 
-```flowlang
+```cadenza
 function loadConfig(filePath: string) uses [FileSystem] -> Result<Config, string> {
     // File existence check
     guard file_exists(filePath) else {
@@ -347,7 +347,7 @@ function loadConfig(filePath: string) uses [FileSystem] -> Result<Config, string
 
 ### Pattern 1: Error-Safe Function Generation
 
-**Prompt:** "Create a FlowLang function that..."
+**Prompt:** "Create a Cadenza function that..."
 
 The LLM will automatically:
 1. Use `Result<T, E>` return types for fallible operations
@@ -357,7 +357,7 @@ The LLM will automatically:
 
 ### Pattern 2: Effect-Aware API Design
 
-**Prompt:** "Create a FlowLang service that reads from database and sends emails"
+**Prompt:** "Create a Cadenza service that reads from database and sends emails"
 
 The LLM will automatically:
 1. Declare `uses [Database, Network]` effects
@@ -379,9 +379,9 @@ The LLM will automatically:
 
 ### Quick Test 1: Function Classification
 
-Ask the LLM to classify these FlowLang functions:
+Ask the LLM to classify these Cadenza functions:
 
-```flowlang
+```cadenza
 // Function A
 pure function add(a: int, b: int) -> int {
     return a + b
@@ -408,9 +408,9 @@ function processOrder(order: Order) uses [Database, Network, Logging] -> Result<
 
 ### Quick Test 2: Error Handling
 
-Ask the LLM to identify issues in this FlowLang code:
+Ask the LLM to identify issues in this Cadenza code:
 
-```flowlang
+```cadenza
 // ❌ This has issues - can the LLM spot them?
 function badExample(input: string) -> string {
     let result = riskyOperation(input)  // Missing ? operator
@@ -451,14 +451,14 @@ function riskyOperation(input: string) -> Result<string, string> {
 
 ## 🎪 Try It Yourself
 
-Copy any of these examples into `.flow` files and run:
+Copy any of these examples into `.cdz` files and run:
 
 ```bash
-flowc run example.flow
+cadenzac run example.cdz
 ```
 
 The generated C# will be clean, safe, and follow .NET best practices!
 
 ---
 
-**FlowLang: Making LLM-generated code predictable, safe, and maintainable.** 🤖✨
+**Cadenza: Making LLM-generated code predictable, safe, and maintainable.** 🤖✨

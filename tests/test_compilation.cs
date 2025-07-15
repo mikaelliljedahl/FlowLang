@@ -4,14 +4,14 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using FlowLang.Compiler;
-using FlowLang.Targets;
+using Cadenza.Compiler;
+using Cadenza.Targets;
 
 class TestUICompilation
 {
     static async Task Main(string[] args)
     {
-        Console.WriteLine("Testing FlowLang UI Component Compilation...");
+        Console.WriteLine("Testing Cadenza UI Component Compilation...");
         
         // Simple UI component source
         var flowLangSource = @"
@@ -42,13 +42,13 @@ component HelloWorld(name: string)
         {
             // Test lexing
             Console.WriteLine("1. Testing Lexer...");
-            var lexer = new FlowLangLexer(flowLangSource);
+            var lexer = new CadenzaLexer(flowLangSource);
             var tokens = lexer.Tokenize();
             Console.WriteLine($"   ✅ Generated {tokens.Count} tokens");
             
             // Test parsing
             Console.WriteLine("2. Testing Parser...");
-            var parser = new FlowLangParser(tokens);
+            var parser = new CadenzaParser(tokens);
             var ast = parser.Parse();
             Console.WriteLine($"   ✅ Generated AST with {ast.Statements.Count} statements");
             

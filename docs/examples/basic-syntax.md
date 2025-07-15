@@ -1,6 +1,6 @@
 # Basic Syntax Examples
 
-This document provides comprehensive examples of FlowLang's basic syntax features, demonstrating core language constructs with working code samples.
+This document provides comprehensive examples of Cadenza's basic syntax features, demonstrating core language constructs with working code samples.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ This document provides comprehensive examples of FlowLang's basic syntax feature
 
 Pure functions have no side effects and are marked with the `pure` keyword:
 
-```flowlang
+```cadenza
 // Simple pure function
 pure function add(a: int, b: int) -> int {
     return a + b
@@ -47,7 +47,7 @@ pure function max(a: int, b: int) -> int {
 
 Functions without the `pure` keyword can have side effects:
 
-```flowlang
+```cadenza
 // Function that returns a value
 function calculateTax(amount: int) -> int {
     return amount * 8 / 100
@@ -67,7 +67,7 @@ function formatMessage(user: string, count: int, active: bool) -> string {
 
 ### Basic Variable Declaration
 
-```flowlang
+```cadenza
 function demonstrateVariables() -> string {
     // Integer variable
     let age = 25
@@ -90,7 +90,7 @@ function demonstrateVariables() -> string {
 
 ### Variable Usage in Calculations
 
-```flowlang
+```cadenza
 pure function complexCalculation(x: int, y: int, z: int) -> int {
     let sum = x + y
     let product = sum * z
@@ -110,7 +110,7 @@ pure function stringProcessing(first: string, last: string) -> string {
 
 ### Integer Type
 
-```flowlang
+```cadenza
 pure function integerExamples() -> int {
     let positive = 42
     let zero = 0
@@ -129,7 +129,7 @@ pure function integerOperations(a: int, b: int) -> int {
 
 ### String Type
 
-```flowlang
+```cadenza
 pure function stringExamples() -> string {
     let simple = "Hello, World!"
     let withEscapes = "Line 1\nLine 2\nLine 3"
@@ -148,7 +148,7 @@ pure function stringConcatenation(prefix: string, name: string, suffix: string) 
 
 ### Boolean Type
 
-```flowlang
+```cadenza
 pure function booleanExamples(age: int, hasPermission: bool) -> bool {
     let isAdult = age >= 18
     let isMinor = age < 18
@@ -170,7 +170,7 @@ pure function logicalOperations(a: bool, b: bool, c: bool) -> bool {
 
 ### Arithmetic Operators
 
-```flowlang
+```cadenza
 pure function arithmeticDemo(x: int, y: int) -> int {
     let addition = x + y
     let subtraction = x - y
@@ -190,7 +190,7 @@ pure function operatorPrecedence(a: int, b: int, c: int) -> int {
 
 ### Comparison Operators
 
-```flowlang
+```cadenza
 pure function comparisonDemo(x: int, y: int) -> bool {
     let equal = x == y
     let notEqual = x != y
@@ -207,7 +207,7 @@ pure function comparisonDemo(x: int, y: int) -> bool {
 
 ### Logical Operators
 
-```flowlang
+```cadenza
 pure function logicalDemo(isAdmin: bool, isOwner: bool, hasPermission: bool) -> bool {
     // AND operator
     let adminWithPermission = isAdmin && hasPermission
@@ -227,7 +227,7 @@ pure function logicalDemo(isAdmin: bool, isOwner: bool, hasPermission: bool) -> 
 
 ### String Operations
 
-```flowlang
+```cadenza
 pure function stringOperations(first: string, last: string) -> string {
     // String concatenation
     let fullName = first + " " + last
@@ -249,7 +249,7 @@ pure function stringOperations(first: string, last: string) -> string {
 
 ### Simple Function Calls
 
-```flowlang
+```cadenza
 pure function helper(x: int) -> int {
     return x * 2
 }
@@ -270,7 +270,7 @@ pure function demonstrateCalls() -> int {
 
 ### Function Calls with Multiple Parameters
 
-```flowlang
+```cadenza
 pure function multiply(a: int, b: int) -> int {
     return a * b
 }
@@ -293,7 +293,7 @@ function complexExample() -> string {
 
 ### Function Call Chains
 
-```flowlang
+```cadenza
 pure function increment(x: int) -> int {
     return x + 1
 }
@@ -321,7 +321,7 @@ function chainExample() -> int {
 
 ### Single-line Comments
 
-```flowlang
+```cadenza
 // This is a single-line comment
 pure function commentExample(x: int) -> int {
     // Comments can explain what the code does
@@ -343,7 +343,7 @@ function moreComments() -> string {
 
 ### Commenting Best Practices
 
-```flowlang
+```cadenza
 // Calculate compound interest using the standard formula
 // Formula: A = P(1 + r/n)^(nt)
 pure function calculateCompoundInterest(
@@ -383,7 +383,7 @@ function processUserData(name: string, age: int) -> string {
 
 Here's a complete example that demonstrates many of the basic syntax features:
 
-```flowlang
+```cadenza
 // Mathematical utility functions
 pure function add(a: int, b: int) -> int {
     return a + b
@@ -452,4 +452,4 @@ This example demonstrates:
 - **Comments explaining the code**
 - **Complex expressions and operator precedence**
 
-When transpiled to C#, this produces clean, efficient code that follows C# best practices while maintaining the safety and explicitness of FlowLang.
+When transpiled to C#, this produces clean, efficient code that follows C# best practices while maintaining the safety and explicitness of Cadenza.

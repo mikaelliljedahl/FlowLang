@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FlowLang.Analysis;
+using Cadenza.Analysis;
 using Xunit;
 
-namespace FlowLang.Tests.Unit.Analysis;
+namespace Cadenza.Tests.Unit.Analysis;
 
 public class LintRuleEngineTests
 {
@@ -52,14 +52,14 @@ public class LintRuleEngineTests
         // Arrange
         var config = new LintConfiguration
         {
-            Exclude = new List<string> { "generated/*", "*.test.flow", "temp_*" }
+            Exclude = new List<string> { "generated/*", "*.test.cdz", "temp_*" }
         };
 
         // Act & Assert
-        Assert.True(config.ShouldExcludeFile("generated/auto.flow"));
-        Assert.True(config.ShouldExcludeFile("example.test.flow"));
-        Assert.True(config.ShouldExcludeFile("temp_output.flow"));
-        Assert.False(config.ShouldExcludeFile("src/main.flow"));
+        Assert.True(config.ShouldExcludeFile("generated/auto.cdz"));
+        Assert.True(config.ShouldExcludeFile("example.test.cdz"));
+        Assert.True(config.ShouldExcludeFile("temp_output.cdz"));
+        Assert.False(config.ShouldExcludeFile("src/main.cdz"));
     }
 
     [Fact]
@@ -98,15 +98,15 @@ public class LintRuleEngineTests
         // Act
         report.AddDiagnostic(new AnalysisDiagnostic(
             "test-rule-1", "Test error", DiagnosticSeverity.Error,
-            new SourceLocation("test.flow", 1, 1), "test"));
+            new SourceLocation("test.cdz", 1, 1), "test"));
 
         report.AddDiagnostic(new AnalysisDiagnostic(
             "test-rule-2", "Test warning", DiagnosticSeverity.Warning,
-            new SourceLocation("test.flow", 2, 1), "test"));
+            new SourceLocation("test.cdz", 2, 1), "test"));
 
         report.AddDiagnostic(new AnalysisDiagnostic(
             "test-rule-1", "Another error", DiagnosticSeverity.Error,
-            new SourceLocation("test.flow", 3, 1), "test"));
+            new SourceLocation("test.cdz", 3, 1), "test"));
 
         // Assert
         Assert.Equal(3, report.Metrics.TotalIssues);
@@ -125,13 +125,13 @@ public class LintRuleEngineTests
         var report = new AnalysisReport();
         report.AddDiagnostic(new AnalysisDiagnostic(
             "rule1", "Message", DiagnosticSeverity.Error,
-            new SourceLocation("test.flow", 1, 1), "category1"));
+            new SourceLocation("test.cdz", 1, 1), "category1"));
         report.AddDiagnostic(new AnalysisDiagnostic(
             "rule2", "Message", DiagnosticSeverity.Warning,
-            new SourceLocation("test.flow", 2, 1), "category2"));
+            new SourceLocation("test.cdz", 2, 1), "category2"));
         report.AddDiagnostic(new AnalysisDiagnostic(
             "rule3", "Message", DiagnosticSeverity.Error,
-            new SourceLocation("test.flow", 3, 1), "category1"));
+            new SourceLocation("test.cdz", 3, 1), "category1"));
 
         // Act
         var category1Diagnostics = report.GetDiagnosticsByCategory("category1").ToList();
@@ -157,7 +157,7 @@ public class LintRuleEngineTests
         // Add warning
         report.AddDiagnostic(new AnalysisDiagnostic(
             "rule", "Warning", DiagnosticSeverity.Warning,
-            new SourceLocation("test.flow", 1, 1), "test"));
+            new SourceLocation("test.cdz", 1, 1), "test"));
 
         Assert.True(report.HasPassingResult(DiagnosticSeverity.Error));
         Assert.False(report.HasPassingResult(DiagnosticSeverity.Warning));
@@ -165,7 +165,7 @@ public class LintRuleEngineTests
         // Add error
         report.AddDiagnostic(new AnalysisDiagnostic(
             "rule", "Error", DiagnosticSeverity.Error,
-            new SourceLocation("test.flow", 2, 1), "test"));
+            new SourceLocation("test.cdz", 2, 1), "test"));
 
         Assert.False(report.HasPassingResult(DiagnosticSeverity.Error));
         Assert.False(report.HasPassingResult(DiagnosticSeverity.Warning));
@@ -189,7 +189,7 @@ public class LintRuleEngineTests
         var ast = CreateTestProgram();
 
         // Act
-        var report = engine.AnalyzeFile("test.flow", "function test() -> int { return 42 }", ast);
+        var report = engine.AnalyzeFile("test.cdz", "function test() -> int { return 42 }", ast);
 
         // Assert
         Assert.Equal(1, report.FilesAnalyzed);

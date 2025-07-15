@@ -5,17 +5,17 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace FlowLang.Tests.Integration
+namespace Cadenza.Tests.Integration
 {
     [TestFixture]
     public class TranspilationTests
     {
-        private FlowLangTranspiler _transpiler;
+        private CadenzaTranspiler _transpiler;
 
         [SetUp]
         public void SetUp()
         {
-            _transpiler = new FlowLangTranspiler();
+            _transpiler = new CadenzaTranspiler();
         }
 
         [Test]

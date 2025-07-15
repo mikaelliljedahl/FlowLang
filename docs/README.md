@@ -1,10 +1,10 @@
-# FlowLang Documentation
+# Cadenza Documentation
 
-Welcome to the comprehensive documentation for FlowLang - a backend programming language designed specifically for LLM-assisted development. This documentation covers everything from getting started to advanced topics and contribution guidelines.
+Welcome to the comprehensive documentation for Cadenza - a backend programming language designed specifically for LLM-assisted development. This documentation covers everything from getting started to advanced topics and contribution guidelines.
 
 > 🚀 **Want to get started quickly?** Check out the main [README.md](../README.md) or [QUICKSTART.md](../QUICKSTART.md) for immediate copy-paste examples!
 
-## Why FlowLang? The Problem with LLMs and Modern Code
+## Why Cadenza? The Problem with LLMs and Modern Code
 
 If you've used an LLM to code, you've seen the symptoms: it generates code that uses the wrong error handling pattern, introduces subtle side effects, or misses dependencies. This isn't the LLM's fault; it's a language problem.
 
@@ -15,15 +15,15 @@ Current languages suffer from:
 3.  **Implicit Error Handling:** Function signatures rarely tell you what can go wrong. LLMs are left to guess which exceptions to catch, leading to fragile code that crashes at runtime.
 4.  **Unclear Dependencies:** Code often depends on hidden services or configurations, making it difficult for an LLM to generate correct unit tests or understand the full context of a function.
 
-FlowLang solves these problems by prioritizing explicitness, safety, and predictability. It's designed to be the ideal partner for an LLM, enabling AI to generate correct, robust, and maintainable code on the first try.
+Cadenza solves these problems by prioritizing explicitness, safety, and predictability. It's designed to be the ideal partner for an LLM, enabling AI to generate correct, robust, and maintainable code on the first try.
 
 ## Documentation Overview
 
-FlowLang prioritizes explicitness, predictability, and safety while maintaining compatibility with the .NET ecosystem through C# transpilation. The documentation is organized to support both new users and experienced developers.
+Cadenza prioritizes explicitness, predictability, and safety while maintaining compatibility with the .NET ecosystem through C# transpilation. The documentation is organized to support both new users and experienced developers.
 
 ## Quick Start
 
-- **New to FlowLang?** Start with [Getting Started](getting-started.md)
+- **New to Cadenza?** Start with [Getting Started](getting-started.md)
 - **Coming from C#?** Check out the [Migration Guide](migration-guide.md)
 - **Need a quick reference?** See the [Language Reference](language-reference.md)
 - **Having issues?** Visit [Troubleshooting](troubleshooting.md)
@@ -37,7 +37,7 @@ FlowLang prioritizes explicitness, predictability, and safety while maintaining 
 | [Getting Started](getting-started.md) | Installation, first program, basic concepts | New users |
 | [Language Reference](language-reference.md) | Complete syntax and features documentation | All users |
 | [CLI Reference](cli-reference.md) | All commands, options, and usage patterns | All users |
-| [Migration Guide](migration-guide.md) | Moving from C# to FlowLang | C# developers |
+| [Migration Guide](migration-guide.md) | Moving from C# to Cadenza | C# developers |
 
 ### Advanced Topics
 
@@ -65,7 +65,7 @@ FlowLang prioritizes explicitness, predictability, and safety while maintaining 
 | [Effect System](examples/effect-system.md) | Side effect management | Pure functions, effect declarations |
 | [Modules](examples/modules.md) | Code organization | Import/export, namespaces |
 
-## FlowLang Features Overview
+## Cadenza Features Overview
 
 ### Core Philosophy
 - **Explicit over implicit**: Every operation and side effect is clearly declared
@@ -76,7 +76,7 @@ FlowLang prioritizes explicitness, predictability, and safety while maintaining 
 ### Key Language Features
 
 #### 🔄 Result Types
-```flowlang
+```cadenza
 function safeDivide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")
@@ -86,7 +86,7 @@ function safeDivide(a: int, b: int) -> Result<int, string> {
 ```
 
 #### ⚡ Effect System
-```flowlang
+```cadenza
 // Pure function - no side effects
 pure function calculate(x: int, y: int) -> int {
     return x + y
@@ -99,7 +99,7 @@ function saveUser(name: string) uses [Database, Logging] -> Result<int, string> 
 ```
 
 #### 📦 Module System
-```flowlang
+```cadenza
 module MathUtils {
     pure function add(a: int, b: int) -> int {
         return a + b
@@ -112,14 +112,14 @@ import MathUtils.{add}
 ```
 
 #### 🔗 String Interpolation
-```flowlang
+```cadenza
 function formatMessage(name: string, count: int) -> string {
     return $"User {name} has {count} items"
 }
 ```
 
 #### 🛡️ Guard Clauses
-```flowlang
+```cadenza
 function validateUser(name: string, age: int) -> Result<string, string> {
     guard name != "" else {
         return Error("Name cannot be empty")
@@ -169,7 +169,7 @@ All code examples in this documentation are:
 - ✅ **Commented**: Explain complex concepts
 
 ### Example Format
-```flowlang
+```cadenza
 // Clear comment explaining the purpose
 function exampleFunction(param: type) -> returnType {
     // Implementation with explanatory comments
@@ -193,7 +193,7 @@ Documents link to related sections:
 ### Community Resources
 - **GitHub Issues**: Report bugs and request features
 - **Discussions**: Ask questions and share ideas
-- **Contributing**: Help improve FlowLang and its documentation
+- **Contributing**: Help improve Cadenza and its documentation
 
 ### Support Channels
 1. **Self-Service**: Search documentation and examples
@@ -222,7 +222,7 @@ Documents link to related sections:
 ## Roadmap and Future
 
 ### Current Status
-FlowLang is in active development with these features implemented:
+Cadenza is in active development with these features implemented:
 - ✅ Core language syntax and semantics
 - ✅ Result types and error propagation
 - ✅ Effect system with pure functions
@@ -234,7 +234,7 @@ FlowLang is in active development with these features implemented:
 
 ### Phase 2 Completed (Ecosystem Integration) ✅
 - ✅ **Language Server Protocol (LSP)** - Real-time IDE support for VS Code, JetBrains, Visual Studio
-- ✅ **Static Analysis & Linting** - 22 specialized rules with FlowLang-specific validation
+- ✅ **Static Analysis & Linting** - 22 specialized rules with Cadenza-specific validation
 - ✅ **Enhanced Package Manager** - Seamless .NET ecosystem integration with auto-bindings
 - ✅ **Professional CLI Tools** - Complete development workflow commands
 - ✅ **Security & Compliance** - Vulnerability scanning and automated fixes
@@ -261,7 +261,7 @@ FlowLang is in active development with these features implemented:
 - Regular reviews ensure accuracy and completeness
 
 ### Version Compatibility
-- Documentation matches the current FlowLang version
+- Documentation matches the current Cadenza version
 - Major version changes include migration guides
 - Deprecated features are clearly marked
 - Legacy documentation is preserved for reference
@@ -282,9 +282,9 @@ FlowLang is in active development with these features implemented:
 
 ## Conclusion
 
-This documentation represents a comprehensive resource for FlowLang users and contributors. Whether you're just getting started or diving deep into the transpiler internals, you'll find the information you need to be successful with FlowLang.
+This documentation represents a comprehensive resource for Cadenza users and contributors. Whether you're just getting started or diving deep into the transpiler internals, you'll find the information you need to be successful with Cadenza.
 
-The FlowLang project is committed to maintaining high-quality documentation that serves the community effectively. Your feedback and contributions help make this documentation better for everyone.
+The Cadenza project is committed to maintaining high-quality documentation that serves the community effectively. Your feedback and contributions help make this documentation better for everyone.
 
-**Happy coding with FlowLang!** 🚀
+**Happy coding with Cadenza!** 🚀
 

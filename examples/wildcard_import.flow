@@ -1,8 +1,0 @@
-// Example demonstrating wildcard imports
-import Utils.*
-
-function main() -> string {
-    let value = double(5)
-    let squared = square(value)
-    return greet("FlowLang")
-}
