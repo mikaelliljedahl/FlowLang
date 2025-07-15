@@ -251,6 +251,9 @@ public class FlowLangLexer
         {"else", TokenType.Else},
         {"effects", TokenType.Effects},
         {"pure", TokenType.Pure},
+        {"true", TokenType.Bool},
+        {"false", TokenType.Bool},
+        {"null", TokenType.Identifier}, // For now, handle null as an identifier
         {"uses", TokenType.Uses},
         {"Result", TokenType.Result},
         {"Ok", TokenType.Ok},
@@ -926,7 +929,7 @@ public class FlowLangParser
             {
                 var paramName = Consume(TokenType.Identifier, "Expected parameter name").Lexeme;
                 Consume(TokenType.Colon, "Expected ':' after parameter name");
-                var paramType = Consume(TokenType.Identifier, "Expected parameter type").Lexeme;
+                var paramType = ConsumeType("Expected parameter type").Lexeme;
                 parameters.Add(new Parameter(paramName, paramType));
             } while (Match(TokenType.Comma));
         }
@@ -942,6 +945,18 @@ public class FlowLangParser
         List<StateDeclaration>? state = null;
         List<EventHandler>? events = null;
         ASTNode? onMount = null;
+        
+        // Parse state declarations if present
+        if (Match(TokenType.State))
+        {
+            state = ParseStateDeclarationsList();
+        }
+        
+        // Parse event handlers if present
+        if (Match(TokenType.Events))
+        {
+            events = ParseEventHandlersList();
+        }
         
         Consume(TokenType.Arrow, "Expected '->' after component signature");
         Consume(TokenType.Identifier, "Expected return type"); // UIComponent, etc.
@@ -1792,6 +1807,12 @@ public class FlowLangParser
             return new StringLiteral(Previous().Literal?.ToString() ?? "");
         }
         
+        if (Match(TokenType.Bool))
+        {
+            var value = Previous().Lexeme;
+            return new BooleanLiteral(value == "true");
+        }
+        
         if (Match(TokenType.StringInterpolation))
         {
             var parts = Previous().Literal as List<object> ?? new List<object>();
@@ -1991,6 +2012,53 @@ public class FlowLangParser
         if (Check(type)) return Advance();
         throw new Exception($"{message}. Got '{Peek().Lexeme}' at line {Peek().Line}");
     }
+    
+    private Token ConsumeType(string message)
+    {
+        // Accept both identifiers and type keywords
+        if (Check(TokenType.Identifier) || Check(TokenType.String_Type) || Check(TokenType.Int) || 
+            Check(TokenType.Bool) || Check(TokenType.List) || Check(TokenType.Option))
+        {
+            return Advance();
+        }
+        throw new Exception($"{message}. Got '{Peek().Lexeme}' at line {Peek().Line}");
+    }
+    
+    private List<StateDeclaration> ParseStateDeclarationsList()
+    {
+        var declarations = new List<StateDeclaration>();
+        
+        Consume(TokenType.LeftBracket, "Expected '[' after state keyword");
+        
+        do
+        {
+            var name = Consume(TokenType.Identifier, "Expected state variable name").Lexeme;
+            // For now, assume all state variables are strings (could be enhanced later)
+            declarations.Add(new StateDeclaration(name, "string"));
+        } while (Match(TokenType.Comma));
+        
+        Consume(TokenType.RightBracket, "Expected ']' after state declarations");
+        
+        return declarations;
+    }
+    
+    private List<EventHandler> ParseEventHandlersList()
+    {
+        var handlers = new List<EventHandler>();
+        
+        Consume(TokenType.LeftBracket, "Expected '[' after events keyword");
+        
+        do
+        {
+            var name = Consume(TokenType.Identifier, "Expected event handler name").Lexeme;
+            // Create placeholder event handlers - they will be parsed in the body
+            handlers.Add(new EventHandler(name, new List<Parameter>(), null, new List<ASTNode>()));
+        } while (Match(TokenType.Comma));
+        
+        Consume(TokenType.RightBracket, "Expected ']' after event handlers");
+        
+        return handlers;
+    }
 }
 
 // =============================================================================
@@ -2070,6 +2138,7 @@ public class CSharpGenerator
         _usingStatements.Add("System");
         _usingStatements.Add("System.Collections.Generic");
         _usingStatements.Add("System.Threading.Tasks");
+        _usingStatements.Add("FlowLang.Runtime");
         
         foreach (var usingStmt in _usingStatements.Distinct())
         {
@@ -2211,6 +2280,7 @@ public class CSharpGenerator
         return ClassDeclaration("Result")
             .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
             .AddMembers(
+                // Generic OK method with explicit type parameters
                 MethodDeclaration(ParseTypeName("Result<T, E>"), "Ok")
                     .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
                     .AddTypeParameterListParameters(
@@ -2225,6 +2295,7 @@ public class CSharpGenerator
                                     Argument(IdentifierName("value")),
                                     Argument(LiteralExpression(SyntaxKind.DefaultLiteralExpression)))))),
                 
+                // Generic Error method with explicit type parameters
                 MethodDeclaration(ParseTypeName("Result<T, E>"), "Error")
                     .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword))
                     .AddTypeParameterListParameters(
@@ -2337,12 +2408,25 @@ public class CSharpGenerator
         
         // Generate method body
         var statements = new List<StatementSyntax>();
-        foreach (var stmt in func.Body)
+        for (int i = 0; i < func.Body.Count; i++)
         {
-            var generated = GenerateStatementSyntax(stmt);
-            if (generated != null)
+            var stmt = func.Body[i];
+            var isLastStatement = i == func.Body.Count - 1;
+            
+            // If this is the last statement and it's an expression (not a return statement),
+            // wrap it in a return statement
+            if (isLastStatement && stmt is not ReturnStatement && func.ReturnType != null && func.ReturnType != "void")
             {
-                statements.Add(generated);
+                var returnStmt = ReturnStatement(GenerateExpression(stmt));
+                statements.Add(returnStmt);
+            }
+            else
+            {
+                var generated = GenerateStatementSyntax(stmt);
+                if (generated != null)
+                {
+                    statements.Add(generated);
+                }
             }
         }
         
@@ -2501,6 +2585,7 @@ public class CSharpGenerator
             Identifier id => IdentifierName(id.Name),
             NumberLiteral num => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(num.Value)),
             StringLiteral str => LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(str.Value)),
+            BooleanLiteral boolean => LiteralExpression(boolean.Value ? SyntaxKind.TrueLiteralExpression : SyntaxKind.FalseLiteralExpression),
             ResultExpression result => GenerateResultExpression(result),
             ErrorPropagation error => GenerateErrorPropagation(error),
             MemberAccessExpression member => GenerateMemberAccess(member),
@@ -2612,11 +2697,24 @@ public class CSharpGenerator
     private InvocationExpressionSyntax GenerateResultExpression(ResultExpression result)
     {
         var methodName = result.Type == "Ok" ? "Ok" : "Error";
+        
+        // For now, use common type combinations - in a full implementation, 
+        // this would need proper type inference from the function signature
+        var typeArgs = result.Type == "Ok" ? 
+            GenericName("Ok").WithTypeArgumentList(TypeArgumentList(SeparatedList<TypeSyntax>(new[] { 
+                IdentifierName("object"), 
+                IdentifierName("string") 
+            }))) :
+            GenericName("Error").WithTypeArgumentList(TypeArgumentList(SeparatedList<TypeSyntax>(new[] { 
+                IdentifierName("object"), 
+                IdentifierName("string") 
+            })));
+        
         return InvocationExpression(
             MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
                 IdentifierName("Result"),
-                IdentifierName(methodName)
+                typeArgs
             )
         ).AddArgumentListArguments(Argument(GenerateExpression(result.Value)));
     }
@@ -2630,10 +2728,17 @@ public class CSharpGenerator
     
     private MemberAccessExpressionSyntax GenerateMemberAccess(MemberAccessExpression member)
     {
+        // Handle FlowLang to C# property mapping
+        var memberName = member.Member;
+        if (memberName == "length")
+        {
+            memberName = "Count"; // List.length -> List.Count
+        }
+        
         return MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
             GenerateExpression(member.Object),
-            IdentifierName(member.Member)
+            IdentifierName(memberName)
         );
     }
     
@@ -2884,9 +2989,7 @@ public class CSharpGenerator
     
     private ExpressionSyntax GenerateMatchExpression(MatchExpression match)
     {
-        // For now, generate a simple ternary conditional for 2-case matches
-        // This is a simplified implementation
-        
+        // Generate proper match expression with variable binding
         var valueExpr = GenerateExpression(match.Value);
         
         if (match.Cases.Count == 2)
@@ -2896,15 +2999,50 @@ public class CSharpGenerator
             
             if (okCase != null && errorCase != null)
             {
-                // Generate: result.Success ? okExpression : errorExpression
+                // Generate: result.IsSuccess ? (var okVar = result.Value; okExpression) : (var errorVar = result.Error; errorExpression)
                 var condition = MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
                     valueExpr,
-                    IdentifierName("Success")
+                    IdentifierName("IsSuccess")
                 );
                 
-                var thenExpr = okCase.Body.Count > 0 ? GenerateExpression(okCase.Body[0]) : LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("ok"));
-                var elseExpr = errorCase.Body.Count > 0 ? GenerateExpression(errorCase.Body[0]) : LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("error"));
+                // Generate the then expression with variable binding
+                ExpressionSyntax thenExpr;
+                if (okCase.Variable != null && okCase.Body.Count > 0)
+                {
+                    // Create a lambda that binds the variable and executes the body
+                    var valueAccess = MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        valueExpr,
+                        IdentifierName("Value")
+                    );
+                    
+                    // For now, just substitute the variable name directly in the body
+                    thenExpr = GenerateExpressionWithVariableSubstitution(okCase.Body[0], okCase.Variable, valueAccess);
+                }
+                else
+                {
+                    thenExpr = okCase.Body.Count > 0 ? GenerateExpression(okCase.Body[0]) : LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("ok"));
+                }
+                
+                // Generate the else expression with variable binding
+                ExpressionSyntax elseExpr;
+                if (errorCase.Variable != null && errorCase.Body.Count > 0)
+                {
+                    // Create a lambda that binds the variable and executes the body
+                    var errorAccess = MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        valueExpr,
+                        IdentifierName("Error")
+                    );
+                    
+                    // For now, just substitute the variable name directly in the body
+                    elseExpr = GenerateExpressionWithVariableSubstitution(errorCase.Body[0], errorCase.Variable, errorAccess);
+                }
+                else
+                {
+                    elseExpr = errorCase.Body.Count > 0 ? GenerateExpression(errorCase.Body[0]) : LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("error"));
+                }
                 
                 return ConditionalExpression(condition, thenExpr, elseExpr);
             }
@@ -2917,6 +3055,46 @@ public class CSharpGenerator
         }
         
         return LiteralExpression(SyntaxKind.StringLiteralExpression, Literal("match"));
+    }
+    
+    private ExpressionSyntax GenerateExpressionWithVariableSubstitution(ASTNode expression, string variableName, ExpressionSyntax valueExpression)
+    {
+        // Simple variable substitution - replace identifiers matching the variable name
+        return expression switch
+        {
+            Identifier id when id.Name == variableName => valueExpression,
+            BinaryExpression binary => BinaryExpression(
+                binary.Operator switch
+                {
+                    "+" => SyntaxKind.AddExpression,
+                    "-" => SyntaxKind.SubtractExpression,
+                    "*" => SyntaxKind.MultiplyExpression,
+                    "/" => SyntaxKind.DivideExpression,
+                    "==" => SyntaxKind.EqualsExpression,
+                    "!=" => SyntaxKind.NotEqualsExpression,
+                    "<" => SyntaxKind.LessThanExpression,
+                    ">" => SyntaxKind.GreaterThanExpression,
+                    "<=" => SyntaxKind.LessThanOrEqualExpression,
+                    ">=" => SyntaxKind.GreaterThanOrEqualExpression,
+                    _ => SyntaxKind.AddExpression
+                },
+                GenerateExpressionWithVariableSubstitution(binary.Left, variableName, valueExpression),
+                GenerateExpressionWithVariableSubstitution(binary.Right, variableName, valueExpression)
+            ),
+            MemberAccessExpression member => MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                GenerateExpressionWithVariableSubstitution(member.Object, variableName, valueExpression),
+                IdentifierName(member.Member == "length" ? "Count" : member.Member)
+            ),
+            CallExpression call => InvocationExpression(
+                call.Name.Contains('.') ? 
+                    ParseExpression(call.Name) : 
+                    IdentifierName(call.Name)
+            ).AddArgumentListArguments(
+                call.Arguments.Select(arg => Argument(GenerateExpressionWithVariableSubstitution(arg, variableName, valueExpression))).ToArray()
+            ),
+            _ => GenerateExpression(expression)
+        };
     }
     
     private void ProcessImportStatement(ImportStatement import)
@@ -3127,7 +3305,7 @@ public class DirectCompiler
     /// </summary>
     private MetadataReference[] GetDefaultReferences()
     {
-        return new[]
+        var references = new List<MetadataReference>
         {
             // Core .NET references
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
@@ -3145,6 +3323,19 @@ public class DirectCompiler
             // System.Text reference (for string operations)
             MetadataReference.CreateFromFile(Assembly.Load("System.Text.RegularExpressions").Location)
         };
+        
+        // Add FlowLang.Runtime reference if it exists in the same assembly
+        try
+        {
+            var currentAssembly = Assembly.GetExecutingAssembly();
+            references.Add(MetadataReference.CreateFromFile(currentAssembly.Location));
+        }
+        catch (Exception)
+        {
+            // If we can't load the runtime, continue without it
+        }
+        
+        return references.ToArray();
     }
 }
 
@@ -3241,6 +3432,43 @@ public class FlowLangTranspiler
         }
         
         return jsCode;
+    }
+    
+    public async Task<string> TranspileToBlazorAsync(string sourceFile, string? outputFile = null)
+    {
+        // Read source file
+        var source = await File.ReadAllTextAsync(sourceFile);
+        
+        // Lex
+        var lexer = new FlowLangLexer(source);
+        var tokens = lexer.ScanTokens();
+        
+        // Parse
+        var parser = new FlowLangParser(tokens);
+        var ast = parser.Parse();
+        
+        // Generate Blazor
+        var blazorGenerator = new BlazorGenerator();
+        var blazorContent = new System.Text.StringBuilder();
+        
+        // Generate Blazor components from AST
+        foreach (var statement in ast.Statements)
+        {
+            if (statement is ComponentDeclaration component)
+            {
+                blazorContent.AppendLine(blazorGenerator.GenerateBlazorComponent(component));
+            }
+        }
+        
+        var blazorCode = blazorContent.ToString();
+        
+        // Write to output file if specified
+        if (outputFile != null)
+        {
+            await File.WriteAllTextAsync(outputFile, blazorCode);
+        }
+        
+        return blazorCode;
     }
 }
 
@@ -3370,8 +3598,14 @@ public class DirectCompilerCLI
                 Console.WriteLine($"Successfully transpiled {options.InputFile} -> {options.OutputFile} (JavaScript)");
                 break;
             
+            case "blazor":
+            case "razor":
+                await transpiler.TranspileToBlazorAsync(options.InputFile!, options.OutputFile);
+                Console.WriteLine($"Successfully transpiled {options.InputFile} -> {options.OutputFile} (Blazor)");
+                break;
+            
             default:
-                Console.Error.WriteLine($"Error: Unsupported target '{options.Target}'. Supported targets: csharp, javascript");
+                Console.Error.WriteLine($"Error: Unsupported target '{options.Target}'. Supported targets: csharp, javascript, blazor");
                 return 1;
         }
         
@@ -3488,6 +3722,7 @@ public class DirectCompilerCLI
             var extension = options.Target?.ToLowerInvariant() switch
             {
                 "javascript" or "js" => ".js",
+                "blazor" or "razor" => ".razor",
                 _ => ".cs"
             };
             options.OutputFile = Path.ChangeExtension(options.InputFile, extension);
@@ -3502,7 +3737,7 @@ public class DirectCompilerCLI
         Console.WriteLine();
         Console.WriteLine("Usage:");
         Console.WriteLine("  Transpile (default):");
-        Console.WriteLine("    flowc-core <input.flow> [<output.cs>] [--target csharp|javascript]");
+        Console.WriteLine("    flowc-core <input.flow> [<output.cs>] [--target csharp|javascript|blazor]");
         Console.WriteLine();
         Console.WriteLine("  Direct compilation:");
         Console.WriteLine("    flowc-core --compile <input.flow> [--output <output.exe>]");
@@ -3515,7 +3750,7 @@ public class DirectCompilerCLI
         Console.WriteLine("  --library, -l   Generate library (.dll) instead of executable");
         Console.WriteLine("  --debug, -d     Include debug symbols and disable optimizations");
         Console.WriteLine("  --output, -o    Specify output file path");
-        Console.WriteLine("  --target, -t    Target language for transpilation (csharp, javascript)");
+        Console.WriteLine("  --target, -t    Target language for transpilation (csharp, javascript, blazor)");
         Console.WriteLine("  --help, -h      Show this help message");
         Console.WriteLine("  --version, -v   Show version information");
         Console.WriteLine();
@@ -3549,6 +3784,366 @@ public class CLIOptions
     public string? Target { get; set; }
     public bool ShowHelp { get; set; }
     public bool ShowVersion { get; set; }
+}
+
+// =============================================================================
+// BLAZOR GENERATOR
+// =============================================================================
+
+public class BlazorGenerator
+{
+    public string GenerateBlazorComponent(ComponentDeclaration component)
+    {
+        var razor = new System.Text.StringBuilder();
+        
+        // Add page directive if this is a page component
+        if (component.Parameters.Any())
+        {
+            razor.AppendLine($"@page \"/{component.Name.ToLowerInvariant()}\"");
+        }
+        
+        // Add using statements
+        razor.AppendLine("@using Microsoft.AspNetCore.Components");
+        razor.AppendLine("@using Microsoft.AspNetCore.Components.Web");
+        razor.AppendLine();
+        
+        // Generate render block (HTML markup)
+        razor.AppendLine(GenerateRenderBlock(component.RenderBlock));
+        razor.AppendLine();
+        
+        // Generate code block
+        razor.AppendLine("@code {");
+        
+        // Add parameters
+        foreach (var param in component.Parameters)
+        {
+            razor.AppendLine($"    [Parameter] public {MapFlowLangTypeToCSharp(param.Type)} {param.Name} {{ get; set; }} = default({MapFlowLangTypeToCSharp(param.Type)});");
+        }
+        
+        if (component.Parameters.Any())
+        {
+            razor.AppendLine();
+        }
+        
+        // Add state variables
+        if (component.State?.Any() == true)
+        {
+            foreach (var state in component.State)
+            {
+                var defaultValue = state.InitialValue != null ? GenerateBlazorExpression(state.InitialValue) : GetDefaultValue(state.Type);
+                razor.AppendLine($"    private {MapFlowLangTypeToCSharp(state.Type)} {state.Name} = {defaultValue};");
+            }
+            razor.AppendLine();
+        }
+        
+        // Add OnInitialized method if component has OnMount
+        if (component.OnMount != null)
+        {
+            razor.AppendLine("    protected override void OnInitialized()");
+            razor.AppendLine("    {");
+            razor.AppendLine("        base.OnInitialized();");
+            razor.AppendLine(GenerateBlazorStatements(component.OnMount));
+            razor.AppendLine("    }");
+            razor.AppendLine();
+        }
+        
+        // Add event handlers
+        if (component.Events?.Any() == true)
+        {
+            foreach (var eventHandler in component.Events)
+            {
+                razor.AppendLine($"    private void {ToPascalCase(eventHandler.Name)}({GenerateParameterList(eventHandler.Parameters)})");
+                razor.AppendLine("    {");
+                
+                foreach (var statement in eventHandler.Body)
+                {
+                    razor.AppendLine($"        {GenerateBlazorStatements(statement)}");
+                }
+                
+                razor.AppendLine("    }");
+                razor.AppendLine();
+            }
+        }
+        
+        razor.AppendLine("}");
+        
+        return razor.ToString();
+    }
+    
+    private string GenerateRenderBlock(ASTNode renderBlock)
+    {
+        return renderBlock switch
+        {
+            UIElement element => GenerateUIElement(element),
+            ComponentInstance component => GenerateComponentInstance(component),
+            ConditionalRender conditional => GenerateConditionalRender(conditional),
+            IterativeRender iterative => GenerateIterativeRender(iterative),
+            _ => GenerateBlazorExpression(renderBlock)
+        };
+    }
+    
+    private string GenerateUIElement(UIElement element)
+    {
+        var html = new System.Text.StringBuilder();
+        
+        // Map FlowLang element names to HTML tags
+        var htmlTag = MapFlowLangElementToHtml(element.Tag);
+        
+        html.Append($"<{htmlTag}");
+        
+        // Add attributes
+        foreach (var attr in element.Attributes)
+        {
+            var attrName = MapFlowLangAttributeToHtml(attr.Name);
+            var attrValue = GenerateBlazorExpression(attr.Value);
+            
+            if (attr.Name.StartsWith("on_"))
+            {
+                // Event handler
+                var eventName = attr.Name.Replace("on_", "@on");
+                html.Append($" {eventName}=\"{attrValue}\"");
+            }
+            else if (attr.Name == "text")
+            {
+                // Text content - handle specially
+                html.Append($">{attrValue}</{htmlTag}>");
+                return html.ToString();
+            }
+            else
+            {
+                html.Append($" {attrName}=\"{attrValue}\"");
+            }
+        }
+        
+        if (element.Children.Any())
+        {
+            html.Append(">");
+            
+            foreach (var child in element.Children)
+            {
+                html.Append(GenerateRenderBlock(child));
+            }
+            
+            html.Append($"</{htmlTag}>");
+        }
+        else
+        {
+            html.Append(" />");
+        }
+        
+        return html.ToString();
+    }
+    
+    private string GenerateComponentInstance(ComponentInstance component)
+    {
+        var html = new System.Text.StringBuilder();
+        
+        html.Append($"<{component.Name}");
+        
+        // Add props
+        foreach (var prop in component.Props)
+        {
+            var propValue = GenerateBlazorExpression(prop.Value);
+            html.Append($" {prop.Name}=\"{propValue}\"");
+        }
+        
+        if (component.Children?.Any() == true)
+        {
+            html.Append(">");
+            
+            foreach (var child in component.Children)
+            {
+                html.Append(GenerateRenderBlock(child));
+            }
+            
+            html.Append($"</{component.Name}>");
+        }
+        else
+        {
+            html.Append(" />");
+        }
+        
+        return html.ToString();
+    }
+    
+    private string GenerateConditionalRender(ConditionalRender conditional)
+    {
+        var html = new System.Text.StringBuilder();
+        
+        html.AppendLine($"@if ({GenerateBlazorExpression(conditional.Condition)})");
+        html.AppendLine("{");
+        
+        foreach (var item in conditional.ThenBody)
+        {
+            html.AppendLine($"    {GenerateRenderBlock(item)}");
+        }
+        
+        html.AppendLine("}");
+        
+        if (conditional.ElseBody?.Any() == true)
+        {
+            html.AppendLine("else");
+            html.AppendLine("{");
+            
+            foreach (var item in conditional.ElseBody)
+            {
+                html.AppendLine($"    {GenerateRenderBlock(item)}");
+            }
+            
+            html.AppendLine("}");
+        }
+        
+        return html.ToString();
+    }
+    
+    private string GenerateIterativeRender(IterativeRender iterative)
+    {
+        var html = new System.Text.StringBuilder();
+        
+        var condition = iterative.Condition != null ? $" where {GenerateBlazorExpression(iterative.Condition)}" : "";
+        html.AppendLine($"@foreach (var {iterative.Variable} in {GenerateBlazorExpression(iterative.Collection)}{condition})");
+        html.AppendLine("{");
+        
+        foreach (var item in iterative.Body)
+        {
+            html.AppendLine($"    {GenerateRenderBlock(item)}");
+        }
+        
+        html.AppendLine("}");
+        
+        return html.ToString();
+    }
+    
+    private string GenerateBlazorExpression(ASTNode expression)
+    {
+        return expression switch
+        {
+            Identifier id => id.Name,
+            NumberLiteral num => num.Value.ToString(),
+            StringLiteral str => $"\"{str.Value}\"",
+            BooleanLiteral boolLit => boolLit.Value.ToString().ToLower(),
+            StringInterpolation interpolation => GenerateStringInterpolation(interpolation),
+            BinaryExpression binary => $"{GenerateBlazorExpression(binary.Left)} {binary.Operator} {GenerateBlazorExpression(binary.Right)}",
+            CallExpression call => $"{call.Name}({string.Join(", ", call.Arguments.Select(GenerateBlazorExpression))})",
+            MethodCallExpression method => $"{GenerateBlazorExpression(method.Object)}.{method.Method}({string.Join(", ", method.Arguments.Select(GenerateBlazorExpression))})",
+            _ => expression.ToString() ?? ""
+        };
+    }
+    
+    private string GenerateStringInterpolation(StringInterpolation interpolation)
+    {
+        var result = new System.Text.StringBuilder();
+        result.Append("$\"");
+        
+        foreach (var part in interpolation.Parts)
+        {
+            if (part is StringLiteral str)
+            {
+                result.Append(str.Value);
+            }
+            else
+            {
+                result.Append("{");
+                result.Append(GenerateBlazorExpression(part));
+                result.Append("}");
+            }
+        }
+        
+        result.Append("\"");
+        return result.ToString();
+    }
+    
+    private string GenerateBlazorStatements(ASTNode statement)
+    {
+        return statement switch
+        {
+            CallExpression call when call.Name == "set_state" => GenerateSetStateCall(call),
+            CallExpression call => $"{GenerateBlazorExpression(call)};",
+            _ => $"{GenerateBlazorExpression(statement)};"
+        };
+    }
+    
+    private string GenerateSetStateCall(CallExpression call)
+    {
+        if (call.Arguments.Count >= 2)
+        {
+            var stateName = GenerateBlazorExpression(call.Arguments[0]);
+            var stateValue = GenerateBlazorExpression(call.Arguments[1]);
+            return $"{stateName} = {stateValue};";
+        }
+        return "";
+    }
+    
+    private string MapFlowLangElementToHtml(string elementName)
+    {
+        return elementName switch
+        {
+            "container" => "div",
+            "heading" => "h1",
+            "button" => "button",
+            "text_input" => "input",
+            "select_dropdown" => "select",
+            _ => elementName
+        };
+    }
+    
+    private string MapFlowLangAttributeToHtml(string attributeName)
+    {
+        return attributeName switch
+        {
+            "class" => "class",
+            "text" => "text",
+            "level" => "level",
+            "disabled" => "disabled",
+            _ => attributeName
+        };
+    }
+    
+    private string MapFlowLangTypeToCSharp(string flowLangType)
+    {
+        return flowLangType switch
+        {
+            "string" => "string",
+            "int" => "int",
+            "bool" => "bool",
+            "float" => "float",
+            "double" => "double",
+            "Option<string>" => "string?",
+            "Option<int>" => "int?",
+            "Option<bool>" => "bool?",
+            "List<string>" => "List<string>",
+            "List<int>" => "List<int>",
+            _ => flowLangType
+        };
+    }
+    
+    private string GetDefaultValue(string type)
+    {
+        return type switch
+        {
+            "string" => "\"\"",
+            "int" => "0",
+            "bool" => "false",
+            "float" => "0.0f",
+            "double" => "0.0",
+            _ when type.StartsWith("Option<") => "null",
+            _ when type.StartsWith("List<") => $"new {MapFlowLangTypeToCSharp(type)}()",
+            _ => "default"
+        };
+    }
+    
+    private string GenerateParameterList(List<Parameter> parameters)
+    {
+        return string.Join(", ", parameters.Select(p => $"{MapFlowLangTypeToCSharp(p.Type)} {p.Name}"));
+    }
+    
+    private string ToPascalCase(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+        
+        return char.ToUpper(input[0]) + input.Substring(1);
+    }
 }
 
 public class FlowCoreProgram

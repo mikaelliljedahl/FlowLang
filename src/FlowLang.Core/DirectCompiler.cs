@@ -386,8 +386,14 @@ namespace FlowLang.Core
                     Console.WriteLine($"Successfully transpiled {options.InputFile} -> {options.OutputFile} (JavaScript)");
                     break;
                 
+                case "blazor":
+                case "razor":
+                    await transpiler.TranspileToBlazorAsync(options.InputFile!, options.OutputFile);
+                    Console.WriteLine($"Successfully transpiled {options.InputFile} -> {options.OutputFile} (Blazor)");
+                    break;
+                
                 default:
-                    Console.Error.WriteLine($"Error: Unsupported target '{options.Target}'. Supported targets: csharp, javascript");
+                    Console.Error.WriteLine($"Error: Unsupported target '{options.Target}'. Supported targets: csharp, javascript, blazor");
                     return 1;
             }
             
@@ -504,6 +510,7 @@ namespace FlowLang.Core
                 var extension = options.Target?.ToLowerInvariant() switch
                 {
                     "javascript" or "js" => ".js",
+                    "blazor" or "razor" => ".razor",
                     _ => ".cs"
                 };
                 options.OutputFile = Path.ChangeExtension(options.InputFile, extension);
@@ -518,7 +525,7 @@ namespace FlowLang.Core
             Console.WriteLine();
             Console.WriteLine("Usage:");
             Console.WriteLine("  Transpile (default):");
-            Console.WriteLine("    flowc-core <input.flow> [<output.cs>] [--target csharp|javascript]");
+            Console.WriteLine("    flowc-core <input.flow> [<output.cs>] [--target csharp|javascript|blazor]");
             Console.WriteLine();
             Console.WriteLine("  Direct compilation:");
             Console.WriteLine("    flowc-core --compile <input.flow> [--output <output.exe>]");
@@ -531,7 +538,7 @@ namespace FlowLang.Core
             Console.WriteLine("  --library, -l   Generate library (.dll) instead of executable");
             Console.WriteLine("  --debug, -d     Include debug symbols and disable optimizations");
             Console.WriteLine("  --output, -o    Specify output file path");
-            Console.WriteLine("  --target, -t    Target language for transpilation (csharp, javascript)");
+            Console.WriteLine("  --target, -t    Target language for transpilation (csharp, javascript, blazor)");
             Console.WriteLine("  --help, -h      Show this help message");
             Console.WriteLine("  --version, -v   Show version information");
             Console.WriteLine();

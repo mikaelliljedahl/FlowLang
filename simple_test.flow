@@ -1,0 +1,12 @@
+function test() -> Result<int, string> {
+    let result = Ok(42)
+    
+    match result {
+        Ok(value) -> {
+            return Ok(value)
+        }
+        Error(err) -> {
+            return Error(err)
+        }
+    }
+}

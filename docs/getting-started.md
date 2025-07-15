@@ -53,7 +53,7 @@ If you prefer manual setup:
 ```bash
 # Test with a simple file
 echo 'function main() -> string { return "Hello!" }' > test.flow
-flowc run test.flow  # Should show generated C# code
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run test.flow  # Should show "Hello!" output
 ```
 
 ## Your First Program
@@ -69,8 +69,8 @@ function main() -> string {
 }
 EOF
 
-# Run it
-flowc run hello.flow
+# Run it (working as of July 2025)
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run hello.flow
 ```
 
 **Example 2: String Interpolation**
@@ -86,8 +86,8 @@ function main() -> string {
 }
 EOF
 
-# Run it
-flowc run greet.flow
+# Run it (working as of July 2025)
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run greet.flow
 ```
 
 **Example 3: Result Types (Error Handling)**
@@ -111,21 +111,23 @@ function main() -> string {
 }
 EOF
 
-# Run it
-flowc run math.flow
+# Run it (working as of July 2025)
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run math.flow
 ```
 
 ### 🎯 Quick Commands to Remember
 
 ```bash
-# Run any FlowLang file
-flowc run myfile.flow
+# **WORKING as of July 2025**
+# Direct compilation and execution
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --compile myfile.flow
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run myfile.flow
 
-# Create a new project
-flowc new my-project
+# Traditional transpilation
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- myfile.flow myfile.cs
 
 # Get help
-flowc --help
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --help
 ```
 
 ### Generated C# Output
@@ -286,18 +288,19 @@ function registerUser(name: string, age: int, email: string)
 FlowLang provides a comprehensive CLI for project management:
 
 ```bash
-# Create a new project
-dotnet run --project src/flowc.csproj -- new my-awesome-app
-cd my-awesome-app
+# **WORKING as of July 2025**
+# Direct compilation and execution
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --compile my-awesome-app.flow
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run my-awesome-app.flow
 
-# Build the project
-dotnet run --project ../src/flowc.csproj -- build
+# Traditional transpilation
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- my-awesome-app.flow my-awesome-app.cs
 
-# Run tests
-dotnet run --project ../src/flowc.csproj -- test
-
-# Run a specific file
-dotnet run --project ../src/flowc.csproj -- run examples/hello.flow
+# **NOT YET IMPLEMENTED** (Phase 5 - Self-hosting migration)
+# These commands will be available after .flow tools are tested and fixed:
+# flowc new my-awesome-app
+# flowc build  
+# flowc test
 ```
 
 ### Project Structure
@@ -491,9 +494,10 @@ Now that you have FlowLang up and running:
 
 1. **Explore the Examples**: Check out the `examples/` directory, especially `specification_example.flow` to see how specification blocks preserve intent with code
 2. **Read the Language Reference**: See `docs/language-reference.md` for complete syntax documentation
-3. **Try the CLI**: Experiment with `flowc new`, `build`, `run`, and `test` commands
+3. **Try Direct Compilation**: Experiment with `--compile` and `--run` commands (working as of July 2025)
 4. **Learn About Effects**: Understand FlowLang's effect system in `docs/examples/effect-system.md`
 5. **Migration Guide**: If you're coming from C#, see `docs/migration-guide.md`
+6. **Phase 5 Development**: Follow the self-hosting migration progress in `NEXT_SPRINT_PLAN.md`
 
 ## Getting Help
 

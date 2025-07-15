@@ -31,18 +31,23 @@ function main() -> string {
 
 ### 4. Run It
 ```bash
-# Quick transpilation (from FlowLang root directory)
+# **WORKING: Direct compilation (Phase 4 - July 2025)**
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --compile hello.flow
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run hello.flow
+
+# **WORKING: Traditional transpilation**
 dotnet run --project src/FlowLang.Core/flowc-core.csproj -- hello.flow hello.cs
 dotnet run hello.cs
 
-# Or use the simple flowc script:
-./flowc hello.flow
-flowc run hello.flow
+# **WORKING: Standalone executable**
+dotnet publish src/FlowLang.Core/flowc-core.csproj -c Release -o bin/release
+./bin/release/flowc-core --compile hello.flow
+./bin/release/flowc-core --run hello.flow
 ```
 
 ## 🔥 Core Features
 
-### Multi-Module System - Working as of December 2024! 🎉
+### Multi-Module System - Working as of July 2025! 🎉
 ```flowlang
 // math.flow
 module Math {
@@ -136,33 +141,43 @@ function validateAge(age: int) -> Result<string, string> {
 }
 ```
 
-## 📚 Common Commands
+## 📚 Current Implementation Status
 
+### ✅ **WORKING** (Phase 4 - July 2025)
 ```bash
-# Create new project
-flowc new my-project
+# **Direct compilation and execution**
+./bin/release/flowc-core --compile hello.flow                 # → hello.exe
+./bin/release/flowc-core --run hello.flow                     # Compile + run
+./bin/release/flowc-core --library utils.flow                 # → utils.dll
 
-# Build project
-flowc build
+# **Traditional transpilation**
+./bin/release/flowc-core hello.flow hello.cs                  # → C# source
+./bin/release/flowc-core --target javascript hello.flow       # → JavaScript (basic)
+./bin/release/flowc-core --target blazor ui-component.flow    # → Blazor component (NEW!)
 
-# Run single file (shows generated C#)
-flowc run examples/simple.flow
+# **Multi-module compilation**
+./bin/release/flowc-core --compile main.flow                  # With imports working
+```
 
-# See specification blocks in action
-flowc run examples/specification_example.flow
+### ❌ **NOT WORKING** (Phase 5 - Self-Hosting Migration)
+```bash
+# **These .flow tools exist but don't compile:**
+# - src/FlowLang.Tools/linter.flow (298 lines)
+# - src/FlowLang.Tools/dev-server.flow (66 lines)  
+# - src/FlowLang.Tools/simple-dev-server.flow (165 lines)
+# Issue: FlowLang.Runtime bridge incomplete, syntax incompatibilities
 
-# Run tests
-flowc test
+# **These C# tools exist but aren't integrated:**
+# - src/FlowLang.Analysis/ (8 files) - no .csproj
+# - src/FlowLang.LSP/ (6 files) - no .csproj
+# - src/FlowLang.Package/ (6 files) - no .csproj
+# Issue: Incomplete implementations, never tested
 
-# Static analysis/linting
-flowc lint
-
-# Security audit
-flowc audit
-
-# Get help
-flowc --help
-flowc help <command>
+# **Missing entirely:**
+# - Frontend/UI code generation (Blazor target planned)
+# - Package management (flowc add, flowc install)
+# - LSP server for IDE integration
+# - Comprehensive linting and analysis
 ```
 
 ## 🎯 Why FlowLang?

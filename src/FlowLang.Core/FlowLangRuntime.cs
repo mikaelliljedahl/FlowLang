@@ -108,6 +108,26 @@ namespace FlowLang.Runtime
             watcher.Deleted += (sender, e) => onChanged(e.FullPath);
             watcher.EnableRaisingEvents = true;
         }
+        
+        public static void StartWatching(FileSystemWatcher watcher, string filter)
+        {
+            watcher.Filter = filter;
+            watcher.EnableRaisingEvents = true;
+        }
+        
+        public static List<string> FindFiles(string directory, string pattern, bool recursive = false)
+        {
+            try
+            {
+                var searchOption = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                var files = Directory.GetFiles(directory, pattern, searchOption);
+                return files.ToList();
+            }
+            catch
+            {
+                return new List<string>();
+            }
+        }
     }
     
     // =============================================================================
@@ -202,6 +222,21 @@ namespace FlowLang.Runtime
                 Output = output,
                 Error = error
             };
+        }
+        
+        public static int GetExitCode(ProcessResult result)
+        {
+            return result.ExitCode;
+        }
+        
+        public static string GetOutput(ProcessResult result)
+        {
+            return result.Output;
+        }
+        
+        public static string GetErrorOutput(ProcessResult result)
+        {
+            return result.Error;
         }
         
         public static async Task<ProcessResult> ExecuteCommandAsync(string command, string[] args)
@@ -492,6 +527,21 @@ namespace FlowLang.Runtime
         public static string ToLower(string str)
         {
             return str.ToLower();
+        }
+        
+        public static string ToString(int value)
+        {
+            return value.ToString();
+        }
+        
+        public static string ToString(bool value)
+        {
+            return value.ToString();
+        }
+        
+        public static string ToString(double value)
+        {
+            return value.ToString();
         }
     }
     

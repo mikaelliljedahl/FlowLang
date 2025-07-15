@@ -91,43 +91,47 @@ flowc help new
 
 ## Commands Overview
 
-| Command | Description | Purpose |
-|---------|-------------|---------|
-| [`compile`](#compile-command) | Compile FlowLang to target language | Multi-target compilation |
-| [`new`](#new-command) | Create a new FlowLang project | Project initialization |
-| [`targets`](#targets-command) | List available compilation targets | Target information |
-| [`build`](#build-command) | Build the current project | Transpile all source files |
-| [`run`](#run-command) | Transpile and display a single file | Development and testing |
-| [`dev`](#dev-command) | Start development server | UI development |
-| [`test`](#test-command) | Run all tests in the project | Testing and validation |
-| [`lsp`](#lsp-command) | Start the Language Server Protocol server | IDE integration |
-| [`lint`](#lint-command) | Run static analysis and linting | Code quality analysis |
-| [`add`](#add-command) | Add a package dependency | Package management |
-| [`install`](#install-command) | Install project dependencies | Package management |
-| [`audit`](#audit-command) | Security audit of dependencies | Security validation |
-| [`workspace`](#workspace-command) | Manage multi-project workspaces | Workspace operations |
-| [`help`](#help-command) | Show help information | Documentation |
+| Command | Status | Description | Purpose |
+|---------|--------|-------------|---------|
+| [`compile`](#compile-command) | ✅ **WORKING** | Compile FlowLang to target language | Multi-target compilation |
+| [`run`](#run-command) | ✅ **WORKING** | Transpile and display a single file | Development and testing |
+| [`new`](#new-command) | ❌ **Phase 5** | Create a new FlowLang project | Project initialization |
+| [`targets`](#targets-command) | ❌ **Phase 5** | List available compilation targets | Target information |
+| [`build`](#build-command) | ❌ **Phase 5** | Build the current project | Transpile all source files |
+| [`dev`](#dev-command) | ❌ **Phase 5** | Start development server | UI development |
+| [`test`](#test-command) | ❌ **Phase 5** | Run all tests in the project | Testing and validation |
+| [`lsp`](#lsp-command) | ❌ **Phase 5** | Start the Language Server Protocol server | IDE integration |
+| [`lint`](#lint-command) | ❌ **Phase 5** | Run static analysis and linting | Code quality analysis |
+| [`add`](#add-command) | ❌ **Phase 5** | Add a package dependency | Package management |
+| [`install`](#install-command) | ❌ **Phase 5** | Install project dependencies | Package management |
+| [`audit`](#audit-command) | ❌ **Phase 5** | Security audit of dependencies | Security validation |
+| [`workspace`](#workspace-command) | ❌ **Phase 5** | Manage multi-project workspaces | Workspace operations |
+| [`help`](#help-command) | ✅ **WORKING** | Show help information | Documentation |
 
 ## Command Reference
 
-### `compile` Command
+### `compile` Command ✅ **WORKING** (July 2025)
 
 Compiles FlowLang source code directly to executable files or transpiles to target languages.
 
 #### Syntax
 
 ```bash
-# Direct compilation to executable
-flowc-core --compile <input-file> [--output <output-file>]
+# Direct compilation to executable (WORKING)
+./bin/release/flowc-core --compile <input-file> [--output <output-file>]
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --compile <input-file>
 
-# Transpilation to target language
-flowc-core <input-file> <output-file> [--target <target>]
+# Transpilation to target language (WORKING)
+./bin/release/flowc-core <input-file> <output-file> [--target <target>]
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- <input-file> <output-file>
 
-# Compile and run immediately
-flowc-core --run <input-file>
+# Compile and run immediately (WORKING)
+./bin/release/flowc-core --run <input-file>
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run <input-file>
 
-# Generate library
-flowc-core --library <input-file> [--output <output-file>]
+# Generate library (WORKING)
+./bin/release/flowc-core --library <input-file> [--output <output-file>]
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --library <input-file>
 ```
 
 #### Options
@@ -156,24 +160,26 @@ The `compile` command transpiles FlowLang source to various target platforms:
 #### Examples
 
 ```bash
-# Transpile to C# (default)
-flowc-core backend/UserService.flow backend/UserService.cs
+# Transpile to C# (default) - WORKING
+./bin/release/flowc-core backend/UserService.flow backend/UserService.cs
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- backend/UserService.flow backend/UserService.cs
 
-# Direct compilation to executable
-flowc-core --compile backend/UserService.flow
-flowc-core --compile backend/UserService.flow --output UserService.exe
+# Direct compilation to executable - WORKING
+./bin/release/flowc-core --compile backend/UserService.flow
+./bin/release/flowc-core --compile backend/UserService.flow --output UserService.exe
 
-# Compile and run immediately
-flowc-core --run backend/UserService.flow
+# Compile and run immediately - WORKING
+./bin/release/flowc-core --run backend/UserService.flow
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run backend/UserService.flow
 
-# Generate library
-flowc-core --library shared/Utils.flow --output shared/Utils.dll
+# Generate library - WORKING
+./bin/release/flowc-core --library shared/Utils.flow --output shared/Utils.dll
 
-# Transpile to JavaScript
-flowc-core frontend/TodoApp.flow frontend/TodoApp.js --target javascript
+# Transpile to JavaScript - BASIC SUPPORT
+./bin/release/flowc-core frontend/TodoApp.flow frontend/TodoApp.js --target javascript
 
-# Debug compilation
-flowc-core --compile --debug backend/UserService.flow
+# Transpile to Blazor - NEW IN JULY 2025
+./bin/release/flowc-core --target blazor ui-component.flow
 ```
 
 #### Target-Specific Features
@@ -310,7 +316,9 @@ flowc dev --watch
 3. Edit FlowLang UI components
 4. See changes reflected immediately
 
-### `new` Command
+### `new` Command ❌ **Phase 5 - Self-hosting migration**
+
+**STATUS**: Not yet implemented. The `new` command will be available after the .flow tools are tested and fixed in Phase 5.
 
 Creates a new FlowLang project with a complete directory structure.
 
@@ -467,7 +475,9 @@ function test_add() -> bool {
 - **Directory already exists**: Returns error code 1  
 - **File system errors**: Returns error code 1
 
-### `build` Command
+### `build` Command ❌ **Phase 5 - Self-hosting migration**
+
+**STATUS**: Not yet implemented. The `build` command will be available after the .flow tools are tested and fixed in Phase 5.
 
 Builds the current FlowLang project by transpiling all source files.
 
@@ -526,14 +536,21 @@ Build behavior is controlled by `flowc.json`:
 - **No .flow files**: Returns error code 1
 - **Transpilation errors**: Returns error code 1
 
-### `run` Command
+### `run` Command ✅ **WORKING** (July 2025)
 
 Transpiles and displays the C# code for a single FlowLang file.
 
 #### Syntax
 
 ```bash
-flowc run <file.flow>
+# Using standalone executable
+./bin/release/flowc-core --run <file.flow>
+
+# Using dotnet run
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run <file.flow>
+
+# Legacy transpilation mode (shows C# code)
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- <file.flow>
 ```
 
 #### Parameters
@@ -551,14 +568,18 @@ The `run` command:
 #### Examples
 
 ```bash
-# Run a single file
-flowc run examples/hello.flow
+# Run a single file - WORKING
+./bin/release/flowc-core --run examples/hello.flow
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run examples/hello.flow
 
-# Run with relative path
-flowc run src/main.flow
+# Run with relative path - WORKING
+./bin/release/flowc-core --run src/main.flow
 
-# Run with absolute path
-flowc run /path/to/project/examples/demo.flow
+# Run with absolute path - WORKING
+./bin/release/flowc-core --run /path/to/project/examples/demo.flow
+
+# Show transpiled C# code (legacy mode) - WORKING
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- examples/hello.flow
 ```
 
 #### Sample Output
@@ -595,7 +616,9 @@ Run complete.
 - **File not found**: Returns error code 1
 - **Transpilation errors**: Returns error code 1
 
-### `test` Command
+### `test` Command ❌ **Phase 5 - Self-hosting migration**
+
+**STATUS**: Not yet implemented. The `test` command will be available after the .flow tools are tested and fixed in Phase 5.
 
 Runs all tests in the current project.
 
@@ -655,7 +678,7 @@ tests/
 - **No test files**: Returns success (exit code 0)
 - **Transpilation failures**: Returns error code 1
 
-### `help` Command
+### `help` Command ✅ **WORKING** (July 2025)
 
 Shows help information for commands.
 
@@ -680,14 +703,15 @@ The `help` command provides:
 #### Examples
 
 ```bash
-# Show general help
-flowc help
+# Show general help - WORKING
+./bin/release/flowc-core --help
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --help
 
-# Show help for specific commands
-flowc help new
-flowc help build
-flowc help run
-flowc help test
+# Show version - WORKING
+./bin/release/flowc-core --version
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --version
+
+# Note: Command-specific help for new, build, run, test will be available in Phase 5
 ```
 
 #### General Help Output
@@ -717,7 +741,9 @@ Each command provides detailed help including:
 - **Generated file structures** (for `new`)
 - **Configuration options** (for `build`)
 
-### `lsp` Command
+### `lsp` Command ❌ **Phase 5 - Self-hosting migration**
+
+**STATUS**: Not yet implemented. The `lsp` command will be available after the .flow tools are tested and fixed in Phase 5.
 
 Starts the FlowLang Language Server Protocol server for IDE integration.
 
@@ -763,7 +789,9 @@ See [LSP Integration Guide](lsp-integration.md) for setup instructions with:
 - Neovim
 - Emacs
 
-### `lint` Command
+### `lint` Command ❌ **Phase 5 - Self-hosting migration**
+
+**STATUS**: Not yet implemented. The `lint` command will be available after the .flow tools are tested and fixed in Phase 5.
 
 Runs static analysis and linting on FlowLang source code.
 
@@ -1174,11 +1202,14 @@ jobs:
 
 **Solution:**
 ```bash
-# Use full dotnet command
-dotnet run --project src/flowc.csproj -- --version
+# Use full dotnet command (WORKING as of July 2025)
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --version
+
+# Or use standalone executable
+./bin/release/flowc-core --version
 
 # Or create alias
-alias flowc="dotnet run --project /path/to/flowlang/src/flowc.csproj --"
+alias flowc="dotnet run --project /path/to/flowlang/src/FlowLang.Core/flowc-core.csproj --"
 ```
 
 #### 2. Project Already Exists
@@ -1187,16 +1218,17 @@ alias flowc="dotnet run --project /path/to/flowlang/src/flowc.csproj --"
 
 **Solutions:**
 ```bash
-# Use different name
-flowc new my-project-v2
+# NOTE: flowc new is not yet implemented (Phase 5)
+# For now, create projects manually:
 
-# Remove existing directory
-rm -rf my-project
-flowc new my-project
-
-# Or work in existing directory
+# Create directory structure
+mkdir my-project
 cd my-project
-# Add flowc.json manually if needed
+mkdir src examples tests
+
+# Create basic files
+echo 'function main() -> string { return "Hello!" }' > src/main.flow
+echo 'function greet(name: string) -> string { return $"Hello, {name}!" }' > examples/hello.flow
 ```
 
 #### 3. No Source Files
@@ -1221,8 +1253,9 @@ cat flowc.json
 
 **Solutions:**
 ```bash
-# Test individual files
-flowc run src/problematic_file.flow
+# Test individual files (WORKING)
+./bin/release/flowc-core --run src/problematic_file.flow
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run src/problematic_file.flow
 
 # Check syntax against language reference
 # See docs/language-reference.md
@@ -1258,20 +1291,21 @@ chmod -R 755 build/
 For additional debugging information:
 
 ```bash
-# Use verbose dotnet output
-dotnet run --project src/flowc.csproj --verbosity detailed -- build
+# Use verbose dotnet output (WORKING)
+dotnet run --project src/FlowLang.Core/flowc-core.csproj --verbosity detailed -- --run myfile.flow
 
-# Check generated files
-ls -la build/
-cat build/main.cs
+# Check generated files for traditional transpilation
+dotnet run --project src/FlowLang.Core/flowc-core.csproj -- myfile.flow myfile.cs
+cat myfile.cs
 ```
 
 ### Getting Help
 
 1. **Built-in Help:**
    ```bash
-   flowc help
-   flowc help <command>
+   # WORKING as of July 2025
+   ./bin/release/flowc-core --help
+   dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --help
    ```
 
 2. **Documentation:**
@@ -1308,16 +1342,17 @@ flowc run examples/hello.flow
    # Old
    flowc --input file.flow
    
-   # New
-   flowc run file.flow
+   # New (WORKING as of July 2025)
+   ./bin/release/flowc-core --run file.flow
+   dotnet run --project src/FlowLang.Core/flowc-core.csproj -- --run file.flow
    ```
 
 2. **Use project structure:**
    ```bash
    # Instead of individual file processing
-   flowc new my-project
-   # Move files to src/
-   flowc build
+   # NOTE: flowc new and flowc build are not yet implemented (Phase 5)
+   # For now, work with individual files:
+   ./bin/release/flowc-core --run file.flow
    ```
 
 ## Summary

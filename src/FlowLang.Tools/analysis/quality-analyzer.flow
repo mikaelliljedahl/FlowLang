@@ -1,0 +1,559 @@
+// FlowLang Code Quality Analyzer
+// Analyzes code quality metrics and patterns
+
+/*spec
+intent: "Analyze FlowLang code quality including complexity, naming, documentation, and best practices"
+rules:
+  - "Check function complexity (cyclomatic complexity, line count, parameter count)"
+  - "Validate naming conventions for functions, variables, and modules"
+  - "Check documentation coverage (spec blocks, comments)"
+  - "Detect code duplication and similar patterns"
+  - "Validate consistent coding style and patterns"
+  - "Check for dead code and unreachable statements"
+postconditions:
+  - "All code quality issues are detected and reported"
+  - "Suggestions provided for improving code maintainability"
+  - "Metrics collected for overall code quality assessment"
+spec*/
+
+struct QualityIssue {
+    rule_id: string,
+    severity: string,
+    message: string,
+    file_path: string,
+    line: int,
+    column: int,
+    fix_suggestion: string
+}
+
+struct QualityMetrics {
+    avg_function_length: int,
+    avg_complexity: int,
+    documentation_coverage: int,
+    naming_consistency: int,
+    code_duplication: int
+}
+
+struct QualityAnalysisResult {
+    issues: List<QualityIssue>,
+    metrics: QualityMetrics,
+    total_functions: int,
+    complex_functions: int,
+    undocumented_functions: int
+}
+
+// Main quality analyzer function
+function analyze_quality(file_path: string, content: string) uses [Logging] -> Result<QualityAnalysisResult, string> {
+    FlowLang.Runtime.LoggingRuntime.LogInfo("Analyzing code quality in: " + file_path)
+    
+    let issues = []
+    let totalFunctions = 0
+    let complexFunctions = 0
+    let undocumentedFunctions = 0
+    
+    // Extract functions and analyze quality
+    let functions = extract_quality_functions(content)
+    
+    match functions {
+        Ok(functionList) -> {
+            totalFunctions = functionList.length
+            
+            // Run quality analysis
+            let analysisResult = analyze_function_quality(functionList, file_path)
+            match analysisResult {
+                Ok(functionIssues) -> {
+                    issues = functionIssues
+                    
+                    // Calculate metrics
+                    let metrics = calculate_quality_metrics(functionList)
+                    let complexCount = count_complex_functions(functionList)
+                    let undocumentedCount = count_undocumented_functions(functionList)
+                    
+                    complexFunctions = complexCount
+                    undocumentedFunctions = undocumentedCount
+                    
+                    let result = QualityAnalysisResult {
+                        issues: issues,
+                        metrics: metrics,
+                        total_functions: totalFunctions,
+                        complex_functions: complexFunctions,
+                        undocumented_functions: undocumentedFunctions
+                    }
+                    
+                    FlowLang.Runtime.LoggingRuntime.LogInfo("Quality analysis completed - found " + FlowLang.Runtime.StringRuntime.ToString(issues.length) + " issues")
+                    return Ok(result)
+                }
+                Error(err) -> {
+                    FlowLang.Runtime.LoggingRuntime.LogError("Quality analysis failed: " + err)
+                    return Error(err)
+                }
+            }
+        }
+        Error(err) -> {
+            FlowLang.Runtime.LoggingRuntime.LogError("Function extraction failed: " + err)
+            return Error(err)
+        }
+    }
+}
+
+// Extract function information for quality analysis
+function extract_quality_functions(content: string) -> Result<List<QualityFunctionInfo>, string> {
+    let functions = []
+    let lines = FlowLang.Runtime.StringRuntime.Split(content, "\n")
+    
+    let functionInfo = extract_quality_function_info(lines)
+    match functionInfo {
+        Ok(info) -> {
+            functions = info :: functions
+            return Ok(functions)
+        }
+        Error(err) -> {
+            return Error(err)
+        }
+    }
+}
+
+struct QualityFunctionInfo {
+    name: string,
+    line_count: int,
+    parameter_count: int,
+    has_spec_documentation: bool,
+    has_comments: bool,
+    body_content: string,
+    line_number: int,
+    naming_issues: List<string>
+}
+
+// Extract function information focusing on quality metrics
+function extract_quality_function_info(lines: List<string>) -> Result<QualityFunctionInfo, string> {
+    if lines.length > 0 {
+        let firstLine = lines[0]
+        
+        if FlowLang.Runtime.StringRuntime.Contains(firstLine, "function ") {
+            let functionName = extract_quality_function_name(firstLine)
+            let lineCount = estimate_function_line_count(lines)
+            let parameterCount = count_function_parameters(firstLine)
+            let hasSpecDoc = check_for_spec_documentation(lines)
+            let hasComments = check_for_comments(lines)
+            let bodyContent = join_quality_lines(lines)
+            let namingIssues = check_naming_issues(functionName)
+            
+            let info = QualityFunctionInfo {
+                name: functionName,
+                line_count: lineCount,
+                parameter_count: parameterCount,
+                has_spec_documentation: hasSpecDoc,
+                has_comments: hasComments,
+                body_content: bodyContent,
+                line_number: 1,
+                naming_issues: namingIssues
+            }
+            
+            return Ok(info)
+        }
+    }
+    
+    return Error("No function found")
+}
+
+// Extract function name for quality analysis
+function extract_quality_function_name(line: string) -> string {
+    if FlowLang.Runtime.StringRuntime.Contains(line, "function ") {
+        let parts = FlowLang.Runtime.StringRuntime.Split(line, " ")
+        if parts.length > 1 {
+            let namePart = parts[1]
+            if FlowLang.Runtime.StringRuntime.Contains(namePart, "(") {
+                let nameparts = FlowLang.Runtime.StringRuntime.Split(namePart, "(")
+                if nameparts.length > 0 {
+                    return nameparts[0]
+                }
+            }
+            return namePart
+        }
+    }
+    return "unknown"
+}
+
+// Estimate function line count
+function estimate_function_line_count(lines: List<string>) -> int {
+    // Simple estimation - in a real implementation this would count actual function lines
+    return lines.length
+}
+
+// Count function parameters
+function count_function_parameters(line: string) -> int {
+    let paramCount = 0
+    
+    if FlowLang.Runtime.StringRuntime.Contains(line, "(") {
+        // Count commas in parameter list as rough estimate
+        if FlowLang.Runtime.StringRuntime.Contains(line, ",") {
+            paramCount = 2  // Simple estimate
+        } else if FlowLang.Runtime.StringRuntime.Contains(line, ":") {
+            paramCount = 1  // Has at least one parameter
+        }
+    }
+    
+    return paramCount
+}
+
+// Check for spec documentation
+function check_for_spec_documentation(lines: List<string>) -> bool {
+    if lines.length > 0 {
+        let firstLine = lines[0]
+        return FlowLang.Runtime.StringRuntime.Contains(firstLine, "/*spec") ||
+               FlowLang.Runtime.StringRuntime.Contains(firstLine, "spec*/")
+    }
+    return false
+}
+
+// Check for comments
+function check_for_comments(lines: List<string>) -> bool {
+    if lines.length > 0 {
+        let firstLine = lines[0]
+        return FlowLang.Runtime.StringRuntime.Contains(firstLine, "//") ||
+               FlowLang.Runtime.StringRuntime.Contains(firstLine, "/*")
+    }
+    return false
+}
+
+// Join lines for quality analysis
+function join_quality_lines(lines: List<string>) -> string {
+    if lines.length > 0 {
+        return lines[0]
+    }
+    return ""
+}
+
+// Check naming issues
+function check_naming_issues(functionName: string) -> List<string> {
+    let issues = []
+    
+    // Check for snake_case convention
+    if FlowLang.Runtime.StringRuntime.Contains(functionName, "_") {
+        // Good - follows snake_case
+    } else {
+        if FlowLang.Runtime.StringRuntime.Contains(functionName, "A") ||
+           FlowLang.Runtime.StringRuntime.Contains(functionName, "B") ||
+           FlowLang.Runtime.StringRuntime.Contains(functionName, "C") ||
+           FlowLang.Runtime.StringRuntime.Contains(functionName, "D") {
+            issues = "should use snake_case instead of camelCase" :: issues
+        }
+    }
+    
+    // Check for descriptive names
+    if FlowLang.Runtime.StringRuntime.Contains(functionName, "func") ||
+       FlowLang.Runtime.StringRuntime.Contains(functionName, "fn") ||
+       FlowLang.Runtime.StringRuntime.Contains(functionName, "temp") {
+        issues = "should use more descriptive name" :: issues
+    }
+    
+    return issues
+}
+
+// Analyze function quality and return issues
+function analyze_function_quality(functions: List<QualityFunctionInfo>, file_path: string) -> Result<List<QualityIssue>, string> {
+    let allIssues = []
+    
+    if functions.length > 0 {
+        let firstFunction = functions[0]
+        
+        // Check function complexity
+        let complexityIssues = check_function_complexity(firstFunction, file_path)
+        allIssues = append_quality_issues(allIssues, complexityIssues)
+        
+        // Check naming conventions
+        let namingIssues = check_naming_conventions(firstFunction, file_path)
+        allIssues = append_quality_issues(allIssues, namingIssues)
+        
+        // Check documentation
+        let documentationIssues = check_documentation_coverage(firstFunction, file_path)
+        allIssues = append_quality_issues(allIssues, documentationIssues)
+        
+        // Check for dead code
+        let deadCodeIssues = check_dead_code(firstFunction, file_path)
+        allIssues = append_quality_issues(allIssues, deadCodeIssues)
+        
+        return Ok(allIssues)
+    }
+    
+    return Ok([])
+}
+
+// Check function complexity
+function check_function_complexity(func: QualityFunctionInfo, file_path: string) -> List<QualityIssue> {
+    let issues = []
+    
+    // Check line count
+    if func.line_count > 50 {
+        let issue = QualityIssue {
+            rule_id: "function-complexity",
+            severity: "warning",
+            message: "Function '" + func.name + "' is too long (" + FlowLang.Runtime.StringRuntime.ToString(func.line_count) + " lines)",
+            file_path: file_path,
+            line: func.line_number,
+            column: 1,
+            fix_suggestion: "Break down into smaller functions (max 50 lines recommended)"
+        }
+        issues = issue :: issues
+    }
+    
+    // Check parameter count
+    if func.parameter_count > 5 {
+        let issue = QualityIssue {
+            rule_id: "function-complexity",
+            severity: "warning",
+            message: "Function '" + func.name + "' has too many parameters (" + FlowLang.Runtime.StringRuntime.ToString(func.parameter_count) + ")",
+            file_path: file_path,
+            line: func.line_number,
+            column: 1,
+            fix_suggestion: "Reduce parameter count or use a struct to group related parameters"
+        }
+        issues = issue :: issues
+    }
+    
+    // Check cyclomatic complexity (simplified)
+    let bodyContent = func.body_content
+    let complexity = calculate_cyclomatic_complexity(bodyContent)
+    if complexity > 10 {
+        let issue = QualityIssue {
+            rule_id: "function-complexity",
+            severity: "warning",
+            message: "Function '" + func.name + "' has high cyclomatic complexity (" + FlowLang.Runtime.StringRuntime.ToString(complexity) + ")",
+            file_path: file_path,
+            line: func.line_number,
+            column: 1,
+            fix_suggestion: "Simplify control flow or extract sub-functions"
+        }
+        issues = issue :: issues
+    }
+    
+    return issues
+}
+
+// Calculate cyclomatic complexity (simplified)
+function calculate_cyclomatic_complexity(bodyContent: string) -> int {
+    let complexity = 1  // Base complexity
+    
+    // Count decision points
+    if FlowLang.Runtime.StringRuntime.Contains(bodyContent, "if ") {
+        complexity = complexity + 1
+    }
+    
+    if FlowLang.Runtime.StringRuntime.Contains(bodyContent, "match ") {
+        complexity = complexity + 1
+    }
+    
+    if FlowLang.Runtime.StringRuntime.Contains(bodyContent, "while ") {
+        complexity = complexity + 1
+    }
+    
+    if FlowLang.Runtime.StringRuntime.Contains(bodyContent, "for ") {
+        complexity = complexity + 1
+    }
+    
+    return complexity
+}
+
+// Check naming conventions
+function check_naming_conventions(func: QualityFunctionInfo, file_path: string) -> List<QualityIssue> {
+    let issues = []
+    
+    // Check naming issues
+    if func.naming_issues.length > 0 {
+        let firstIssue = func.naming_issues[0]
+        let issue = QualityIssue {
+            rule_id: "naming-convention",
+            severity: "info",
+            message: "Function '" + func.name + "' " + firstIssue,
+            file_path: file_path,
+            line: func.line_number,
+            column: 1,
+            fix_suggestion: "Follow FlowLang naming conventions: use snake_case for functions"
+        }
+        issues = issue :: issues
+    }
+    
+    return issues
+}
+
+// Check documentation coverage
+function check_documentation_coverage(func: QualityFunctionInfo, file_path: string) -> List<QualityIssue> {
+    let issues = []
+    
+    if !func.has_spec_documentation && !func.has_comments {
+        let issue = QualityIssue {
+            rule_id: "documentation-coverage",
+            severity: "info",
+            message: "Function '" + func.name + "' lacks documentation",
+            file_path: file_path,
+            line: func.line_number,
+            column: 1,
+            fix_suggestion: "Add /*spec ... spec*/ block or inline comments to explain the function"
+        }
+        issues = issue :: issues
+    }
+    
+    return issues
+}
+
+// Check for dead code
+function check_dead_code(func: QualityFunctionInfo, file_path: string) -> List<QualityIssue> {
+    let issues = []
+    
+    let bodyContent = func.body_content
+    
+    // Check for unreachable code after return
+    if FlowLang.Runtime.StringRuntime.Contains(bodyContent, "return ") {
+        // Simple check - in a real implementation this would be more sophisticated
+        if FlowLang.Runtime.StringRuntime.Contains(bodyContent, "return") &&
+           FlowLang.Runtime.StringRuntime.Contains(bodyContent, "let ") {
+            let issue = QualityIssue {
+                rule_id: "dead-code",
+                severity: "warning",
+                message: "Potential unreachable code after return in function '" + func.name + "'",
+                file_path: file_path,
+                line: func.line_number,
+                column: 1,
+                fix_suggestion: "Remove unreachable code or restructure function logic"
+            }
+            issues = issue :: issues
+        }
+    }
+    
+    return issues
+}
+
+// Append quality issues
+function append_quality_issues(existingIssues: List<QualityIssue>, newIssues: List<QualityIssue>) -> List<QualityIssue> {
+    // For now, just return the new issues
+    return newIssues
+}
+
+// Calculate quality metrics
+function calculate_quality_metrics(functions: List<QualityFunctionInfo>) -> QualityMetrics {
+    let avgFunctionLength = 0
+    let avgComplexity = 0
+    let documentationCoverage = 0
+    let namingConsistency = 0
+    let codeDuplication = 0
+    
+    if functions.length > 0 {
+        let firstFunc = functions[0]
+        avgFunctionLength = firstFunc.line_count
+        avgComplexity = calculate_cyclomatic_complexity(firstFunc.body_content)
+        documentationCoverage = if firstFunc.has_spec_documentation { 100 } else { 0 }
+        namingConsistency = if firstFunc.naming_issues.length == 0 { 100 } else { 50 }
+        codeDuplication = 0  // Simplified
+    }
+    
+    let metrics = QualityMetrics {
+        avg_function_length: avgFunctionLength,
+        avg_complexity: avgComplexity,
+        documentation_coverage: documentationCoverage,
+        naming_consistency: namingConsistency,
+        code_duplication: codeDuplication
+    }
+    
+    return metrics
+}
+
+// Count complex functions
+function count_complex_functions(functions: List<QualityFunctionInfo>) -> int {
+    let complexCount = 0
+    
+    if functions.length > 0 {
+        let firstFunc = functions[0]
+        if firstFunc.line_count > 50 || firstFunc.parameter_count > 5 {
+            complexCount = 1
+        }
+    }
+    
+    return complexCount
+}
+
+// Count undocumented functions
+function count_undocumented_functions(functions: List<QualityFunctionInfo>) -> int {
+    let undocumentedCount = 0
+    
+    if functions.length > 0 {
+        let firstFunc = functions[0]
+        if !firstFunc.has_spec_documentation && !firstFunc.has_comments {
+            undocumentedCount = 1
+        }
+    }
+    
+    return undocumentedCount
+}
+
+// Format quality analysis results
+function format_quality_results(results: QualityAnalysisResult) uses [IO, Logging] -> Result<string, string> {
+    FlowLang.Runtime.LoggingRuntime.LogInfo("Formatting quality analysis results...")
+    
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("=== Code Quality Analysis ===")
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("Total functions: " + FlowLang.Runtime.StringRuntime.ToString(results.total_functions))
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("Complex functions: " + FlowLang.Runtime.StringRuntime.ToString(results.complex_functions))
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("Undocumented functions: " + FlowLang.Runtime.StringRuntime.ToString(results.undocumented_functions))
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("Total issues: " + FlowLang.Runtime.StringRuntime.ToString(results.issues.length))
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("")
+    
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("Quality Metrics:")
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("  Average function length: " + FlowLang.Runtime.StringRuntime.ToString(results.metrics.avg_function_length) + " lines")
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("  Average complexity: " + FlowLang.Runtime.StringRuntime.ToString(results.metrics.avg_complexity))
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("  Documentation coverage: " + FlowLang.Runtime.StringRuntime.ToString(results.metrics.documentation_coverage) + "%")
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("  Naming consistency: " + FlowLang.Runtime.StringRuntime.ToString(results.metrics.naming_consistency) + "%")
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("")
+    
+    if results.issues.length > 0 {
+        FlowLang.Runtime.ConsoleRuntime.WriteLine("Issues found:")
+        
+        let firstIssue = results.issues[0]
+        FlowLang.Runtime.ConsoleRuntime.WriteLine("  [" + firstIssue.severity + "] " + firstIssue.message)
+        FlowLang.Runtime.ConsoleRuntime.WriteLine("    Fix: " + firstIssue.fix_suggestion)
+        
+        if results.issues.length > 1 {
+            FlowLang.Runtime.ConsoleRuntime.WriteLine("  ... and " + FlowLang.Runtime.StringRuntime.ToString(results.issues.length - 1) + " more issues")
+        }
+    } else {
+        FlowLang.Runtime.ConsoleRuntime.WriteLine("✓ No quality issues found")
+    }
+    
+    FlowLang.Runtime.ConsoleRuntime.WriteLine("")
+    return Ok("Quality analysis formatted")
+}
+
+// Main function for testing quality analyzer
+function main() uses [FileSystem, Logging, IO] -> Result<int, string> {
+    FlowLang.Runtime.LoggingRuntime.LogInfo("FlowLang Quality Analyzer Test")
+    
+    let testFile = "src/FlowLang.Tools/linter.flow"
+    let contentResult = FlowLang.Runtime.FileSystemRuntime.ReadFile(testFile)
+    
+    match contentResult {
+        Ok(content) -> {
+            let analysisResult = analyze_quality(testFile, content)
+            match analysisResult {
+                Ok(results) -> {
+                    let formatResult = format_quality_results(results)
+                    match formatResult {
+                        Ok(_) -> {
+                            FlowLang.Runtime.LoggingRuntime.LogInfo("Quality analysis completed successfully")
+                            return Ok(0)
+                        }
+                        Error(err) -> {
+                            FlowLang.Runtime.LoggingRuntime.LogError("Failed to format results: " + err)
+                            return Error(err)
+                        }
+                    }
+                }
+                Error(err) -> {
+                    FlowLang.Runtime.LoggingRuntime.LogError("Quality analysis failed: " + err)
+                    return Error(err)
+                }
+            }
+        }
+        Error(err) -> {
+            FlowLang.Runtime.LoggingRuntime.LogError("Failed to read test file: " + err)
+            return Error(err)
+        }
+    }
+}

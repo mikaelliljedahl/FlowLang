@@ -33,6 +33,8 @@ FlowLang is a statically-typed, functional programming language that transpiles 
 - **String interpolation** for readable text formatting
 - **Specification preservation** with embedded specification blocks for atomic intent-code linking
 
+**Current Status (July 2025)**: Direct compilation, traditional transpilation, and module system are working. Phase 5 self-hosting migration is in progress to implement .flow-based tooling.
+
 ## Lexical Elements
 
 ### Identifiers
