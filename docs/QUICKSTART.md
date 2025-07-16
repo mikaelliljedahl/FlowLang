@@ -307,11 +307,26 @@ dotnet run myfile.cs
 ./cadenzac myfile.cdz
 ```
 
+## 🧪 Verify Your Installation
+
+Run the test suite to make sure everything is working:
+
+```bash
+# Navigate to Cadenza root directory
+cd /path/to/Cadenza
+
+# Run all tests (requires .NET 10.0)
+dotnet test tests/Cadenza.Core.Tests/Cadenza.Core.Tests.csproj
+
+# Should show: "Passed! - Failed: 0, Passed: 63, Skipped: 0, Total: 63"
+```
+
 ## 📚 Next Steps
 
 1. **Read the docs**: [docs/getting-started.md](docs/getting-started.md)
 2. **Language reference**: [docs/language-reference.md](docs/language-reference.md)
 3. **More examples**: [docs/examples/](docs/examples/)
 4. **IDE setup**: [docs/lsp-integration.md](docs/lsp-integration.md)
+5. **Run tests**: [docs/testing-guide.md](docs/testing-guide.md)
 
 **Happy coding with Cadenza!** 🎉
