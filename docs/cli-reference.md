@@ -16,7 +16,7 @@ The Cadenza CLI (`cadenzac`) provides a comprehensive set of commands for creati
 
 ### Prerequisites
 
-- .NET 8.0 SDK or later
+- .NET 10.0 SDK or later
 - Cadenza source code (cloned repository)
 
 ### Building the CLI
@@ -1174,7 +1174,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
     
     - name: Build Cadenza CLI
       run: dotnet build src/

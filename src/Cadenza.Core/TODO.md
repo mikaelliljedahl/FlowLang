@@ -1,54 +1,56 @@
-# Cadenza Core TODO - Development Priorities
+# Refactoring Plan for cadenzac-core.cs
 
-## ✅ TRANSPILER STATUS: MULTI-MODULE COMPILATION WORKING!
+The `cadenzac-core.cs` file has grown too large and needs to be split into multiple files to improve maintainability, readability, and separation of concerns. The proposed file structure follows the logical phases of the compiler.
 
-**MAJOR BREAKTHROUGH: Multi-module import resolution is now fully functional!**
+## Proposed File Structure:
 
-### 🎉 JULY 2025 MILESTONE - MULTI-MODULE COMPILATION ACHIEVED
+1.  **`Tokens.cs`**:
+    *   **Responsibility**: Contains all definitions related to lexical tokens.
+    *   **Contents**:
+        *   `TokenType` enum
+        *   `Token` record
 
-**What Changed:**
-- **Import Resolution**: `import Math.{add, multiply}` now generates correct qualified C# calls
-- **Export Syntax**: Both `export add, multiply` and `export { add, multiply }` work
-- **End-to-End Tested**: Full Cadenza → C# → execution pipeline proven working
+2.  **`Ast.cs`**:
+    *   **Responsibility**: Contains all Abstract Syntax Tree (AST) node definitions. This provides a single source for the language's data structure.
+    *   **Contents**:
+        *   `ASTNode` base record
+        *   All record types inheriting from `ASTNode` (e.g., `Program`, `FunctionDeclaration`, `BinaryExpression`, `ComponentDeclaration`, etc.).
 
-**Proof of Success:**
-```
-Testing Cadenza import resolution...
-add(5, 3) = 8
-multiply(8, 2) = 16
-Final result: 16
-✅ SUCCESS: Cadenza import resolution works!
-```
+3.  **`Lexer.cs`**:
+    *   **Responsibility**: The lexical analysis phase.
+    *   **Contents**:
+        *   `CadenzaLexer` class.
 
----
+4.  **`Parser.cs`**:
+    *   **Responsibility**: The parsing phase, which builds the AST from tokens.
+    *   **Contents**:
+        *   `CadenzaParser` class.
 
-## ✅ COMPLETED: DIRECT COMPILATION WITH ROSLYN
+5.  **`Transpiler.cs`**:
+    *   **Responsibility**: Transpiling the Cadenza AST to C# source code.
+    *   **Contents**:
+        *   `CadenzaTranspiler` class.
 
-### Overview
-✅ **SUCCESSFULLY IMPLEMENTED**: Native compilation support using Roslyn's compilation capabilities. Cadenza can now compile directly to assemblies instead of transpiling to C# source files.
+6.  **`Compiler.cs`**:
+    *   **Responsibility**: Orchestrating the compilation process and interacting with the C# compiler.
+    *   **Contents**:
+        *   `CadenzaCompiler` class (the main driver).
+        *   `CSharpCompiler` class (the Roslyn wrapper).
 
-### ✅ VERIFIED WORKING FUNCTIONALITY
-- **End-to-End Testing**: Successfully tested with multiple Cadenza programs
-- **Assembly Generation**: Creates working .exe files from .cdz source  
-- **Assembly Execution**: Generated executables run correctly and produce expected output
-- **Roslyn Integration**: Uses existing CSharpGenerator with Roslyn compilation pipeline
+7.  **`Program.cs`** (or keep in `Compiler.cs`):
+    *   **Responsibility**: The command-line entry point for the compiler.
+    *   **Contents**:
+        *   The `Program` class with the `Main` method.
 
-### ✅ SUCCESSFUL TEST RESULTS
-```
-=== Test Results ===
-✅ Test 1: Simple return value - PASSED
-✅ Test 2: Function with addition - PASSED  
-✅ Test 3: Console output - PASSED
-🎉 ALL DIRECTCOMPILER TESTS PASSED!
-```
+## Action Items:
 
-### ✅ PROVEN CAPABILITIES
-- Cadenza source → Lexer → Parser → AST → CSharpGenerator → Roslyn → Assembly
-- Generated executables execute Cadenza logic correctly
-- Console output from Cadenza programs works
-- Function calls and arithmetic operations work
-- Proper assembly metadata and entry points
-
+- [ ] Create the new files as outlined above.
+- [ ] Move the corresponding code from `cadenzac-core.cs` into each new file.
+- [ ] Ensure all necessary `using` statements are present in the new files.
+- [ ] Update the `.csproj` file if necessary to include the new files.
+- [ ] Delete the original `cadenzac-core.cs` file after all code has been moved.
+- [ ] Verify that the project still compiles and all tests pass after the refactoring.
+- [ ] Add a separate test project based on Nunit (it seems the old tests are not using a real testing framework) that references the existing project & new files to ensure that the refactoring did not break any functionality.
 ---
 
 ## 🚨 CRITICAL DISCOVERY: PHASE 5 .CDZ TOOLS HAVE MAJOR SYNTAX ISSUES
@@ -157,53 +159,6 @@ let first = files[0]
 2. **Language Limitations**: Cadenza is more limited than the tool authors assumed
 3. **Testing Critical**: Must test compilation before building features
 4. **Documentation Needed**: Clear syntax examples prevent these issues
-
----
-
-## 🎉 PHASE 5 SPRINT COMPLETION - JULY 2025
-
-### ✅ SPRINT GOALS ACHIEVED
-
-**Core Language Bug Fixes Completed:**
-- ✅ **String Interpolation Bug**: Fixed critical bug where `$"Hello, {name}!"` generated malformed C# code
-- ✅ **Type Casing Issues**: Fixed XML documentation to use consistent lowercase C# types
-- ✅ **Complex Expression Handling**: Fixed nested if-else statements that were generating `return null;`
-
-**Repository Cleanup Completed:**
-- ✅ **Removed unused C# tooling**: Eliminated `src/Cadenza.Analysis/`, `src/Cadenza.LSP/`, `src/Cadenza.Package/`
-- ✅ **Removed broken .cdz tools**: Eliminated non-working linter, dev-server, and analysis tools
-- ✅ **Updated sprint plan**: Refocused on core language features that LLMs actually need
-
-### 🎯 IMPACT ON LLM DEVELOPMENT
-
-**Before Sprint:**
-- String interpolation completely broken
-- Type casing inconsistent in generated code
-- Nested if-else statements didn't work
-- Repository cluttered with unused tooling
-
-**After Sprint:**
-- ✅ **Professional code generation**: String interpolation works correctly
-- ✅ **Consistent type casing**: Clean, professional XML documentation
-- ✅ **Reliable control flow**: Complex if-else statements work properly
-- ✅ **Focused codebase**: Only essential features remain
-
-### 📊 SPRINT METRICS
-
-**Bugs Fixed**: 3 critical language bugs
-**Files Removed**: 20+ unused C# tooling files
-**Code Quality**: Significantly improved generated C# code
-**LLM Readiness**: Cadenza now suitable for LLM-assisted development
-
-### 🚀 STRATEGIC OUTCOME
-
-This sprint transformed Cadenza from a language with broken core features to a **reliable, LLM-friendly programming language** focused on what LLMs actually need:
-- **Working string interpolation** for text generation
-- **Clean, consistent generated code** for professional output
-- **Reliable control flow** for complex logic
-- **Focused feature set** without unnecessary complexity
-
-The focus on core language reliability makes Cadenza much more suitable for LLM-assisted development workflows.
 
 ---
 
@@ -353,30 +308,6 @@ public static async Task<int> Main(string[] args)
 - **Impact**: Developer experience
 
 ### Transpiler Code Generation Gaps
-
-#### String Interpolation Bug (CRITICAL) - ✅ FIXED
-- **Issue**: String interpolation in Cadenza code generates malformed C# code
-- **Example**: `$"Hello, {name}!"` generates `"" + "Hello, " + "! Welcome to Cadenza!"` instead of proper interpolation
-- **Status**: ✅ FIXED - July 2025 during Phase 5 sprint
-- **Priority**: High
-- **Impact**: String interpolation completely broken, generates incorrect output
-- **Location**: String interpolation handling in C# code generator
-- **Fix**: Fixed lexer to create proper Dictionary objects and updated C# generator to use InterpolatedStringExpression
-
-#### Non-Standard Type Casing (Partial Issue) - ✅ FIXED
-- **Status**: ✅ FIXED - July 2025 during Phase 5 sprint
-- **Implementation**: MapCadenzaTypeToCSharp function converts most Cadenza types to proper C# types
-- **Previous Issue**: Some parameter types in XML docs still show as `String` instead of `string`
-- **Priority**: Low
-- **Impact**: Code consistency and professional appearance
-- **Fix**: Updated XML documentation generation to use MapCadenzaTypeToCSharp for parameter and return types
-
-#### Complex Expressions Support - ✅ FIXED
-- **Issue**: Limited nested expression support - nested if-else statements generated `return null;`
-- **Status**: ✅ FIXED - July 2025 during Phase 5 sprint
-- **Priority**: Medium
-- **Impact**: Reduces language expressiveness for complex calculations
-- **Fix**: Updated function body generation to handle IfStatement and GuardStatement as statements, not expressions
 
 ### Future Enhancements
 

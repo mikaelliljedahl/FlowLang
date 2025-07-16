@@ -17,7 +17,7 @@ Cadenza transpiles to C#, giving you immediate access to the entire .NET ecosyst
 
 ### ⚡ Quick Setup (Recommended)
 
-1. **Install .NET 8.0+**: [Download here](https://dotnet.microsoft.com/download)
+1. **Install .NET 10.0+**: [Download here](https://dotnet.microsoft.com/download)
 2. **Clone and setup**:
    ```bash
    git clone https://github.com/mikaelliljedahl/Cadenza.git
@@ -37,7 +37,7 @@ Cadenza transpiles to C#, giving you immediate access to the entire .NET ecosyst
 
 If you prefer manual setup:
 
-1. **Prerequisites**: .NET 8.0+ SDK ([download](https://dotnet.microsoft.com/download))
+1. **Prerequisites**: .NET 10.0+ SDK ([download](https://dotnet.microsoft.com/download))
 2. **Clone and build**:
    ```bash
    git clone https://github.com/mikaelliljedahl/Cadenza.git
@@ -487,6 +487,46 @@ module UserService {
     export {createUser, getUser}
 }
 ```
+
+## Running Tests
+
+Once you have Cadenza set up, you can run the comprehensive test suite to verify everything is working correctly:
+
+### Running All Tests
+
+```bash
+# Navigate to the repository root
+cd /path/to/Cadenza
+
+# Run all tests (requires .NET 10.0)
+dotnet test tests/Cadenza.Core.Tests/Cadenza.Core.Tests.csproj
+
+# Run with verbose output to see test details
+dotnet test tests/Cadenza.Core.Tests/Cadenza.Core.Tests.csproj --verbosity normal
+```
+
+### Test Categories
+
+The test suite includes:
+
+- **Lexer Tests**: Token generation and validation (working ✅)
+- **Parser Tests**: AST construction and syntax validation (working ✅)
+- **AST Tests**: Core data structure validation (working ✅)
+- **Token Tests**: Token type validation (working ✅)
+
+### Expected Results
+
+A successful test run should show:
+```
+Passed!  - Failed: 0, Passed: 63, Skipped: 0, Total: 63
+```
+
+If tests fail, check that:
+1. You have .NET 10.0 SDK installed
+2. The project builds successfully: `dotnet build src/Cadenza.Core/cadenzac-core.csproj`
+3. All dependencies are restored: `dotnet restore`
+
+For more detailed testing information, see the [Testing Guide](testing-guide.md).
 
 ## Next Steps
 

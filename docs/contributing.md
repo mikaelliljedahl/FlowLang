@@ -19,7 +19,7 @@ Thank you for your interest in contributing to Cadenza! This document provides g
 
 ### Prerequisites
 
-- **.NET 8.0 SDK or later**
+- **.NET 10.0 SDK or later**
 - **Git** for version control
 - **Code editor** (Visual Studio, VS Code, JetBrains Rider)
 - **Basic understanding** of compiler construction and C#

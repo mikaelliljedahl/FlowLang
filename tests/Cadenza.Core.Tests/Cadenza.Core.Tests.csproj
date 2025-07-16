@@ -15,27 +15,10 @@
     <PackageReference Include="NUnit.Analyzers" Version="3.6.1" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" />
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../src/Cadenza.Core/cadenzac-core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="golden/inputs/**/*" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="golden/expected/**/*" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="regression/data/**/*" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="README.md" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="golden/expected/**/*" />
-    <Compile Remove="*.cdz" />
-    <Compile Remove="test_compilation.cs" />
-    <Compile Remove="test_dev_server.cs" />
-    <Compile Remove="test_guard.cs" />
-    <Compile Remove="test_self_hosting.cs" />
+    <ProjectReference Include="../../src/Cadenza.Core/cadenzac-core.csproj" />
   </ItemGroup>
 
 </Project>

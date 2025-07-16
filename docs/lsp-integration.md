@@ -26,7 +26,7 @@ The Cadenza LSP server implements the [Language Server Protocol specification](h
 ## Installation
 
 ### Prerequisites
-- .NET 8.0 or later
+- .NET 10.0 or later
 - Cadenza transpiler (cadenzac)
 
 ### Build the Language Server
@@ -391,7 +391,7 @@ cadenzac lsp --verbose
 
 ### Development Setup
 1. Clone the Cadenza repository
-2. Install .NET 8.0 SDK
+2. Install .NET 10.0 SDK
 3. Build the project: `dotnet build src/cadenzac.csproj`
 4. Run tests: `dotnet test tests/`
 

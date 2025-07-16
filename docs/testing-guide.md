@@ -19,6 +19,8 @@ This guide covers the comprehensive testing framework for Cadenza, including how
 
 Cadenza uses a comprehensive testing framework built on .NET's testing infrastructure with NUnit. The framework provides multiple types of tests to ensure the transpiler's correctness, performance, and reliability.
 
+**Note**: The Cadenza compiler and all tests are written for .NET 10.0. Make sure you have .NET 10.0 SDK installed before running tests.
+
 ### Test Framework Architecture
 
 ```
@@ -88,7 +90,7 @@ Prevent breaking changes:
 
 ### Prerequisites
 
-- .NET 8.0 SDK or later
+- .NET 10.0 SDK or later
 - Cadenza source code built successfully
 - All NuGet packages restored
 
@@ -1018,7 +1020,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
     
     - name: Restore dependencies
       run: dotnet restore tests/

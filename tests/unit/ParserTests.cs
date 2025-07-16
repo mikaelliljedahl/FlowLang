@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cadenza.Core;
 
 namespace Cadenza.Tests.Unit
 {
@@ -11,7 +12,7 @@ namespace Cadenza.Tests.Unit
         private CadenzaParser CreateParser(string source)
         {
             var lexer = new CadenzaLexer(source);
-            var tokens = lexer.Tokenize();
+            var tokens = lexer.ScanTokens();
             return new CadenzaParser(tokens);
         }
 
@@ -62,7 +63,7 @@ namespace Cadenza.Tests.Unit
         public void Parser_ShouldParseFunctionWithEffects()
         {
             // Arrange
-            var source = "function saveUser(user: string) uses [Database, Logging] -> int { return 42 }";
+            var source = "function saveUser(user: string) uses Database, Logging -> int { return 42 }";
             var parser = CreateParser(source);
 
             // Act
@@ -72,9 +73,9 @@ namespace Cadenza.Tests.Unit
             Assert.That(program.Statements.Count, Is.EqualTo(1));
             var func = (FunctionDeclaration)program.Statements[0];
             Assert.That(func.Effects, Is.Not.Null);
-            Assert.That(func.Effects.Effects.Count, Is.EqualTo(2));
-            Assert.That(func.Effects.Effects[0], Is.EqualTo("Database"));
-            Assert.That(func.Effects.Effects[1], Is.EqualTo("Logging"));
+            Assert.That(func.Effects.Count, Is.EqualTo(2));
+            Assert.That(func.Effects[0], Is.EqualTo("Database"));
+            Assert.That(func.Effects[1], Is.EqualTo("Logging"));
         }
 
         [Test]
@@ -223,9 +224,9 @@ namespace Cadenza.Tests.Unit
             // Assert
             var func = (FunctionDeclaration)program.Statements[0];
             var returnStmt = (ReturnStatement)func.Body[0];
-            Assert.That(returnStmt.Expression, Is.InstanceOf<FunctionCall>());
+            Assert.That(returnStmt.Expression, Is.InstanceOf<CallExpression>());
             
-            var call = (FunctionCall)returnStmt.Expression;
+            var call = (CallExpression)returnStmt.Expression;
             Assert.That(call.Name, Is.EqualTo("add"));
             Assert.That(call.Arguments.Count, Is.EqualTo(2));
             Assert.That(call.Arguments[0], Is.InstanceOf<NumberLiteral>());
@@ -245,9 +246,9 @@ namespace Cadenza.Tests.Unit
             // Assert
             var func = (FunctionDeclaration)program.Statements[0];
             var returnStmt = (ReturnStatement)func.Body[0];
-            Assert.That(returnStmt.Expression, Is.InstanceOf<OkExpression>());
+            Assert.That(returnStmt.Expression, Is.InstanceOf<ResultExpression>());
             
-            var okExpr = (OkExpression)returnStmt.Expression;
+            var okExpr = (ResultExpression)returnStmt.Expression;
             Assert.That(okExpr.Value, Is.InstanceOf<NumberLiteral>());
         }
 
@@ -264,9 +265,9 @@ namespace Cadenza.Tests.Unit
             // Assert
             var func = (FunctionDeclaration)program.Statements[0];
             var returnStmt = (ReturnStatement)func.Body[0];
-            Assert.That(returnStmt.Expression, Is.InstanceOf<ErrorExpression>());
+            Assert.That(returnStmt.Expression, Is.InstanceOf<ResultExpression>());
             
-            var errorExpr = (ErrorExpression)returnStmt.Expression;
+            var errorExpr = (ResultExpression)returnStmt.Expression;
             Assert.That(errorExpr.Value, Is.InstanceOf<StringLiteral>());
         }
 
@@ -284,10 +285,10 @@ namespace Cadenza.Tests.Unit
             var func = (FunctionDeclaration)program.Statements[0];
             Assert.That(func.Body.Count, Is.EqualTo(2));
             var letStmt = (LetStatement)func.Body[0];
-            Assert.That(letStmt.Expression, Is.InstanceOf<ErrorPropagationExpression>());
+            Assert.That(letStmt.Expression, Is.InstanceOf<ErrorPropagation>());
             
-            var errorProp = (ErrorPropagationExpression)letStmt.Expression;
-            Assert.That(errorProp.Expression, Is.InstanceOf<FunctionCall>());
+            var errorProp = (ErrorPropagation)letStmt.Expression;
+            Assert.That(errorProp.Expression, Is.InstanceOf<CallExpression>());
         }
 
         [Test]
@@ -403,9 +404,9 @@ namespace Cadenza.Tests.Unit
             // Assert
             var func = (FunctionDeclaration)program.Statements[0];
             var returnStmt = (ReturnStatement)func.Body[0];
-            Assert.That(returnStmt.Expression, Is.InstanceOf<FunctionCall>());
+            Assert.That(returnStmt.Expression, Is.InstanceOf<CallExpression>());
             
-            var call = (FunctionCall)returnStmt.Expression;
+            var call = (CallExpression)returnStmt.Expression;
             Assert.That(call.Name, Is.EqualTo("Math.add"));
         }
 
@@ -455,7 +456,7 @@ namespace Cadenza.Tests.Unit
         public void Parser_ShouldThrowOnInvalidEffectName()
         {
             // Arrange
-            var source = "function test() uses [InvalidEffect] -> int { return 42 }";
+            var source = "function test() uses InvalidEffect -> int { return 42 }";
             var parser = CreateParser(source);
 
             // Act & Assert
@@ -527,7 +528,7 @@ namespace Cadenza.Tests.Unit
         public void Parser_ShouldParseMultipleEffects()
         {
             // Arrange
-            var source = "function process() uses [Database, Network, Logging, FileSystem] -> int { return 42 }";
+            var source = "function process() uses Database, Network, Logging, FileSystem -> int { return 42 }";
             var parser = CreateParser(source);
 
             // Act
@@ -535,11 +536,11 @@ namespace Cadenza.Tests.Unit
 
             // Assert
             var func = (FunctionDeclaration)program.Statements[0];
-            Assert.That(func.Effects.Effects.Count, Is.EqualTo(4));
-            Assert.That(func.Effects.Effects, Contains.Item("Database"));
-            Assert.That(func.Effects.Effects, Contains.Item("Network"));
-            Assert.That(func.Effects.Effects, Contains.Item("Logging"));
-            Assert.That(func.Effects.Effects, Contains.Item("FileSystem"));
+            Assert.That(func.Effects.Count, Is.EqualTo(4));
+            Assert.That(func.Effects, Contains.Item("Database"));
+            Assert.That(func.Effects, Contains.Item("Network"));
+            Assert.That(func.Effects, Contains.Item("Logging"));
+            Assert.That(func.Effects, Contains.Item("FileSystem"));
         }
 
         [Test]
@@ -555,7 +556,7 @@ namespace Cadenza.Tests.Unit
             // Assert
             var func = (FunctionDeclaration)program.Statements[0];
             var letStmt = (LetStatement)func.Body[0];
-            Assert.That(letStmt.Expression, Is.InstanceOf<ErrorPropagationExpression>());
+            Assert.That(letStmt.Expression, Is.InstanceOf<ErrorPropagation>());
         }
 
         [Test]
@@ -704,7 +705,7 @@ namespace Cadenza.Tests.Unit
         public void Parser_ShouldThrowOnPureFunctionWithEffects()
         {
             // Arrange
-            var source = "pure function test() uses [Database] -> int { return 42 }";
+            var source = "pure function test() uses Database -> int { return 42 }";
             var parser = CreateParser(source);
 
             // Act & Assert
@@ -715,7 +716,7 @@ namespace Cadenza.Tests.Unit
         public void Parser_ShouldParseAllEffectTypes()
         {
             // Arrange
-            var source = "function allEffects() uses [Database, Network, Logging, FileSystem, Memory, IO] -> int { return 42 }";
+            var source = "function allEffects() uses Database, Network, Logging, FileSystem, Memory, IO -> int { return 42 }";
             var parser = CreateParser(source);
 
             // Act
@@ -723,11 +724,11 @@ namespace Cadenza.Tests.Unit
 
             // Assert
             var func = (FunctionDeclaration)program.Statements[0];
-            Assert.That(func.Effects.Effects.Count, Is.EqualTo(6));
+            Assert.That(func.Effects.Count, Is.EqualTo(6));
             var expectedEffects = new[] { "Database", "Network", "Logging", "FileSystem", "Memory", "IO" };
             foreach (var effect in expectedEffects)
             {
-                Assert.That(func.Effects.Effects, Contains.Item(effect));
+                Assert.That(func.Effects, Contains.Item(effect));
             }
         }
     }

@@ -2,7 +2,7 @@
 
 Welcome to the comprehensive documentation for Cadenza - a backend programming language designed specifically for LLM-assisted development. This documentation covers everything from getting started to advanced topics and contribution guidelines.
 
-> 🚀 **Want to get started quickly?** Check out the main [README.md](../README.md) or [QUICKSTART.md](../QUICKSTART.md) for immediate copy-paste examples!
+> 🚀 **Want to get started quickly?** Check out the main [README.md](../README.md) or [QUICKSTART.md](QUICKSTART.md) for immediate copy-paste examples!
 
 ## Why Cadenza? The Problem with LLMs and Modern Code
 
@@ -35,6 +35,7 @@ Cadenza prioritizes explicitness, predictability, and safety while maintaining c
 | Document | Description | Audience |
 |----------|-------------|----------|
 | [Getting Started](getting-started.md) | Installation, first program, basic concepts | New users |
+| [Frontend Getting Started](frontend-getting-started.md) | Getting started with the frontend | New users |
 | [Language Reference](language-reference.md) | Complete syntax and features documentation | All users |
 | [CLI Reference](cli-reference.md) | All commands, options, and usage patterns | All users |
 | [Migration Guide](migration-guide.md) | Moving from C# to Cadenza | C# developers |
@@ -65,6 +66,7 @@ Cadenza prioritizes explicitness, predictability, and safety while maintaining c
 | [Problem Statement](problem-statement.md) | The problems Cadenza aims to solve. | All users |
 | [Specifications](specifications.md) | The language specification. | Advanced users |
 | [Transpiler Architecture](transpiler-architecture.md) | A deep-dive into the transpiler's architecture. | Contributors |
+| [PROJECT_STRUCTURE_CLEAN](PROJECT_STRUCTURE_CLEAN.md) | A guide to the project structure. | All users |
 
 ### User Guides
 
@@ -79,6 +81,7 @@ Cadenza prioritizes explicitness, predictability, and safety while maintaining c
 |----------|-------------|----------|
 | [Roadmap Next Phase](roadmap-next-phase.md) | The roadmap for the next phase of development. | All users |
 | [Self-Hosting Progress](self-hosting-progress.md) | The progress on self-hosting the Cadenza compiler. | All users |
+| [Phase 3 Features](phase3-features.md) | The features for phase 3. | All users |
 
 ### Examples and Tutorials
 
@@ -88,6 +91,7 @@ Cadenza prioritizes explicitness, predictability, and safety while maintaining c
 | [Result Types](examples/result-types.md) | Safe error handling | Error propagation, validation |
 | [Effect System](examples/effect-system.md) | Side effect management | Pure functions, effect declarations |
 | [Modules](examples/modules.md) | Code organization | Import/export, namespaces |
+| [Specifications](examples/specifications.md) | Example specifications | Specifications |
 
 ## Cadenza Features Overview
 

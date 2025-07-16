@@ -215,7 +215,7 @@ module System_Net_Http {
 
 ### Supported .NET Frameworks
 
-- .NET 8.0+ (primary target)
+- .NET 10.0+ (primary target)
 - .NET Standard 2.1
 - .NET Framework 4.8 (compatibility mode)
 

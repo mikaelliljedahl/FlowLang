@@ -21,7 +21,7 @@ This guide helps you diagnose and fix common issues when using Cadenza. It cover
 **Problem**: Error message "dotnet command not found" or "SDK not found"
 
 **Solution**:
-1. Install .NET 8.0 SDK or later from [Microsoft's website](https://dotnet.microsoft.com/download)
+1. Install .NET 10.0 SDK or later from [Microsoft's website](https://dotnet.microsoft.com/download)
 2. Verify installation:
    ```bash
    dotnet --version
@@ -603,7 +603,7 @@ A: Yes, check the `roadmap/` directory for detailed development plans.
 When encountering issues, work through this checklist:
 
 1. **Environment Check**:
-   - [ ] .NET 8.0+ SDK installed
+   - [ ] .NET 10.0+ SDK installed
    - [ ] Cadenza transpiler builds successfully
    - [ ] Path and permissions configured correctly
 

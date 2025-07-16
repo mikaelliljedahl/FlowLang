@@ -4,7 +4,7 @@
 
 ## ⚡ Super Quick Setup
 
-1. **Install .NET 8.0+**: https://dotnet.microsoft.com/download
+1. **Install .NET 10.0+**: https://dotnet.microsoft.com/download
 2. **Clone and build**:
    ```bash
    git clone https://github.com/mikaelliljedahl/Cadenza.git
@@ -291,7 +291,7 @@ cadenzac help <command>
 cd /path/to/cadenza
 
 # Check .NET version
-dotnet --version  # Should be 8.0+
+dotnet --version  # Should be 10.0+
 
 # Rebuild
 cd src && dotnet build
