@@ -13,12 +13,19 @@ namespace Cadenza.LanguageServer;
 /// </summary>
 public class HoverProvider
 {
+    private readonly DocumentManager _documentManager;
+
+    public HoverProvider(DocumentManager documentManager)
+    {
+        _documentManager = documentManager;
+    }
+
     /// <summary>
     /// Get hover information for the symbol at the specified position
     /// </summary>
     public Hover? GetHover(ManagedDocument document, LspPosition position)
     {
-        var token = document.GetTokenAtPosition(position);
+        var token = _documentManager.GetTokenAtPosition(document, position);
         if (token == null) return null;
 
         var hoverContent = GetHoverContent(document, token, position);
@@ -26,12 +33,11 @@ public class HoverProvider
 
         return new Hover
         {
-            Contents = new SumType<string, MarkedString, MarkedString[], MarkupContent>(
-                new MarkupContent
+            Contents = new MarkupContent
                 {
                     Kind = MarkupKind.Markdown,
                     Value = hoverContent
-                }),
+                },
             Range = TokenToRange(token)
         };
     }
@@ -70,7 +76,7 @@ public class HoverProvider
             case TokenType.FileSystem:
             case TokenType.Memory:
             case TokenType.IO:
-                return GetEffectHover(token.Value);
+                return GetEffectHover(token.Lexeme);
 
             case TokenType.Let:
                 return GetKeywordHover("let", "Declares a variable binding");
@@ -121,18 +127,18 @@ public class HoverProvider
     /// </summary>
     private string GetIdentifierHover(ManagedDocument document, Token token)
     {
-        if (document.AST == null) return GetGenericIdentifierHover(token.Value);
+        if (document.AST == null) return GetGenericIdentifierHover(token.Lexeme);
 
         // Look for function declarations
         foreach (var statement in document.AST.Statements)
         {
-            if (statement is FunctionDeclaration func && func.Name == token.Value)
+            if (statement is FunctionDeclaration func && func.Name == token.Lexeme)
             {
                 return GetFunctionHover(func);
             }
             else if (statement is ModuleDeclaration module)
             {
-                if (module.Name == token.Value)
+                if (module.Name == token.Lexeme)
                 {
                     return GetModuleHover(module);
                 }
@@ -140,7 +146,7 @@ public class HoverProvider
                 // Check for functions within modules
                 foreach (var moduleStmt in module.Body)
                 {
-                    if (moduleStmt is FunctionDeclaration moduleFunc && moduleFunc.Name == token.Value)
+                    if (moduleStmt is FunctionDeclaration moduleFunc && moduleFunc.Name == token.Lexeme)
                     {
                         return GetFunctionHover(moduleFunc, module.Name);
                     }
@@ -152,14 +158,14 @@ public class HoverProvider
         var functionContext = FindContainingFunction(document, token);
         if (functionContext != null)
         {
-            var parameter = functionContext.Parameters.FirstOrDefault(p => p.Name == token.Value);
+            var parameter = functionContext.Parameters.FirstOrDefault(p => p.Name == token.Lexeme);
             if (parameter != null)
             {
                 return GetParameterHover(parameter, functionContext);
             }
         }
 
-        return GetGenericIdentifierHover(token.Value);
+        return GetGenericIdentifierHover(token.Lexeme);
     }
 
     /// <summary>
@@ -204,9 +210,9 @@ public class HoverProvider
         sb.Append(string.Join(", ", func.Parameters.Select(p => $"{p.Name}: {p.Type}")));
         sb.Append(")");
 
-        if (func.Effects != null && func.Effects.Effects.Count > 0)
+        if (func.Effects != null && func.Effects.Count > 0)
         {
-            sb.Append($" uses [{string.Join(", ", func.Effects.Effects)}]");
+            sb.Append($" uses [{string.Join(", ", func.Effects)}]");
         }
 
         sb.AppendLine($" -> {func.ReturnType}");
@@ -217,10 +223,10 @@ public class HoverProvider
         {
             sb.AppendLine("**Pure function** - No side effects");
         }
-        else if (func.Effects != null && func.Effects.Effects.Count > 0)
+        else if (func.Effects != null && func.Effects.Count > 0)
         {
             sb.AppendLine("**Effects:**");
-            foreach (var effect in func.Effects.Effects)
+            foreach (var effect in func.Effects)
             {
                 sb.AppendLine($"- `{effect}`: {GetEffectDescription(effect)}");
             }
@@ -389,7 +395,7 @@ public class HoverProvider
     {
         var line = Math.Max(0, token.Line - 1); // Convert to 0-based
         var column = Math.Max(0, token.Column - 1); // Convert to 0-based
-        var endColumn = column + token.Value.Length;
+        var endColumn = column + token.Lexeme.Length;
 
         return new Microsoft.VisualStudio.LanguageServer.Protocol.Range
         {

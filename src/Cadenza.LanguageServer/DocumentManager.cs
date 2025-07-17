@@ -18,7 +18,7 @@ public class ManagedDocument
     public string Content { get; set; } = string.Empty;
     public int Version { get; set; }
     public List<Token> Tokens { get; set; } = new();
-    public Program? AST { get; set; }
+    public ProgramNode? AST { get; set; }
     public DateTime LastModified { get; set; } = DateTime.UtcNow;
     public List<Exception> ParseErrors { get; set; } = new();
 
@@ -193,7 +193,7 @@ public class DocumentManager
 
             // Tokenize the document
             var lexer = new CadenzaLexer(document.Content);
-            document.Tokens = lexer.Tokenize();
+            document.Tokens = lexer.ScanTokens();
 
             // Parse into AST
             var parser = new CadenzaParser(document.Tokens);
@@ -218,7 +218,7 @@ public class DocumentManager
         return document.Tokens.FirstOrDefault(token =>
             token.Line == line &&
             column >= token.Column &&
-            column < token.Column + token.Value.Length);
+            column < token.Column + token.Lexeme.Length);
     }
 
     /// <summary>

@@ -231,7 +231,7 @@ namespace Cadenza.LanguageServer
                         Range = TokenToRange(next),
                         Severity = DiagnosticSeverity.Error,
                         Source = "Cadenza",
-                        Message = $"Invalid operator sequence: '{current.Value}{next.Value}'",
+                        Message = $"Invalid operator sequence: '{current.Lexeme}{next.Lexeme}'",
                         Code = "INVALID_OPERATOR_SEQUENCE"
                     });
                 }
@@ -277,12 +277,12 @@ namespace Cadenza.LanguageServer
                 if (token.Type == TokenType.Identifier)
                 {
                     // This is a simplified check - a full implementation would need scope analysis
-                    var isBuiltinKeyword = IsBuiltinKeyword(token.Value);
-                    var isDefined = definedFunctions.Contains(token.Value) || 
-                                   definedVariables.Contains(token.Value) ||
+                    var isBuiltinKeyword = IsBuiltinKeyword(token.Lexeme);
+                    var isDefined = definedFunctions.Contains(token.Lexeme) || 
+                                   definedVariables.Contains(token.Lexeme) ||
                                    isBuiltinKeyword;
 
-                    if (!isDefined && !IsCommonIdentifier(token.Value))
+                    if (!isDefined && !IsCommonIdentifier(token.Lexeme))
                     {
                         // Only warn for potential undefined references
                         diagnostics.Add(new Diagnostic
@@ -290,7 +290,7 @@ namespace Cadenza.LanguageServer
                             Range = TokenToRange(token),
                             Severity = DiagnosticSeverity.Information,
                             Source = "Cadenza",
-                            Message = $"Identifier '{token.Value}' may be undefined",
+                            Message = $"Identifier '{token.Lexeme}' may be undefined",
                             Code = "POTENTIALLY_UNDEFINED"
                         });
                     }
@@ -323,9 +323,10 @@ namespace Cadenza.LanguageServer
             // Check for unknown effects
             if (func.Effects != null)
             {
-                foreach (var effect in func.Effects.Effects)
+                foreach (var effect in func.Effects)
                 {
-                    if (!EffectValidator.IsValidEffect(effect))
+                                    var validEffects = new List<string> { "Database", "Network", "Logging", "FileSystem", "Memory", "IO" };
+                if (!validEffects.Contains(effect))
                     {
                         diagnostics.Add(new Diagnostic
                         {
@@ -424,7 +425,7 @@ namespace Cadenza.LanguageServer
                 Range = TokenToRange(token),
                 Severity = DiagnosticSeverity.Error,
                 Source = "Cadenza",
-                Message = $"Unclosed '{token.Value}', expected '{expectedChar}'",
+                Message = $"Unclosed '{token.Lexeme}', expected '{expectedChar}'",
                 Code = "UNCLOSED_CONSTRUCT"
             };
         }
@@ -433,7 +434,7 @@ namespace Cadenza.LanguageServer
         {
             var line = Math.Max(0, token.Line - 1); // Convert to 0-based
             var column = Math.Max(0, token.Column - 1); // Convert to 0-based
-            var endColumn = column + token.Value.Length;
+            var endColumn = column + token.Lexeme.Length;
 
             return new Microsoft.VisualStudio.LanguageServer.Protocol.Range
             {
@@ -457,7 +458,7 @@ namespace Cadenza.LanguageServer
         private bool IsValidOperatorSequence(Token first, Token second)
         {
             // Allow specific valid sequences like ->, ==, !=, &&, ||, >=, <=
-            var sequence = first.Value + second.Value;
+            var sequence = first.Lexeme + second.Lexeme;
             return sequence is "->" or "==" or "!=" or "&&" or "||" or ">=" or "<=";
         }
 

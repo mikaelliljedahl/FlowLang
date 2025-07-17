@@ -30,8 +30,8 @@ public class CadenzaLanguageServer
         _documentManager = new DocumentManager();
         _diagnosticsProvider = new DiagnosticsProvider();
         _completionProvider = new CompletionProvider();
-        _hoverProvider = new HoverProvider();
-        _definitionProvider = new DefinitionProvider();
+        _hoverProvider = new HoverProvider(_documentManager);
+        _definitionProvider = new DefinitionProvider(_documentManager);
 
         _jsonRpc = JsonRpc.Attach(output, input, this);
     }
@@ -55,6 +55,7 @@ public class CadenzaLanguageServer
                 ResolveProvider = false,
                 TriggerCharacters = new[] { ".", "(", "[", "\"", "$" }
             },
+            
             HoverProvider = true,
             DefinitionProvider = true,
             DocumentSymbolProvider = true,
@@ -71,12 +72,7 @@ public class CadenzaLanguageServer
 
         return new InitializeResult
         {
-            Capabilities = serverCapabilities,
-            ServerInfo = new ServerInfo
-            {
-                Name = "Cadenza Language Server",
-                Version = "1.0.0"
-            }
+            Capabilities = serverCapabilities
         };
     }
 
@@ -118,10 +114,10 @@ public class CadenzaLanguageServer
         if (!_isInitialized) return;
 
         var document = param.TextDocument;
-        _documentManager.OpenDocument(document.Uri, document.Text, document.Version);
+        _documentManager.OpenDocument(document.Uri.ToString(), document.Text, document.Version);
 
         // Provide initial diagnostics
-        await PublishDiagnostics(document.Uri);
+        await PublishDiagnostics(document.Uri.ToString());
     }
 
     /// <summary>
@@ -133,10 +129,10 @@ public class CadenzaLanguageServer
         if (!_isInitialized) return;
 
         var document = param.TextDocument;
-        _documentManager.UpdateDocument(document.Uri, param.ContentChanges, document.Version);
+        _documentManager.UpdateDocument(document.Uri.ToString(), param.ContentChanges, document.Version);
 
         // Provide updated diagnostics
-        await PublishDiagnostics(document.Uri);
+        await PublishDiagnostics(document.Uri.ToString());
     }
 
     /// <summary>
@@ -148,7 +144,7 @@ public class CadenzaLanguageServer
         if (!_isInitialized) return;
 
         // Re-analyze document on save
-        await PublishDiagnostics(param.TextDocument.Uri);
+        await PublishDiagnostics(param.TextDocument.Uri.ToString());
     }
 
     /// <summary>
@@ -159,14 +155,10 @@ public class CadenzaLanguageServer
     {
         if (!_isInitialized) return;
 
-        _documentManager.CloseDocument(param.TextDocument.Uri);
+        _documentManager.CloseDocument(param.TextDocument.Uri.ToString());
 
         // Clear diagnostics for closed document
-        _jsonRpc.NotifyAsync(Methods.TextDocumentPublishDiagnosticsName, new PublishDiagnosticsParams
-        {
-            Uri = param.TextDocument.Uri,
-            Diagnostics = Array.Empty<Diagnostic>()
-        });
+        _jsonRpc.NotifyAsync(Methods.TextDocumentPublishDiagnosticsName, param.TextDocument.Uri.ToString(), Array.Empty<Diagnostic>());
     }
 
     #endregion
@@ -181,7 +173,7 @@ public class CadenzaLanguageServer
     {
         if (!_isInitialized) return null;
 
-        var document = _documentManager.GetDocument(param.TextDocument.Uri);
+        var document = _documentManager.GetDocument(param.TextDocument.Uri.ToString());
         if (document == null) return null;
 
         return _completionProvider.GetCompletions(document, param.Position);
@@ -195,7 +187,7 @@ public class CadenzaLanguageServer
     {
         if (!_isInitialized) return null;
 
-        var document = _documentManager.GetDocument(param.TextDocument.Uri);
+        var document = _documentManager.GetDocument(param.TextDocument.Uri.ToString());
         if (document == null) return null;
 
         return _hoverProvider.GetHover(document, param.Position);
@@ -209,7 +201,7 @@ public class CadenzaLanguageServer
     {
         if (!_isInitialized) return null;
 
-        var document = _documentManager.GetDocument(param.TextDocument.Uri);
+        var document = _documentManager.GetDocument(param.TextDocument.Uri.ToString());
         if (document == null) return null;
 
         return _definitionProvider.GetDefinition(document, param.Position);
@@ -223,7 +215,7 @@ public class CadenzaLanguageServer
     {
         if (!_isInitialized) return null;
 
-        var document = _documentManager.GetDocument(param.TextDocument.Uri);
+        var document = _documentManager.GetDocument(param.TextDocument.Uri.ToString());
         if (document == null) return null;
 
         return _definitionProvider.GetDocumentSymbols(document);
@@ -245,7 +237,7 @@ public class CadenzaLanguageServer
 
             var diagnostics = _diagnosticsProvider.GetDiagnostics(document);
 
-            await _jsonRpc.NotifyAsync(Methods.TextDocumentPublishDiagnosticsName, new PublishDiagnosticsParams
+            await _jsonRpc.NotifyAsync(Methods.TextDocumentPublishDiagnosticsName, new Microsoft.VisualStudio.LanguageServer.Protocol.PublishDiagnosticsParams
             {
                 Uri = uri,
                 Diagnostics = diagnostics

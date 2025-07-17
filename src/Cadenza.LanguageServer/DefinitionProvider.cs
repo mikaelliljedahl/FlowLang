@@ -13,12 +13,19 @@ namespace Cadenza.LanguageServer;
 /// </summary>
 public class DefinitionProvider
 {
+    private readonly DocumentManager _documentManager;
+
+    public DefinitionProvider(DocumentManager documentManager)
+    {
+        _documentManager = documentManager;
+    }
+
     /// <summary>
     /// Get the definition location for the symbol at the specified position
     /// </summary>
     public Location? GetDefinition(ManagedDocument document, LspPosition position)
     {
-        var token = document.GetTokenAtPosition(position);
+        var token = _documentManager.GetTokenAtPosition(document, position);
         if (token == null || token.Type != TokenType.Identifier) return null;
 
         var location = FindDefinitionLocation(document, token, position);
@@ -66,7 +73,7 @@ public class DefinitionProvider
     {
         if (document.AST == null) return null;
 
-        var identifier = token.Value;
+        var identifier = token.Lexeme;
 
         // Check for function definitions
         var functionLocation = FindFunctionDefinition(document, identifier);
@@ -108,7 +115,7 @@ public class DefinitionProvider
                 {
                     return new Location
                     {
-                        Uri = document.Uri,
+                        Uri = new Uri(document.Uri),
                         Range = TokenToRange(functionToken)
                     };
                 }
@@ -124,7 +131,7 @@ public class DefinitionProvider
                         {
                             return new Location
                             {
-                                Uri = document.Uri,
+                                Uri = new Uri(document.Uri),
                                 Range = TokenToRange(functionToken)
                             };
                         }
@@ -152,7 +159,7 @@ public class DefinitionProvider
                 {
                     return new Location
                     {
-                        Uri = document.Uri,
+                        Uri = new Uri(document.Uri),
                         Range = TokenToRange(moduleToken)
                     };
                 }
@@ -177,7 +184,7 @@ public class DefinitionProvider
                 var moduleToken = document.Tokens[tokenIndex - 2];
                 if (moduleToken.Type == TokenType.Identifier)
                 {
-                    return FindQualifiedFunctionDefinition(document, moduleToken.Value, token.Value);
+                    return FindQualifiedFunctionDefinition(document, moduleToken.Lexeme, token.Lexeme);
                 }
             }
         }
@@ -188,7 +195,7 @@ public class DefinitionProvider
             var functionToken = document.Tokens[tokenIndex + 2];
             if (functionToken.Type == TokenType.Identifier)
             {
-                return FindQualifiedFunctionDefinition(document, token.Value, functionToken.Value);
+                return FindQualifiedFunctionDefinition(document, token.Lexeme, functionToken.Lexeme);
             }
         }
 
@@ -215,7 +222,7 @@ public class DefinitionProvider
                         {
                             return new Location
                             {
-                                Uri = document.Uri,
+                                Uri = new Uri(document.Uri),
                                 Range = TokenToRange(functionToken)
                             };
                         }
@@ -244,7 +251,7 @@ public class DefinitionProvider
         {
             return new Location
             {
-                Uri = document.Uri,
+                Uri = new Uri(document.Uri),
                 Range = TokenToRange(parameterToken)
             };
         }
@@ -270,11 +277,11 @@ public class DefinitionProvider
             if (letIndex < document.Tokens.Count - 1)
             {
                 var nextToken = document.Tokens[letIndex + 1];
-                if (nextToken.Type == TokenType.Identifier && nextToken.Value == variableName)
+                if (nextToken.Type == TokenType.Identifier && nextToken.Lexeme == variableName)
                 {
                     return new Location
                     {
-                        Uri = document.Uri,
+                        Uri = new Uri(document.Uri),
                         Range = TokenToRange(nextToken)
                     };
                 }
@@ -317,7 +324,7 @@ public class DefinitionProvider
 
             if ((token.Type == TokenType.Function || 
                  (token.Type == TokenType.Pure && i + 2 < document.Tokens.Count && document.Tokens[i + 1].Type == TokenType.Function)) &&
-                nextToken.Type == TokenType.Identifier && nextToken.Value == func.Name)
+                                                nextToken.Type == TokenType.Identifier && nextToken.Lexeme == func.Name)
             {
                 return nextToken; // Return the function name token
             }
@@ -337,7 +344,7 @@ public class DefinitionProvider
             var nextToken = document.Tokens[i + 1];
 
             if (token.Type == TokenType.Module && 
-                nextToken.Type == TokenType.Identifier && nextToken.Value == module.Name)
+                nextToken.Type == TokenType.Identifier && nextToken.Lexeme == module.Name)
             {
                 return nextToken; // Return the module name token
             }
@@ -361,7 +368,7 @@ public class DefinitionProvider
         for (int i = functionIndex; i < document.Tokens.Count; i++)
         {
             var token = document.Tokens[i];
-            if (token.Type == TokenType.Identifier && token.Value == parameter.Name)
+            if (token.Type == TokenType.Identifier && token.Lexeme == parameter.Name)
             {
                 // Check if this is followed by a colon (parameter syntax)
                 if (i + 1 < document.Tokens.Count && document.Tokens[i + 1].Type == TokenType.Colon)
@@ -385,7 +392,7 @@ public class DefinitionProvider
             Kind = SymbolKind.Function,
             Location = new Location
             {
-                Uri = uri,
+                Uri = new Uri(uri),
                 Range = new Microsoft.VisualStudio.LanguageServer.Protocol.Range { Start = new Position(0, 0), End = new Position(0, 0) } // TODO: Get actual range
             },
             ContainerName = containerName
@@ -403,7 +410,7 @@ public class DefinitionProvider
             Kind = SymbolKind.Module,
             Location = new Location
             {
-                Uri = uri,
+                Uri = new Uri(uri),
                 Range = new Microsoft.VisualStudio.LanguageServer.Protocol.Range { Start = new Position(0, 0), End = new Position(0, 0) } // TODO: Get actual range
             }
         };
@@ -416,7 +423,7 @@ public class DefinitionProvider
     {
         var line = Math.Max(0, token.Line - 1); // Convert to 0-based
         var column = Math.Max(0, token.Column - 1); // Convert to 0-based
-        var endColumn = column + token.Value.Length;
+        var endColumn = column + token.Lexeme.Length;
 
         return new Microsoft.VisualStudio.LanguageServer.Protocol.Range
         {

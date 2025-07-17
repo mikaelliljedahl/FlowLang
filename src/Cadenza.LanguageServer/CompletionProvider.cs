@@ -323,7 +323,7 @@ public class CompletionProvider
     private string BuildFunctionSignature(FunctionDeclaration func)
     {
         var parameters = string.Join(", ", func.Parameters.Select(p => $"{p.Name}: {p.Type}"));
-        var effectsStr = func.Effects != null ? $" uses [{string.Join(", ", func.Effects.Effects)}]" : "";
+        var effectsStr = func.Effects != null ? $" uses [{string.Join(", ", func.Effects)}]" : "";
         var pureStr = func.IsPure ? "pure " : "";
         return $"{pureStr}function {func.Name}({parameters}){effectsStr} -> {func.ReturnType}";
     }
@@ -335,9 +335,9 @@ public class CompletionProvider
         {
             doc += "Pure function - no side effects\n";
         }
-        if (func.Effects != null && func.Effects.Effects.Count > 0)
+        if (func.Effects != null && func.Effects.Count > 0)
         {
-            doc += $"Effects: {string.Join(", ", func.Effects.Effects)}\n";
+            doc += $"Effects: {string.Join(", ", func.Effects)}\n";
         }
         doc += $"Returns: {func.ReturnType}";
         return doc;
@@ -368,7 +368,7 @@ public class CompletionProvider
             Detail = $"Cadenza keyword",
             Documentation = documentation ?? $"Cadenza '{keyword}' keyword",
             InsertText = insertText ?? keyword,
-            InsertTextFormat = insertText?.Contains("$") == true ? InsertTextFormat.Snippet : InsertTextFormat.PlainText
+            InsertTextFormat = insertText?.Contains("$") == true ? InsertTextFormat.Snippet : InsertTextFormat.Snippet
         };
     }
 
@@ -381,7 +381,7 @@ public class CompletionProvider
             Detail = "Cadenza type",
             Documentation = documentation ?? $"Cadenza '{type}' type",
             InsertText = insertText ?? type,
-            InsertTextFormat = insertText?.Contains("$") == true ? InsertTextFormat.Snippet : InsertTextFormat.PlainText
+            InsertTextFormat = insertText?.Contains("$") == true ? InsertTextFormat.Snippet : InsertTextFormat.Snippet
         };
     }
 
