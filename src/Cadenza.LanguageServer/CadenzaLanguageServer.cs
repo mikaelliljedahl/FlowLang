@@ -237,11 +237,7 @@ public class CadenzaLanguageServer
 
             var diagnostics = _diagnosticsProvider.GetDiagnostics(document);
 
-            await _jsonRpc.NotifyAsync(Methods.TextDocumentPublishDiagnosticsName, new Microsoft.VisualStudio.LanguageServer.Protocol.PublishDiagnosticsParams
-            {
-                Uri = uri,
-                Diagnostics = diagnostics
-            });
+            await _jsonRpc.NotifyAsync(Methods.TextDocumentPublishDiagnosticsName, new { Uri = uri, Diagnostics = diagnostics });
         }
         catch (Exception ex)
         {
