@@ -2,13 +2,15 @@
 
 ## ✅ **CLEANUP COMPLETE**: Project properly organized!
 
+**NOTE: This document describes an idealized or target project structure and the intended working status of its components. While the core Cadenza compiler is functional, many of the tools and integrations described here are part of the ongoing Phase 5 self-hosting migration and are not yet fully implemented or stable.**
+
 ### **Final Clean Structure:**
 
 ```
 Cadenza/
 ├── src/                               # ALL SOURCE CODE
 │   ├── Cadenza.Core/                # Core transpiler (WORKING VERSION)
-│   │   ├── cadenzac-core.cs             # Enhanced transpiler with all features
+│   │   ├── cadenzac-core.cs             # (Legacy) Monolithic compiler source - not actively used for development
 │   │   ├── CadenzaRuntime.cs        # Enhanced runtime bridge (18KB)
 │   │   ├── cadenzac-core.csproj         # Project file
 │   │   └── TODO.md                   # Development notes

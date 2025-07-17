@@ -31,13 +31,16 @@ The Cadenza LSP server implements the [Language Server Protocol specification](h
 
 ### Build the Language Server
 ```bash
-cd src/
-dotnet build cadenzac.csproj
+# Navigate to the LSP project directory
+cd src/Cadenza.LSP
+# Build the LSP project
+dotnet build Cadenza.LSP.csproj
 ```
 
 ### Start the Language Server
 ```bash
-cadenzac lsp
+# Run the LSP server directly
+dotnet run --project src/Cadenza.LSP/Cadenza.LSP.csproj
 ```
 
 The server communicates via stdin/stdout using JSON-RPC.
@@ -99,8 +102,8 @@ let client: LanguageClient;
 
 export function activate(context: vscode.ExtensionContext) {
   const serverOptions: ServerOptions = {
-    command: 'cadenzac',
-    args: ['lsp'],
+    command: 'dotnet',
+    args: ['run', '--project', 'src/Cadenza.LSP/Cadenza.LSP.csproj'],
     transport: TransportKind.stdio
   };
 
@@ -134,7 +137,7 @@ export function deactivate(): Thenable<void> | undefined {
 #### Neovim with nvim-lspconfig
 ```lua
 require'lspconfig'.cadenza.setup{
-  cmd = {'cadenzac', 'lsp'},
+  cmd = {'dotnet', 'run', '--project', 'src/Cadenza.LSP/Cadenza.LSP.csproj'},
   filetypes = {'cadenza'},
   root_dir = require'lspconfig'.util.root_pattern('cadenzac.json', '.git'),
 }
@@ -144,7 +147,7 @@ require'lspconfig'.cadenza.setup{
 ```elisp
 (add-to-list 'lsp-language-id-configuration '(cadenza-mode . "cadenza"))
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection '("cadenzac" "lsp"))
+ (make-lsp-client :new-connection (lsp-stdio-connection '("dotnet" "run" "--project" "src/Cadenza.LSP/Cadenza.LSP.csproj"))
                   :major-modes '(cadenza-mode)
                   :server-id 'cadenza))
 ```
@@ -295,17 +298,17 @@ Provides document outline with:
 ### Unit Tests
 Run the LSP unit tests:
 ```bash
-dotnet test tests/unit/lsp/
+dotnet test tests/Cadenza.Tests.csproj --filter "FullyQualifiedName~LSP"
 ```
 
 ### Integration Testing
 Test with a real LSP client:
 ```bash
 # Start the server
-cadenzac lsp
+dotnet run --project src/Cadenza.LSP/Cadenza.LSP.csproj
 
 # In another terminal, test with a simple LSP client
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' | cadenzac lsp
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' | dotnet run --project src/Cadenza.LSP/Cadenza.LSP.csproj
 ```
 
 ### Manual Testing with VS Code
@@ -362,7 +365,7 @@ dotnet --version
 ### Debug Mode
 Enable verbose logging:
 ```bash
-cadenzac lsp --verbose
+dotnet run --project src/Cadenza.LSP/Cadenza.LSP.csproj -- --verbose
 ```
 
 ### Known Limitations
@@ -392,8 +395,8 @@ cadenzac lsp --verbose
 ### Development Setup
 1. Clone the Cadenza repository
 2. Install .NET 10.0 SDK
-3. Build the project: `dotnet build src/cadenzac.csproj`
-4. Run tests: `dotnet test tests/`
+3. Build the LSP project: `dotnet build src/Cadenza.LSP/Cadenza.LSP.csproj`
+4. Run tests: `dotnet test tests/Cadenza.Tests.csproj --filter "FullyQualifiedName~LSP"`
 
 ### Adding New Features
 1. Implement in appropriate provider class

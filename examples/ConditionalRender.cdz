@@ -1,0 +1,23 @@
+component ConditionalRender -> UIComponent {
+    state {
+        isVisible: Bool = true
+    }
+
+    effectful function toggleVisibility() uses [State] {
+        set_state(current => { isVisible: !current.isVisible })
+    }
+
+    view {
+        div {
+            button(onclick: toggleVisibility) {
+                "Toggle Visibility"
+            }
+
+            if state.isVisible {
+                p { "This text is visible." }
+            } else {
+                p { "This text is hidden." }
+            }
+        }
+    }
+}

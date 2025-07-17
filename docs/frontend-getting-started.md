@@ -76,25 +76,25 @@ component CounterApp()
 }
 ```
 
-### 3. Compile to JavaScript
+### 3. Compile to C# for Blazor
 
 ```bash
-# Compile UI component to JavaScript/React
-cadenzac compile main.cdz
+# Compile UI component to C# for Blazor
+cadenzac compile --target csharp main.cdz # UI components (marked with -> UIComponent) will be compiled to Blazor-compatible C#
 
-# Generated files:
-main.js              # React component
-package.json         # npm configuration
-index.html          # HTML template
-cadenza-runtime.js  # Cadenza runtime
+# Generated files (example):
+main.g.cs            # Generated C# Blazor component
+_Imports.razor       # Blazor imports (if needed)
+Project.csproj       # C# project file (if new project)
 ```
 
 ### 4. Run Your UI Application
 
 ```bash
-npm install
-npm run dev
-# Opens browser at http://localhost:3000
+dotnet run
+# Or for development with hot reload:
+dotnet watch run
+# Opens browser at configured Blazor application URL (e.g., https://localhost:5001)
 ```
 
 ## Core Concepts for LLM Developers
@@ -487,7 +487,7 @@ cadenzac new --template ui my-ui-app
 cadenzac new --template fullstack my-fullstack-app
 
 # Compile to different targets
-cadenzac compile --target javascript frontend/main.cdz
+cadenzac compile --target csharp frontend/main.cdz # UI components (marked with -> UIComponent) will be compiled to Blazor-compatible C#
 cadenzac compile --target csharp backend/main.cdz
 
 # List available targets
@@ -500,13 +500,13 @@ cadenzac dev --watch
 ### Project Templates
 
 **UI Template:**
-- Basic React application structure
+- Basic Blazor application structure (C#)
 - Example components and state management
-- Build configuration for modern JavaScript
+- Build configuration for Blazor
 
 **Fullstack Template:**
 - Backend services in C#/.NET
-- Frontend components in JavaScript/React  
+- Frontend components in C# (Blazor)
 - Shared type definitions
 - API client auto-generation
 

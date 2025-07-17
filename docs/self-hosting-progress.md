@@ -1,13 +1,15 @@
 # Cadenza Self-Hosting Implementation Progress
 
+**NOTE: This document outlines the roadmap and progress of Cadenza's self-hosting initiative. While foundational work has been completed, many of the advanced tools and features described as "working" or "completed" are still under active development or represent future goals. This document reflects an aspirational view of the project's progress.**
+
 ## Overview
 Cadenza is achieving self-hosting by rewriting its development tools in Cadenza itself. The original C# implementation had sophisticated tooling that broke due to dependency conflicts. This document tracks recreating all tools in Cadenza.
 
 ## Analysis of Original Implementation (src/ folder)
 
-**CRITICAL DISCOVERY:** The original `src/cadenzac.cs` already contained a fully implemented development ecosystem that's broken due to compilation issues. Here's what was already built:
+**CRITICAL DISCOVERY:** The original `src/cadenzac.cs` was a basic compiler. The sophisticated tooling described below was largely conceptual or existed in separate, incomplete C# projects (`src/Cadenza.Analysis`, `src/Cadenza.LSP`, etc.) that are now being integrated and rewritten. Here's what was envisioned and is now being built:
 
-### ✅ **Original Implementation Analysis**
+### ✅ **Original Implementation Analysis (Conceptual/Planned Features)**
 
 #### **1. Development Server (DevCommand in cadenzac.cs:3220+)**
 - **HTTP Server**: HttpListener-based web server
@@ -149,25 +151,25 @@ Cadenza is achieving self-hosting by rewriting its development tools in Cadenza 
 
 ## Current Status - MAJOR MILESTONE ACHIEVED! 🎉
 
-### ✅ Phase 1: Core Transpiler Enhancement - COMPLETED
-- ✅ **Core transpiler working** (core/cadenzac-core.cs) 
+### ✅ Phase 1: Core Transpiler Enhancement - FOUNDATIONAL WORK COMPLETED
+- ✅ **Core transpiler working** (core/cadenzac-core.csproj) 
 - ✅ **Guard statements**: `guard condition else { block }` syntax working
 - ✅ **List<T> types**: `[1,2,3]` literals and `list[index]` access  
 - ✅ **Option<T> types**: `Some(value)` and `None` constructors
 - ✅ **Match expressions**: Basic Result<T,E> pattern matching
-- ✅ **Effect system**: Proper effect tracking and XML documentation
-- ✅ **Module system**: Export functions and namespace generation
+- ✅ **Effect system**: Initial effect tracking and XML documentation
+- ✅ **Module system**: Initial export functions and namespace generation
 - ✅ **Specification blocks**: Full spec-to-documentation conversion
 
-### ✅ Phase 2: Runtime Bridge - COMPLETED  
+### ✅ Phase 2: Runtime Bridge - FOUNDATIONAL WORK COMPLETED  
 - ✅ **Cadenza.Runtime bridge** (core/CadenzaRuntime.cs)
-- ✅ **HTTP server operations**: HttpListener integration
-- ✅ **File system operations**: File reading, writing, watching
-- ✅ **WebSocket server**: Real-time communication support
-- ✅ **Process execution**: Command execution with output capture
-- ✅ **Logging system**: Structured logging with timestamps
+- ✅ **HTTP server operations**: Conceptual HttpListener integration
+- ✅ **File system operations**: Conceptual file reading, writing, watching
+- ✅ **WebSocket server**: Conceptual real-time communication support
+- ✅ **Process execution**: Conceptual command execution with output capture
+- ✅ **Logging system**: Conceptual structured logging with timestamps
 
-### ✅ Phase 3: Self-Hosting Status - MULTI-MODULE BREAKTHROUGH! 🎉
+### ✅ Phase 3: Self-Hosting Status - MULTI-MODULE FOUNDATION LAID! 🎉
 - ✅ **Multi-Module Compilation**: WORKING - Import resolution fully implemented!
   - **BREAKTHROUGH**: `import Math.{add, multiply}` now generates correct qualified C# calls
   - **FIXED**: Import statements previously ignored, now properly resolved to namespaces
@@ -179,7 +181,7 @@ Cadenza is achieving self-hosting by rewriting its development tools in Cadenza 
   - **Generated C#**: `Cadenza.Modules.Math.Math.add(5, 3)` (proper qualified calls)
   - **Execution Success**: `add(5, 3) = 8`, `multiply(8, 2) = 16` ✅
   
-- ✅ **Cadenza Tools**: NOW ACTUALLY POSSIBLE
+- ✅ **Cadenza Tools**: NOW POSSIBLE TO START IMPLEMENTING
   - LSP Implementation: Multi-module support enables complex tool development
   - Development Server: Can now be written in Cadenza with module imports
   - Static Analysis Tool: Multi-module analysis now feasible

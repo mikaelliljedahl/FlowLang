@@ -1,5 +1,7 @@
 # Cadenza Language Fundamentals
 
+**NOTE: This document describes the comprehensive vision and future capabilities of the Cadenza language. Not all features described here are currently implemented in the compiler. For a reference of currently implemented features, please refer to the [Language Reference](language-reference.md).**
+
 ## Table of Contents
 1. [Primitive Types](#primitive-types)
 2. [Module System](#module-system)

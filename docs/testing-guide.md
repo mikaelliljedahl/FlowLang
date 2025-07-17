@@ -101,45 +101,45 @@ Prevent breaking changes:
 cd tests
 
 # Run all tests
-dotnet test
+dotnet test Cadenza.Tests.csproj
 
 # Run with verbose output
-dotnet test --verbosity normal
+dotnet test Cadenza.Tests.csproj --verbosity normal
 
 # Run with coverage collection
-dotnet test --collect:"XPlat Code Coverage"
+dotnet test Cadenza.Tests.csproj --collect:"XPlat Code Coverage"
 ```
 
 ### Running Specific Test Categories
 
 ```bash
 # Unit tests only
-dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Unit"
+dotnet test Cadenza.Tests.csproj --filter "FullyQualifiedName~Cadenza.Tests.Unit"
 
 # Integration tests only
-dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Integration"
+dotnet test Cadenza.Tests.csproj --filter "FullyQualifiedName~Cadenza.Tests.Integration"
 
 # Golden file tests only
-dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Golden"
+dotnet test Cadenza.Tests.csproj --filter "FullyQualifiedName~Cadenza.Tests.Golden"
 
 # Performance tests only
-dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Performance"
+dotnet test Cadenza.Tests.csproj --filter "FullyQualifiedName~Cadenza.Tests.Performance"
 
 # Regression tests only
-dotnet test --filter "FullyQualifiedName~Cadenza.Tests.Regression"
+dotnet test Cadenza.Tests.csproj --filter "FullyQualifiedName~Cadenza.Tests.Regression"
 ```
 
 ### Running Individual Test Classes
 
 ```bash
 # Run specific test class
-dotnet test --filter "ClassName=LexerTests"
+dotnet test Cadenza.Tests.csproj --filter "ClassName=LexerTests"
 
 # Run specific test method
-dotnet test --filter "MethodName=Lexer_ShouldTokenizeNumbers"
+dotnet test Cadenza.Tests.csproj --filter "MethodName=Lexer_ShouldTokenizeNumbers"
 
 # Run tests with specific attribute
-dotnet test --filter "Category=FastTests"
+dotnet test Cadenza.Tests.csproj --filter "Category=FastTests"
 ```
 
 ### Performance Test Execution
@@ -148,10 +148,10 @@ Performance tests require special handling:
 
 ```bash
 # Run in Release mode for accurate measurements
-dotnet test --configuration Release --filter "Performance"
+dotnet test Cadenza.Tests.csproj --configuration Release --filter "Performance"
 
 # Run with detailed timing
-dotnet test --logger "console;verbosity=detailed" --filter "Performance"
+dotnet test Cadenza.Tests.csproj --logger "console;verbosity=detailed" --filter "Performance"
 ```
 
 ## Writing Unit Tests
@@ -190,30 +190,31 @@ namespace Cadenza.Tests.Unit
             _lexer = new CadenzaLexer(source);
 
             // Act
-            var tokens = _lexer.Tokenize();
+            var tokens = _lexer.ScanTokens();
 
             // Assert
             Assert.That(tokens.Count, Is.EqualTo(2)); // Number + EOF
             Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Number));
-            Assert.That(tokens[0].Value, Is.EqualTo("42"));
+            Assert.That(tokens[0].Lexeme, Is.EqualTo("42"));
             Assert.That(tokens[1].Type, Is.EqualTo(TokenType.EOF));
         }
 
-        [TestCase("42", TokenType.Number, "42")]
-        [TestCase("identifier", TokenType.Identifier, "identifier")]
-        [TestCase("function", TokenType.Function, "function")]
-        [TestCase("\"hello\"", TokenType.String, "hello")]
-        public void Lexer_ShouldTokenizeCorrectly(string input, TokenType expectedType, string expectedValue)
+        [TestCase("42", TokenType.Number, "42", 42)]
+        [TestCase("identifier", TokenType.Identifier, "identifier", null)]
+        [TestCase("function", TokenType.Function, "function", null)]
+        [TestCase("\"hello\"", TokenType.String, "\"hello\"", "hello")]
+        public void Lexer_ShouldTokenizeCorrectly(string input, TokenType expectedType, string expectedLexeme, object? expectedLiteral)
         {
             // Arrange
             _lexer = new CadenzaLexer(input);
 
             // Act
-            var tokens = _lexer.Tokenize();
+            var tokens = _lexer.ScanTokens();
 
             // Assert
             Assert.That(tokens[0].Type, Is.EqualTo(expectedType));
-            Assert.That(tokens[0].Value, Is.EqualTo(expectedValue));
+            Assert.That(tokens[0].Lexeme, Is.EqualTo(expectedLexeme));
+            Assert.That(tokens[0].Literal, Is.EqualTo(expectedLiteral));
         }
     }
 }
@@ -232,7 +233,7 @@ public class ParserTests
         // Arrange
         var source = "pure function add(a: int, b: int) -> int { return a + b }";
         var lexer = new CadenzaLexer(source);
-        var tokens = lexer.Tokenize();
+        var tokens = lexer.ScanTokens();
         var parser = new CadenzaParser(tokens);
 
         // Act
@@ -255,7 +256,7 @@ public class ParserTests
         // Arrange
         var source = "function divide(a: int, b: int) -> Result<int, string> { return Ok(a / b) }";
         var lexer = new CadenzaLexer(source);
-        var tokens = lexer.Tokenize();
+        var tokens = lexer.ScanTokens();
         var parser = new CadenzaParser(tokens);
 
         // Act
@@ -272,7 +273,7 @@ public class ParserTests
         // Arrange
         var source = "function missing_params() -> int { return 42 }"; // Missing parameter list
         var lexer = new CadenzaLexer(source);
-        var tokens = lexer.Tokenize();
+        var tokens = lexer.ScanTokens();
         var parser = new CadenzaParser(tokens);
 
         // Act & Assert

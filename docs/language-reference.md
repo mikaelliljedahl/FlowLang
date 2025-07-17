@@ -335,12 +335,12 @@ function getRoleDescription(role: string) -> string {
 A `match` can also be used as an expression to return a value directly, which can then be assigned to a variable. This is a more concise way to handle branching logic.
 
 ```cadenza
-function calculateDiscount(loyaltyTier: string) -> float {
+function calculateDiscount(loyaltyTier: string) -> int {
     let discount = match loyaltyTier {
-        "Platinum" -> 0.15
-        "Gold" -> 0.10
-        "Silver" -> 0.05
-        _ -> 0.0
+        "Platinum" -> 15
+        "Gold" -> 10
+        "Silver" -> 5
+        _ -> 0
     };
     return discount;
 }

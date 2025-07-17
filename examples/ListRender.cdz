@@ -1,0 +1,16 @@
+component ListRender -> UIComponent {
+    state {
+        items: List<String> = ["Apple", "Banana", "Cherry"]
+    }
+
+    view {
+        div {
+            h2 { "Fruit List" }
+            ul {
+                each item in state.items {
+                    li { item }
+                }
+            }
+        }
+    }
+}

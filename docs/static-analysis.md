@@ -1,24 +1,24 @@
 # Cadenza Static Analysis & Linting
 
-Cadenza includes a comprehensive static analysis and linting system accessible via `cadenzac lint`. This system helps detect issues, enforce best practices, and suggest improvements for code quality, performance, and security.
+**NOTE: This document describes the future vision and planned capabilities of the Cadenza Static Analysis and Linting system. Many of the commands, rules, and features described here are aspirational and are not yet implemented in the current compiler. This document serves as a roadmap for future development.**
 
 ## Quick Start
 
 ```bash
-# Analyze current directory
-cadenzac lint
+# Analyze current directory (NOT YET IMPLEMENTED)
+# cadenzac lint
 
-# Analyze specific files or directories
-cadenzac lint src/ examples/
+# Analyze specific files or directories (NOT YET IMPLEMENTED)
+# cadenzac lint src/ examples/
 
-# Run only specific rule categories
-cadenzac lint --effects --results
+# Run only specific rule categories (NOT YET IMPLEMENTED)
+# cadenzac lint --effects --results
 
-# Output in JSON format for CI/CD
-cadenzac lint --format json
+# Output in JSON format for CI/CD (NOT YET IMPLEMENTED)
+# cadenzac lint --format json
 
-# Show detailed help
-cadenzac help lint
+# Show detailed help (NOT YET IMPLEMENTED)
+# cadenzac help lint
 ```
 
 ## Analysis Categories

@@ -1,0 +1,8 @@
+component ParentComponent -> UIComponent {
+    view {
+        div {
+            h2 { "Parent Component" }
+            GreetingChild(message: "Hello from Parent!")
+        }
+    }
+}

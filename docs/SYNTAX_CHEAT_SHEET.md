@@ -38,9 +38,9 @@ let number: int = 42
 let text: string = "hello"
 let flag: bool = true
 
-// Arrays
-let numbers: int[] = [1, 2, 3, 4, 5]
-let names: string[] = ["Alice", "Bob"]
+// Lists (Cadenza's primary collection type)
+let numbers: List<int> = [1, 2, 3, 4, 5]
+let names: List<string> = ["Alice", "Bob"]
 ```
 
 ### Result Types (Error Handling)
@@ -208,25 +208,24 @@ postconditions:
   - "The original order's status is updated to 'return-pending'."
 source_doc: "policy/return-and-refund-policy.md"
 spec*/
-function processReturnRequest(orderId: OrderId, productId: ProductId, reason: string) 
-    uses [Database, Email, Inventory] -> Result<ReturnAuthorization, ReturnError> {
+function processReturnRequest(orderId: string, productId: string, reason: string) 
+    uses [Database, Email, Inventory] -> Result<string, string> {
     
-    let order = getOrder(orderId)?
-    guard order.deliveryDate.isWithinDays(30) else {
-        return Error(ReturnError.PastReturnWindow)
+    // Simplified for example. In a real implementation, these would be actual checks.
+    guard orderId != "" else {
+        return Error("Invalid Order ID")
     }
     
-    let product = getProduct(productId)?
-    guard !product.isDigital else {
-        return Error(ReturnError.DigitalProductNotReturnable)
+    guard productId != "" else {
+        return Error("Invalid Product ID")
     }
     
-    let restockingFee = product.category.restockingFee
-    let refundAmount = product.price - restockingFee
+    // Simulate return logic
+    let rma = "RMA-" + orderId + "-" + productId
     
-    let rma = createReturnAuthorization(orderId, productId, refundAmount, reason)?
-    sendReturnInstructions(order.customerEmail, rma)?
-    updateOrderStatus(orderId, "ReturnPending")?
+    // Simulate side effects
+    // database_save_rma(rma)
+    // email_send_instructions(orderId)
     
     return Ok(rma)
 }
@@ -272,7 +271,8 @@ module MathUtils {
 
 module StringUtils {
     pure function upper(text: string) -> string {
-        return text.ToUpper()
+        // This would be implemented in the Cadenza runtime or as a built-in
+        return text + "_UPPER"
     }
     
     export { upper }

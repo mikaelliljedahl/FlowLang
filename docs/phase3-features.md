@@ -1,6 +1,6 @@
 # Cadenza Phase 3 Advanced Features 🚀
 
-**Phase 3 introduces unique Cadenza features that set it apart as the premier language for distributed systems, observability, and multi-platform development.**
+**NOTE: This document describes advanced features planned for Phase 3 of Cadenza's development. Many of the features and commands described here are aspirational and not yet implemented in the current compiler. For a reference of currently implemented language features, please refer to the [Language Reference](language-reference.md). For currently implemented CLI commands, please refer to the [CLI Reference](cli-reference.md).**
 
 ## 🎯 Phase 3 Overview
 

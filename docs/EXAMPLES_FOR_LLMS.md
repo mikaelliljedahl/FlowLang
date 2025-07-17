@@ -191,7 +191,7 @@ module Users {
         return Ok(email)
     }
     
-    function createUser(email: string, name: string) uses [Database] -> Result<string, string> {
+    function createUser(email: string, name: string) uses [Database] -> Result<int, string> {
         let validEmail = validateEmail(email)?
         let userId = database_create_user(validEmail, name)?
         return Ok(userId)

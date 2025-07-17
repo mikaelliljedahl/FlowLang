@@ -38,13 +38,11 @@ Thank you for your interest in contributing to Cadenza! This document provides g
    ```
 4. **Build the project**:
    ```bash
-   cd src
-   dotnet build
+   dotnet build src/Cadenza.Core/cadenzac-core.csproj
    ```
 5. **Run tests** to ensure everything works:
    ```bash
-   cd ../tests
-   dotnet test
+   dotnet test tests/Cadenza.Tests.csproj
    ```
 
 ## Development Environment
@@ -90,8 +88,9 @@ insert_final_newline = true
 ```
 cadenza/
 ├── src/                    # Main transpiler source code
-│   ├── cadenzac.cs           # Single-file transpiler implementation
-│   └── cadenzac.csproj       # Project configuration
+│   ├── Cadenza.Core/       # Core compiler components (Lexer, Parser, AST, CSharpGenerator)
+│   ├── Cadenza.Tools/      # CLI tools and other utilities
+│   └── ...                 # Other project-specific source directories
 ├── tests/                  # Comprehensive test suite
 │   ├── unit/              # Unit tests for components
 │   ├── integration/       # End-to-end tests
@@ -114,11 +113,11 @@ cadenza/
 
 | Component | Location | Description |
 |-----------|----------|-------------|
-| **Lexer** | `src/cadenzac.cs` | Tokenization (lines 164-473) |
-| **Parser** | `src/cadenzac.cs` | Syntax analysis (lines 479-1217) |
-| **AST** | `src/cadenzac.cs` | Node definitions (lines 106-158) |
-| **Code Generator** | `src/cadenzac.cs` | C# generation (lines 1224-1818) |
-| **CLI** | `src/cadenzac.cs` | Command interface (lines 1846-2386) |
+| **Lexer** | `src/Cadenza.Core/Lexer.cs` | Tokenization |
+| **Parser** | `src/Cadenza.Core/Parser.cs` | Syntax analysis |
+| **AST** | `src/Cadenza.Core/Ast.cs` | Node definitions |
+| **Code Generator** | `src/Cadenza.Core/Transpiler.cs` | C# generation |
+| **CLI** | `src/Cadenza.Tools/flowc/` | Command interface |
 
 ## Code Style Guidelines
 
@@ -137,26 +136,26 @@ cadenza/
 
 ```csharp
 // ✅ Good
-public record TokenLocation(int Line, int Column);
+public record Token(TokenType Type, string Lexeme, object? Literal, int Line, int Column);
 
 public class CadenzaLexer
 {
     private readonly string _source;
-    private int _position = 0;
+    private int _current = 0;
 
     public CadenzaLexer(string source)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
     }
 
-    public List<Token> Tokenize() => 
-        TokenizeInternal().ToList();
+    public List<Token> ScanTokens() => 
+        ScanTokensInternal().ToList();
 
-    private IEnumerable<Token> TokenizeInternal()
+    private IEnumerable<Token> ScanTokensInternal()
     {
         while (!IsAtEnd())
         {
-            var token = NextToken();
+            var token = ScanToken();
             if (token != null)
                 yield return token;
         }
@@ -240,18 +239,17 @@ Before starting work:
 
 ```bash
 # Run all tests
-dotnet test
+dotnet test tests/Cadenza.Tests.csproj
 
 # Run specific test categories
-dotnet test --filter "FullyQualifiedName~Unit"
-dotnet test --filter "FullyQualifiedName~Integration"
+dotnet test tests/Cadenza.Tests.csproj --filter "FullyQualifiedName~Unit"
+dotnet test tests/Cadenza.Tests.csproj --filter "FullyQualifiedName~Integration"
 
 # Run performance tests
-dotnet test --filter "FullyQualifiedName~Performance"
+dotnet test tests/Cadenza.Tests.csproj --filter "FullyQualifiedName~Performance"
 
 # Test CLI commands
-cd examples
-dotnet run --project ../src/cadenzac.csproj -- run simple.cdz
+dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run examples/simple.cdz
 ```
 
 ### 4. Submitting Your Changes
@@ -396,28 +394,30 @@ public class LexerTests
     public void Lexer_ShouldTokenizeStringLiterals()
     {
         // Arrange
-        var source = "\"Hello, World!\"";
+        var source = ""Hello, World!";
         var lexer = new CadenzaLexer(source);
 
         // Act
-        var tokens = lexer.Tokenize();
+        var tokens = lexer.ScanTokens();
 
         // Assert
         Assert.That(tokens.Count, Is.EqualTo(2)); // String + EOF
         Assert.That(tokens[0].Type, Is.EqualTo(TokenType.String));
-        Assert.That(tokens[0].Value, Is.EqualTo("Hello, World!"));
+        Assert.That(tokens[0].Lexeme, Is.EqualTo(""Hello, World!")); // Lexeme includes quotes
+        Assert.That(tokens[0].Literal, Is.EqualTo("Hello, World!")); // Literal is the actual value
     }
 
-    [TestCase("42", TokenType.Number, "42")]
-    [TestCase("identifier", TokenType.Identifier, "identifier")]
-    [TestCase("function", TokenType.Function, "function")]
-    public void Lexer_ShouldTokenizeCorrectly(string input, TokenType expectedType, string expectedValue)
+    [TestCase("42", TokenType.Number, "42", 42)]
+    [TestCase("identifier", TokenType.Identifier, "identifier", null)]
+    [TestCase("function", TokenType.Function, "function", null)]
+    public void Lexer_ShouldTokenizeCorrectly(string input, TokenType expectedType, string expectedLexeme, object? expectedLiteral)
     {
         var lexer = new CadenzaLexer(input);
-        var tokens = lexer.Tokenize();
+        var tokens = lexer.ScanTokens();
         
         Assert.That(tokens[0].Type, Is.EqualTo(expectedType));
-        Assert.That(tokens[0].Value, Is.EqualTo(expectedValue));
+        Assert.That(tokens[0].Lexeme, Is.EqualTo(expectedLexeme));
+        Assert.That(tokens[0].Literal, Is.EqualTo(expectedLiteral));
     }
 }
 ```
@@ -441,7 +441,7 @@ public class TranspilationTests
         var transpiler = new CadenzaTranspiler();
 
         // Act
-        var csharpCode = transpiler.TranspileToCS(flowLangCode);
+        var csharpCode = transpiler.TranspileFromSource(flowLangCode);
 
         // Assert
         Assert.That(csharpCode, Contains.Substring("public static int add"));
@@ -475,7 +475,7 @@ public class GoldenFileTests
         var transpiler = new CadenzaTranspiler();
 
         // Act
-        var actualCode = transpiler.TranspileToCS(inputCode);
+        var actualCode = transpiler.TranspileFromSource(inputCode);
 
         // Assert
         Assert.That(NormalizeWhitespace(actualCode), Is.EqualTo(NormalizeWhitespace(expectedCode)));
@@ -538,10 +538,10 @@ tests/
 /// <example>
 /// <code>
 /// var transpiler = new CadenzaTranspiler();
-/// var csharpCode = transpiler.TranspileToCS("pure function add(a: int, b: int) -> int { return a + b }");
+/// var csharpCode = transpiler.TranspileFromSource("pure function add(a: int, b: int) -> int { return a + b }");
 /// </code>
 /// </example>
-public string TranspileToCS(string flowLangSource)
+public string TranspileFromSource(string flowLangSource)
 ```
 
 #### User Documentation
@@ -711,8 +711,8 @@ Contributors are recognized through:
 
 4. **Test thoroughly**:
    ```bash
-   dotnet test
-   dotnet run --project src/cadenzac.csproj -- test
+   dotnet test tests/Cadenza.Tests.csproj
+   dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run examples/simple.cdz
    ```
 
 5. **Create pull request** when ready

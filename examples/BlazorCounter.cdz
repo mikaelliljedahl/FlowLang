@@ -1,0 +1,21 @@
+component BlazorCounter -> UIComponent {
+    state {
+        currentCount: Int32 = 0
+    }
+
+    effectful function incrementCount() uses [State] {
+        set_state(current => { currentCount: current.currentCount + 1 })
+    }
+
+    view {
+        div {
+            h1 { "Counter" }
+
+            p { "Current count: ${state.currentCount}" }
+
+            button(class: "btn btn-primary", onclick: incrementCount) {
+                "Click me"
+            }
+        }
+    }
+}

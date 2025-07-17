@@ -18,19 +18,26 @@ Cadenza transpiles to C#, giving you immediate access to the entire .NET ecosyst
 ### ⚡ Quick Setup (Recommended)
 
 1. **Install .NET 10.0+**: [Download here](https://dotnet.microsoft.com/download)
-2. **Clone and setup**:
+2. **Clone the repository**:
    ```bash
    git clone https://github.com/mikaelliljedahl/Cadenza.git
    cd Cadenza
-   bash setup.sh  # Automated setup script
    ```
-3. **Add alias** (makes life easier):
+3. **Build the Cadenza compiler**:
    ```bash
-   # For bash
-   echo 'alias cadenzac="$HOME/.cadenzac"' >> ~/.bashrc && source ~/.bashrc
+   dotnet build src/Cadenza.Core/cadenzac-core.csproj
+   ```
+4. **(Optional) Create a standalone executable**:
+   ```bash
+   dotnet publish src/Cadenza.Core/cadenzac-core.csproj -c Release -o bin/release --self-contained false
+   ```
+5. **(Optional) Add alias** (makes life easier):
+   ```bash
+   # For bash/zsh (using standalone executable)
+   echo 'alias cadenzac="$(pwd)/bin/release/cadenzac-core"' >> ~/.bashrc && source ~/.bashrc
    
-   # For zsh  
-   echo 'alias cadenzac="$HOME/.cadenzac"' >> ~/.zshrc && source ~/.zshrc
+   # For bash/zsh (using dotnet run - for development)
+   echo 'alias cadenzac="dotnet run --project $(pwd)/src/Cadenza.Core/cadenzac-core.csproj --"' >> ~/.bashrc && source ~/.bashrc
    ```
 
 ### Manual Setup
@@ -46,13 +53,15 @@ If you prefer manual setup:
    ```
 3. **Test installation**:
    ```bash
-   dotnet run --project cadenzac.csproj -- --version
+   dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --version
    ```
 
 ### ✅ Verify Installation
 ```bash
 # Test with a simple file
-echo 'function main() -> string { return "Hello!" }' > test.cdz
+cat > test.cdz << 'EOF'
+function main() -> string { return "Hello!" }
+EOF
 dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run test.cdz  # Should show "Hello!" output
 ```
 
@@ -142,7 +151,7 @@ Cadenza generates clean, readable C# code:
 /// <returns>Returns string</returns>
 public static string greet(string name)
 {
-    return "Hello, " + name + "!";
+    return $"Hello, {name}!";
 }
 
 /// <summary>
@@ -499,27 +508,28 @@ Once you have Cadenza set up, you can run the comprehensive test suite to verify
 cd /path/to/Cadenza
 
 # Run all tests (requires .NET 10.0)
-dotnet test tests/Cadenza.Core.Tests/Cadenza.Core.Tests.csproj
+dotnet test tests/Cadenza.Tests.csproj
 
 # Run with verbose output to see test details
-dotnet test tests/Cadenza.Core.Tests/Cadenza.Core.Tests.csproj --verbosity normal
+dotnet test tests/Cadenza.Tests.csproj --verbosity normal
 ```
 
 ### Test Categories
 
-The test suite includes:
+The test suite includes unit and integration tests for:
 
-- **Lexer Tests**: Token generation and validation (working ✅)
-- **Parser Tests**: AST construction and syntax validation (working ✅)
-- **AST Tests**: Core data structure validation (working ✅)
-- **Token Tests**: Token type validation (working ✅)
+- **Lexer**: Token generation and validation
+- **Parser**: AST construction and syntax validation
+- **AST**: Core data structure validation
+- **Transpiler**: Code generation correctness
 
 ### Expected Results
 
 A successful test run should show:
 ```
-Passed!  - Failed: 0, Passed: 63, Skipped: 0, Total: 63
+Passed!  - Failed: 0, Passed: X, Skipped: 0, Total: X
 ```
+(Where X is the total number of tests)
 
 If tests fail, check that:
 1. You have .NET 10.0 SDK installed
@@ -543,7 +553,7 @@ Now that you have Cadenza up and running:
 
 - **Documentation**: Check the `docs/` directory for comprehensive guides
 - **Examples**: Look at working examples in the `examples/` directory  
-- **CLI Help**: Run `dotnet run --project src/cadenzac.csproj -- help` for command help
+- **CLI Help**: Run `dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --help` for command help
 - **Troubleshooting**: See `docs/troubleshooting.md` for common issues
 
 ## Resources
