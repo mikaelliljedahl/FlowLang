@@ -1,7 +1,7 @@
+using Cadenza.Core;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
-using Cadenza.Core;
 
 namespace Cadenza.Tests.Unit;
 
@@ -26,34 +26,34 @@ function test_match() -> int {
         var parser = new CadenzaParser(tokens);
         var program = parser.Parse();
         
-        Assert.IsNotNull(program);
-        Assert.AreEqual(1, program.Statements.Count);
+        Assert.That(program, Is.Not.Null);
+        Assert.That(program.Statements.Count, Is.EqualTo(1));
         
         var func = (FunctionDeclaration)program.Statements[0];
-        Assert.AreEqual("test_match", func.Name);
-        Assert.AreEqual("int", func.ReturnType);
-        Assert.AreEqual(2, func.Body.Count); // let and return statements
+        Assert.That(func.Name, Is.EqualTo("test_match"));
+        Assert.That(func.ReturnType, Is.EqualTo("int"));
+        Assert.That(func.Body.Count, Is.EqualTo(2)); // let and return statements
         
         // Check that the return statement contains a match expression
         var returnStmt = func.Body[1] as ReturnStatement;
-        Assert.IsNotNull(returnStmt);
-        Assert.IsNotNull(returnStmt.Expression);
-        Assert.IsInstanceOf<MatchExpression>(returnStmt.Expression);
+        Assert.That(returnStmt, Is.Not.Null);
+        Assert.That(returnStmt.Expression, Is.Not.Null);
+        Assert.That(returnStmt.Expression, Is.InstanceOf<MatchExpression>());
         
         var matchExpr = (MatchExpression)returnStmt.Expression;
-        Assert.AreEqual(2, matchExpr.Cases.Count);
+        Assert.That(matchExpr.Cases.Count, Is.EqualTo(2));
         
         // Check the Ok case
         var okCase = matchExpr.Cases.FirstOrDefault(c => c.Pattern == "Ok");
-        Assert.IsNotNull(okCase);
-        Assert.AreEqual("value", okCase.Variable);
-        Assert.AreEqual(1, okCase.Body.Count);
+        Assert.That(okCase, Is.Not.Null);
+        Assert.That(okCase.Variable, Is.EqualTo("value"));
+        Assert.That(okCase.Body.Count, Is.EqualTo(1));
         
         // Check the Error case
         var errorCase = matchExpr.Cases.FirstOrDefault(c => c.Pattern == "Error");
-        Assert.IsNotNull(errorCase);
-        Assert.AreEqual("err", errorCase.Variable);
-        Assert.AreEqual(1, errorCase.Body.Count);
+        Assert.That(errorCase, Is.Not.Null);
+        Assert.That(errorCase.Variable, Is.EqualTo("err"));
+        Assert.That(errorCase.Body.Count, Is.EqualTo(1));
     }
 
     [Test]
@@ -78,11 +78,11 @@ function test_match() -> int {
         var syntaxTree = generator.GenerateFromAST(program);
         var csharpCode = syntaxTree.ToString();
         
-        Assert.IsNotNull(csharpCode);
-        Assert.IsTrue(csharpCode.Contains("int test_match()"));
+        Assert.That(csharpCode, Is.Not.Null);
+        Assert.That(csharpCode.Contains("int test_match()"), Is.True);
         
         // Should contain some form of conditional logic for the match
-        Assert.IsTrue(csharpCode.Contains("IsSuccess") || csharpCode.Contains("?"));
+        Assert.That(csharpCode.Contains("IsSuccess") || csharpCode.Contains("?"), Is.True);
     }
 
     [Test]
@@ -103,27 +103,27 @@ function test_simple_match(value: int) -> string {
         var parser = new CadenzaParser(tokens);
         var program = parser.Parse();
         
-        Assert.IsNotNull(program);
-        Assert.AreEqual(1, program.Statements.Count);
+        Assert.That(program, Is.Not.Null);
+        Assert.That(program.Statements.Count, Is.EqualTo(1));
         
         var func = (FunctionDeclaration)program.Statements[0];
-        Assert.AreEqual("test_simple_match", func.Name);
+        Assert.That(func.Name, Is.EqualTo("test_simple_match"));
         
         var returnStmt = func.Body[0] as ReturnStatement;
-        Assert.IsNotNull(returnStmt);
-        Assert.IsInstanceOf<MatchExpression>(returnStmt.Expression);
+        Assert.That(returnStmt, Is.Not.Null);
+        Assert.That(returnStmt.Expression, Is.InstanceOf<MatchExpression>());
         
         var matchExpr = (MatchExpression)returnStmt.Expression;
-        Assert.AreEqual(3, matchExpr.Cases.Count);
+        Assert.That(matchExpr.Cases.Count, Is.EqualTo(3));
         
         // Check cases
         var case1 = matchExpr.Cases.FirstOrDefault(c => c.Pattern == "1");
-        Assert.IsNotNull(case1);
+        Assert.That(case1, Is.Not.Null);
         
         var case2 = matchExpr.Cases.FirstOrDefault(c => c.Pattern == "2");
-        Assert.IsNotNull(case2);
+        Assert.That(case2, Is.Not.Null);
         
         var wildcardCase = matchExpr.Cases.FirstOrDefault(c => c.Pattern == "_");
-        Assert.IsNotNull(wildcardCase);
+        Assert.That(wildcardCase, Is.Not.Null);
     }
 }

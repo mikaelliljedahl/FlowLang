@@ -1,3 +1,10 @@
+using System;
+
+namespace Cadenza.Golden.StringInterpolation
+{
+
+public static class CadenzaProgram
+{
 /// <summary>
 /// </summary>
 /// <param name="name">Parameter of type string</param>
@@ -29,4 +36,8 @@ public static string formatMessage(string user, int count, string status)
 public static string createPath(string dir, string file, string ext)
 {
     return string.Format("{0}/{1}.{2}", dir, file, ext);
+}
+
+}
+
 }

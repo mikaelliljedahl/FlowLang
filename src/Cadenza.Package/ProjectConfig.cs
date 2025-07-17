@@ -1,7 +1,37 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Collections.Generic;
 
 namespace Cadenza.Package;
+
+/// <summary>
+/// Build configuration for Cadenza projects
+/// </summary>
+public record BuildConfig(
+    string Source = "src/",
+    string Output = "build/",
+    string Target = "csharp"
+);
+
+/// <summary>
+/// Workspace configuration for multi-project setups
+/// </summary>
+public record WorkspaceConfig(
+    List<string> Projects = null,
+    List<string> Exclude = null
+)
+{
+    public List<string> Projects { get; init; } = Projects ?? new();
+    public List<string> Exclude { get; init; } = Exclude ?? new();
+}
+
+/// <summary>
+/// Publishing configuration for package publication
+/// </summary>
+public record PublishConfig(
+    string Registry = "https://packages.cadenza.org",
+    string Access = "public"
+);
 
 /// <summary>
 /// Enhanced Cadenza project configuration with comprehensive package management support
@@ -29,23 +59,6 @@ public record EnhancedFlowcConfig(
     public List<string> Scripts { get; init; } = Scripts ?? new();
 }
 
-public record WorkspaceConfig(
-    List<string> Projects = null,
-    List<string> Exclude = null
-)
-{
-    public List<string> Projects { get; init; } = Projects ?? new();
-    public List<string> Exclude { get; init; } = Exclude ?? new();
-}
-
-public record PublishConfig(
-    string Registry = "https://packages.cadenza.org",
-    string Access = "public",
-    Dictionary<string, string> Metadata = null
-)
-{
-    public Dictionary<string, string> Metadata { get; init; } = Metadata ?? new();
-}
 
 /// <summary>
 /// Lock file for reproducible builds

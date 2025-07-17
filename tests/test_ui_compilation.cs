@@ -2,8 +2,9 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Cadenza.Compiler;
-using Cadenza.Targets;
+using Cadenza.Core;
+
+namespace Cadenza.Tests.UICompilation;
 
 class TestUICompilation
 {

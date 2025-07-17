@@ -2,7 +2,8 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using Cadenza.Core;
 
-namespace Cadenza.Core.Tests;
+namespace Cadenza.Tests.Unit
+{
 
 [TestFixture]
 public class AstTests
@@ -21,9 +22,9 @@ public class AstTests
         var program = new ProgramNode(statements);
 
         // Assert
-        Assert.AreEqual(2, program.Statements.Count);
-        Assert.IsInstanceOf<FunctionDeclaration>(program.Statements[0]);
-        Assert.IsInstanceOf<ReturnStatement>(program.Statements[1]);
+        Assert.That(program.Statements.Count, Is.EqualTo(2));
+        Assert.That(program.Statements[0], Is.InstanceOf<FunctionDeclaration>());
+        Assert.That(program.Statements[1], Is.InstanceOf<ReturnStatement>());
     }
 
     [Test]
@@ -42,13 +43,13 @@ public class AstTests
         var func = new FunctionDeclaration(name, parameters, returnType, body, isPure, effects, isExported);
 
         // Assert
-        Assert.AreEqual(name, func.Name);
-        Assert.AreEqual(parameters, func.Parameters);
-        Assert.AreEqual(returnType, func.ReturnType);
-        Assert.AreEqual(body, func.Body);
-        Assert.AreEqual(isPure, func.IsPure);
-        Assert.AreEqual(effects, func.Effects);
-        Assert.AreEqual(isExported, func.IsExported);
+        Assert.That(func.Name, Is.EqualTo(name));
+        Assert.That(func.Parameters, Is.EqualTo(parameters));
+        Assert.That(func.ReturnType, Is.EqualTo(returnType));
+        Assert.That(func.Body, Is.EqualTo(body));
+        Assert.That(func.IsPure, Is.EqualTo(isPure));
+        Assert.That(func.Effects, Is.EqualTo(effects));
+        Assert.That(func.IsExported, Is.EqualTo(isExported));
     }
 
     [Test]
@@ -62,8 +63,8 @@ public class AstTests
         var parameter = new Parameter(name, type);
 
         // Assert
-        Assert.AreEqual(name, parameter.Name);
-        Assert.AreEqual(type, parameter.Type);
+        Assert.That(parameter.Name, Is.EqualTo(name));
+        Assert.That(parameter.Type, Is.EqualTo(type));
     }
 
     [Test]
@@ -78,9 +79,9 @@ public class AstTests
         var letStmt = new LetStatement(name, type, expression);
 
         // Assert
-        Assert.AreEqual(name, letStmt.Name);
-        Assert.AreEqual(type, letStmt.Type);
-        Assert.AreEqual(expression, letStmt.Expression);
+        Assert.That(letStmt.Name, Is.EqualTo(name));
+        Assert.That(letStmt.Type, Is.EqualTo(type));
+        Assert.That(letStmt.Expression, Is.EqualTo(expression));
     }
 
     [Test]
@@ -95,9 +96,9 @@ public class AstTests
         var ifStmt = new IfStatement(condition, thenBody, elseBody);
 
         // Assert
-        Assert.AreEqual(condition, ifStmt.Condition);
-        Assert.AreEqual(thenBody, ifStmt.ThenBody);
-        Assert.AreEqual(elseBody, ifStmt.ElseBody);
+        Assert.That(ifStmt.Condition, Is.EqualTo(condition));
+        Assert.That(ifStmt.ThenBody, Is.EqualTo(thenBody));
+        Assert.That(ifStmt.ElseBody, Is.EqualTo(elseBody));
     }
 
     [Test]
@@ -112,9 +113,9 @@ public class AstTests
         var binaryExpr = new BinaryExpression(left, operator_, right);
 
         // Assert
-        Assert.AreEqual(left, binaryExpr.Left);
-        Assert.AreEqual(operator_, binaryExpr.Operator);
-        Assert.AreEqual(right, binaryExpr.Right);
+        Assert.That(binaryExpr.Left, Is.EqualTo(left));
+        Assert.That(binaryExpr.Operator, Is.EqualTo(operator_));
+        Assert.That(binaryExpr.Right, Is.EqualTo(right));
     }
 
     [Test]
@@ -128,8 +129,8 @@ public class AstTests
         var callExpr = new CallExpression(name, arguments);
 
         // Assert
-        Assert.AreEqual(name, callExpr.Name);
-        Assert.AreEqual(arguments, callExpr.Arguments);
+        Assert.That(callExpr.Name, Is.EqualTo(name));
+        Assert.That(callExpr.Arguments, Is.EqualTo(arguments));
     }
 
     [Test]
@@ -142,7 +143,7 @@ public class AstTests
         var numberLiteral = new NumberLiteral(value);
 
         // Assert
-        Assert.AreEqual(value, numberLiteral.Value);
+        Assert.That(numberLiteral.Value, Is.EqualTo(value));
     }
 
     [Test]
@@ -155,7 +156,7 @@ public class AstTests
         var stringLiteral = new StringLiteral(value);
 
         // Assert
-        Assert.AreEqual(value, stringLiteral.Value);
+        Assert.That(stringLiteral.Value, Is.EqualTo(value));
     }
 
     [Test]
@@ -168,7 +169,7 @@ public class AstTests
         var booleanLiteral = new BooleanLiteral(value);
 
         // Assert
-        Assert.AreEqual(value, booleanLiteral.Value);
+        Assert.That(booleanLiteral.Value, Is.EqualTo(value));
     }
 
     [Test]
@@ -182,8 +183,8 @@ public class AstTests
         var resultExpr = new ResultExpression(type, value);
 
         // Assert
-        Assert.AreEqual(type, resultExpr.Type);
-        Assert.AreEqual(value, resultExpr.Value);
+        Assert.That(resultExpr.Type, Is.EqualTo(type));
+        Assert.That(resultExpr.Value, Is.EqualTo(value));
     }
 
     [Test]
@@ -196,7 +197,7 @@ public class AstTests
         var errorProp = new ErrorPropagation(expression);
 
         // Assert
-        Assert.AreEqual(expression, errorProp.Expression);
+        Assert.That(errorProp.Expression, Is.EqualTo(expression));
     }
 
     [Test]
@@ -214,8 +215,8 @@ public class AstTests
         var matchExpr = new MatchExpression(value, cases);
 
         // Assert
-        Assert.AreEqual(value, matchExpr.Value);
-        Assert.AreEqual(cases, matchExpr.Cases);
+        Assert.That(matchExpr.Value, Is.EqualTo(value));
+        Assert.That(matchExpr.Cases, Is.EqualTo(cases));
     }
 
     [Test]
@@ -230,9 +231,9 @@ public class AstTests
         var matchCase = new MatchCase(pattern, variable, body);
 
         // Assert
-        Assert.AreEqual(pattern, matchCase.Pattern);
-        Assert.AreEqual(variable, matchCase.Variable);
-        Assert.AreEqual(body, matchCase.Body);
+        Assert.That(matchCase.Pattern, Is.EqualTo(pattern));
+        Assert.That(matchCase.Variable, Is.EqualTo(variable));
+        Assert.That(matchCase.Body, Is.EqualTo(body));
     }
 
     [Test]
@@ -247,9 +248,9 @@ public class AstTests
         var module = new ModuleDeclaration(name, body, exports);
 
         // Assert
-        Assert.AreEqual(name, module.Name);
-        Assert.AreEqual(body, module.Body);
-        Assert.AreEqual(exports, module.Exports);
+        Assert.That(module.Name, Is.EqualTo(name));
+        Assert.That(module.Body, Is.EqualTo(body));
+        Assert.That(module.Exports, Is.EqualTo(exports));
     }
 
     [Test]
@@ -264,9 +265,9 @@ public class AstTests
         var import = new ImportStatement(moduleName, specificImports, isWildcard);
 
         // Assert
-        Assert.AreEqual(moduleName, import.ModuleName);
-        Assert.AreEqual(specificImports, import.SpecificImports);
-        Assert.AreEqual(isWildcard, import.IsWildcard);
+        Assert.That(import.ModuleName, Is.EqualTo(moduleName));
+        Assert.That(import.SpecificImports, Is.EqualTo(specificImports));
+        Assert.That(import.IsWildcard, Is.EqualTo(isWildcard));
     }
 
     [Test]
@@ -279,7 +280,7 @@ public class AstTests
         var export = new ExportStatement(exportedNames);
 
         // Assert
-        Assert.AreEqual(exportedNames, export.ExportedNames);
+        Assert.That(export.ExportedNames, Is.EqualTo(exportedNames));
     }
 
     [Test]
@@ -295,10 +296,10 @@ public class AstTests
         var spec = new SpecificationBlock(intent, rules, postconditions, sourceDoc);
 
         // Assert
-        Assert.AreEqual(intent, spec.Intent);
-        Assert.AreEqual(rules, spec.Rules);
-        Assert.AreEqual(postconditions, spec.Postconditions);
-        Assert.AreEqual(sourceDoc, spec.SourceDoc);
+        Assert.That(spec.Intent, Is.EqualTo(intent));
+        Assert.That(spec.Rules, Is.EqualTo(rules));
+        Assert.That(spec.Postconditions, Is.EqualTo(postconditions));
+        Assert.That(spec.SourceDoc, Is.EqualTo(sourceDoc));
     }
 
     [Test]
@@ -312,8 +313,8 @@ public class AstTests
         var guard = new GuardStatement(condition, elseBody);
 
         // Assert
-        Assert.AreEqual(condition, guard.Condition);
-        Assert.AreEqual(elseBody, guard.ElseBody);
+        Assert.That(guard.Condition, Is.EqualTo(condition));
+        Assert.That(guard.ElseBody, Is.EqualTo(elseBody));
     }
 
     [Test]
@@ -328,29 +329,30 @@ public class AstTests
         var ternary = new TernaryExpression(condition, thenExpr, elseExpr);
 
         // Assert
-        Assert.AreEqual(condition, ternary.Condition);
-        Assert.AreEqual(thenExpr, ternary.ThenExpr);
-        Assert.AreEqual(elseExpr, ternary.ElseExpr);
+        Assert.That(ternary.Condition, Is.EqualTo(condition));
+        Assert.That(ternary.ThenExpr, Is.EqualTo(thenExpr));
+        Assert.That(ternary.ElseExpr, Is.EqualTo(elseExpr));
     }
 
     [Test]
     public void AllASTNodes_ShouldInheritFromASTNode()
     {
         // Test that all AST node types properly inherit from ASTNode
-        Assert.IsInstanceOf<ASTNode>(new ProgramNode(new List<ASTNode>()));
-        Assert.IsInstanceOf<ASTNode>(new FunctionDeclaration("test", new List<Parameter>(), "int", new List<ASTNode>()));
-        Assert.IsInstanceOf<ASTNode>(new ReturnStatement(null));
-        Assert.IsInstanceOf<ASTNode>(new IfStatement(new BooleanLiteral(true), new List<ASTNode>()));
-        Assert.IsInstanceOf<ASTNode>(new LetStatement("x", "int", new NumberLiteral(42)));
-        Assert.IsInstanceOf<ASTNode>(new BinaryExpression(new NumberLiteral(1), "+", new NumberLiteral(2)));
-        Assert.IsInstanceOf<ASTNode>(new CallExpression("test", new List<ASTNode>()));
-        Assert.IsInstanceOf<ASTNode>(new NumberLiteral(42));
-        Assert.IsInstanceOf<ASTNode>(new StringLiteral("test"));
-        Assert.IsInstanceOf<ASTNode>(new BooleanLiteral(true));
-        Assert.IsInstanceOf<ASTNode>(new ResultExpression("Ok", new NumberLiteral(42)));
-        Assert.IsInstanceOf<ASTNode>(new MatchExpression(new Identifier("x"), new List<MatchCase>()));
-        Assert.IsInstanceOf<ASTNode>(new ModuleDeclaration("test", new List<ASTNode>()));
-        Assert.IsInstanceOf<ASTNode>(new ImportStatement("test", null, false));
-        Assert.IsInstanceOf<ASTNode>(new ExportStatement(new List<string>()));
+        Assert.That(new ProgramNode(new List<ASTNode>()), Is.InstanceOf<ASTNode>());
+        Assert.That(new FunctionDeclaration("test", new List<Parameter>(), "int", new List<ASTNode>()), Is.InstanceOf<ASTNode>());
+        Assert.That(new ReturnStatement(null), Is.InstanceOf<ASTNode>());
+        Assert.That(new IfStatement(new BooleanLiteral(true), new List<ASTNode>()), Is.InstanceOf<ASTNode>());
+        Assert.That(new LetStatement("x", "int", new NumberLiteral(42)), Is.InstanceOf<ASTNode>());
+        Assert.That(new BinaryExpression(new NumberLiteral(1), "+", new NumberLiteral(2)), Is.InstanceOf<ASTNode>());
+        Assert.That(new CallExpression("test", new List<ASTNode>()), Is.InstanceOf<ASTNode>());
+        Assert.That(new NumberLiteral(42), Is.InstanceOf<ASTNode>());
+        Assert.That(new StringLiteral("test"), Is.InstanceOf<ASTNode>());
+        Assert.That(new BooleanLiteral(true), Is.InstanceOf<ASTNode>());
+        Assert.That(new ResultExpression("Ok", new NumberLiteral(42)), Is.InstanceOf<ASTNode>());
+        Assert.That(new MatchExpression(new Identifier("x"), new List<MatchCase>()), Is.InstanceOf<ASTNode>());
+        Assert.That(new ModuleDeclaration("test", new List<ASTNode>()), Is.InstanceOf<ASTNode>());
+        Assert.That(new ImportStatement("test", null, false), Is.InstanceOf<ASTNode>());
+        Assert.That(new ExportStatement(new List<string>()), Is.InstanceOf<ASTNode>());
     }
+}
 }

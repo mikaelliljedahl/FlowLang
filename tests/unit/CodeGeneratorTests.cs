@@ -1,10 +1,10 @@
+using Cadenza.Core;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Cadenza.Core;
 
 namespace Cadenza.Tests.Unit
 {
@@ -42,7 +42,7 @@ namespace Cadenza.Tests.Unit
                     )
                 }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -62,10 +62,9 @@ namespace Cadenza.Tests.Unit
                 new List<Parameter> { new("a", "int"), new("b", "int") },
                 "int",
                 new List<ASTNode> { new ReturnStatement(new NumberLiteral(42)) },
-                null,
                 true // isPure
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -80,15 +79,16 @@ namespace Cadenza.Tests.Unit
         public void CodeGenerator_ShouldGenerateFunctionWithEffects()
         {
             // Arrange
-            var effects = new EffectAnnotation(new List<string> { "Database", "Logging" });
+            var effects = new List<string> { "Database", "Logging" };
             var func = new FunctionDeclaration(
                 "saveUser",
                 new List<Parameter> { new("user", "string") },
                 "int",
                 new List<ASTNode> { new ReturnStatement(new NumberLiteral(42)) },
+                false,
                 effects
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -107,9 +107,9 @@ namespace Cadenza.Tests.Unit
                 "divide",
                 new List<Parameter> { new("a", "int"), new("b", "int") },
                 "Result<int, string>",
-                new List<ASTNode> { new ReturnStatement(new OkExpression(new NumberLiteral(42))) }
+                new List<ASTNode> { new ReturnStatement(new ResultExpression("Ok", new NumberLiteral(42))) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -125,16 +125,16 @@ namespace Cadenza.Tests.Unit
         }
 
         [Test]
-        public void CodeGenerator_ShouldGenerateOkExpression()
+        public void CodeGenerator_ShouldGenerateResultExpression()
         {
             // Arrange
             var func = new FunctionDeclaration(
                 "test",
                 new List<Parameter>(),
                 "Result<int, string>",
-                new List<ASTNode> { new ReturnStatement(new OkExpression(new NumberLiteral(42))) }
+                new List<ASTNode> { new ReturnStatement(new ResultExpression("Ok", new NumberLiteral(42))) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -145,16 +145,16 @@ namespace Cadenza.Tests.Unit
         }
 
         [Test]
-        public void CodeGenerator_ShouldGenerateErrorExpression()
+        public void CodeGenerator_ShouldGenerateErrorResultExpression()
         {
             // Arrange
             var func = new FunctionDeclaration(
                 "test",
                 new List<Parameter>(),
                 "Result<int, string>",
-                new List<ASTNode> { new ReturnStatement(new ErrorExpression(new StringLiteral("failed"))) }
+                new List<ASTNode> { new ReturnStatement(new ResultExpression("Error", new StringLiteral("failed"))) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -179,7 +179,7 @@ namespace Cadenza.Tests.Unit
                 "int",
                 new List<ASTNode> { ifStmt }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -206,7 +206,7 @@ namespace Cadenza.Tests.Unit
                 "int",
                 new List<ASTNode> { guardStmt, new ReturnStatement(new NumberLiteral(1)) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -221,14 +221,14 @@ namespace Cadenza.Tests.Unit
         public void CodeGenerator_ShouldGenerateLetStatement()
         {
             // Arrange
-            var letStmt = new LetStatement("x", new NumberLiteral(42));
+            var letStmt = new LetStatement("x", null, new NumberLiteral(42));
             var func = new FunctionDeclaration(
                 "test",
                 new List<Parameter>(),
                 "int",
                 new List<ASTNode> { letStmt, new ReturnStatement(new Identifier("x")) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -243,17 +243,17 @@ namespace Cadenza.Tests.Unit
         public void CodeGenerator_ShouldGenerateErrorPropagationInLetStatement()
         {
             // Arrange
-            var errorProp = new ErrorPropagationExpression(
-                new FunctionCall("getValue", new List<ASTNode>())
+            var errorProp = new ErrorPropagation(
+                new CallExpression("getValue", new List<ASTNode>())
             );
-            var letStmt = new LetStatement("x", errorProp);
+            var letStmt = new LetStatement("x", null, errorProp);
             var func = new FunctionDeclaration(
                 "test",
                 new List<Parameter>(),
                 "Result<int, string>",
-                new List<ASTNode> { letStmt, new ReturnStatement(new OkExpression(new Identifier("x"))) }
+                new List<ASTNode> { letStmt, new ReturnStatement(new ResultExpression("Ok", new Identifier("x"))) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -285,7 +285,7 @@ namespace Cadenza.Tests.Unit
                 "int",
                 new List<ASTNode> { new ReturnStatement(expr) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -306,7 +306,7 @@ namespace Cadenza.Tests.Unit
                 "bool",
                 new List<ASTNode> { new ReturnStatement(expr) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -320,14 +320,14 @@ namespace Cadenza.Tests.Unit
         public void CodeGenerator_ShouldGenerateFunctionCall()
         {
             // Arrange
-            var call = new FunctionCall("add", new List<ASTNode> { new NumberLiteral(1), new NumberLiteral(2) });
+            var call = new CallExpression("add", new List<ASTNode> { new NumberLiteral(1), new NumberLiteral(2) });
             var func = new FunctionDeclaration(
                 "test",
                 new List<Parameter>(),
                 "int",
                 new List<ASTNode> { new ReturnStatement(call) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -353,7 +353,7 @@ namespace Cadenza.Tests.Unit
                 "string",
                 new List<ASTNode> { new ReturnStatement(interp) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -379,7 +379,7 @@ namespace Cadenza.Tests.Unit
                 "Math",
                 new List<ASTNode> { func }
             );
-            var program = new Program(new List<ASTNode> { module });
+            var program = new ProgramNode(new List<ASTNode> { module });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -395,14 +395,14 @@ namespace Cadenza.Tests.Unit
         public void CodeGenerator_ShouldGenerateQualifiedFunctionCall()
         {
             // Arrange
-            var call = new FunctionCall("Math.add", new List<ASTNode> { new NumberLiteral(1), new NumberLiteral(2) });
+            var call = new CallExpression("Math.add", new List<ASTNode> { new NumberLiteral(1), new NumberLiteral(2) });
             var func = new FunctionDeclaration(
                 "test",
                 new List<Parameter>(),
                 "int",
                 new List<ASTNode> { new ReturnStatement(call) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -422,7 +422,7 @@ namespace Cadenza.Tests.Unit
                 "int",
                 new List<ASTNode> { new ReturnStatement(new NumberLiteral(42)) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -455,7 +455,7 @@ namespace Cadenza.Tests.Unit
                 "bool",
                 new List<ASTNode> { new ReturnStatement(expr) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -475,15 +475,15 @@ namespace Cadenza.Tests.Unit
                 "Result<bool, string>",
                 new List<ASTNode> 
                 { 
-                    new LetStatement("z", new BinaryExpression(new Identifier("x"), "+", new NumberLiteral(10))),
+                    new LetStatement("z", null, new BinaryExpression(new Identifier("x"), "+", new NumberLiteral(10))),
                     new IfStatement(
                         new BinaryExpression(new Identifier("z"), ">", new NumberLiteral(5)),
-                        new List<ASTNode> { new ReturnStatement(new OkExpression(new Identifier("true"))) },
-                        new List<ASTNode> { new ReturnStatement(new ErrorExpression(new Identifier("y"))) }
+                        new List<ASTNode> { new ReturnStatement(new ResultExpression("Ok", new Identifier("true"))) },
+                        new List<ASTNode> { new ReturnStatement(new ResultExpression("Ok", new Identifier("y"))) }
                     )
                 }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -524,7 +524,7 @@ namespace Cadenza.Tests.Unit
                 "string",
                 new List<ASTNode> { outerIf }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -559,7 +559,7 @@ namespace Cadenza.Tests.Unit
                 "Math",
                 new List<ASTNode> { func1, func2, export }
             );
-            var program = new Program(new List<ASTNode> { module });
+            var program = new ProgramNode(new List<ASTNode> { module });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -591,7 +591,7 @@ namespace Cadenza.Tests.Unit
                 "bool",
                 new List<ASTNode> { new ReturnStatement(expr) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -610,7 +610,7 @@ namespace Cadenza.Tests.Unit
                 new StringLiteral("User "),
                 new Identifier("name"),
                 new StringLiteral(" has "),
-                new FunctionCall("getCount", new List<ASTNode>()),
+                new CallExpression("getCount", new List<ASTNode>()),
                 new StringLiteral(" messages")
             });
             var func = new FunctionDeclaration(
@@ -619,7 +619,7 @@ namespace Cadenza.Tests.Unit
                 "string",
                 new List<ASTNode> { new ReturnStatement(interp) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -635,9 +635,9 @@ namespace Cadenza.Tests.Unit
         public void CodeGenerator_ShouldGenerateMultipleLetStatements()
         {
             // Arrange
-            var let1 = new LetStatement("x", new NumberLiteral(10));
-            var let2 = new LetStatement("y", new NumberLiteral(20));
-            var let3 = new LetStatement("sum", new BinaryExpression(new Identifier("x"), "+", new Identifier("y")));
+            var let1 = new LetStatement("x", null, new NumberLiteral(10));
+            var let2 = new LetStatement("y", null, new NumberLiteral(20));
+            var let3 = new LetStatement("sum", null, new BinaryExpression(new Identifier("x"), "+", new Identifier("y")));
             var returnStmt = new ReturnStatement(new Identifier("sum"));
             
             var func = new FunctionDeclaration(
@@ -646,7 +646,7 @@ namespace Cadenza.Tests.Unit
                 "int",
                 new List<ASTNode> { let1, let2, let3, returnStmt }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -663,15 +663,15 @@ namespace Cadenza.Tests.Unit
         public void CodeGenerator_ShouldGenerateNestedFunctionCalls()
         {
             // Arrange
-            var innerCall = new FunctionCall("getValue", new List<ASTNode> { new NumberLiteral(42) });
-            var outerCall = new FunctionCall("processValue", new List<ASTNode> { innerCall });
+            var innerCall = new CallExpression("getValue", new List<ASTNode> { new NumberLiteral(42) });
+            var outerCall = new CallExpression("processValue", new List<ASTNode> { innerCall });
             var func = new FunctionDeclaration(
                 "nested",
                 new List<Parameter>(),
                 "int",
                 new List<ASTNode> { new ReturnStatement(outerCall) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -696,7 +696,7 @@ namespace Cadenza.Tests.Unit
                 "bool",
                 new List<ASTNode> { new ReturnStatement(expr) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -718,7 +718,7 @@ namespace Cadenza.Tests.Unit
                 "int",
                 new List<ASTNode> { new ReturnStatement(new NumberLiteral(42)) }
             );
-            var program = new Program(new List<ASTNode> { import1, import2, func });
+            var program = new ProgramNode(new List<ASTNode> { import1, import2, func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -733,14 +733,14 @@ namespace Cadenza.Tests.Unit
         public void CodeGenerator_ShouldGenerateComplexResultTypes()
         {
             // Arrange
-            var nestedOk = new OkExpression(new OkExpression(new NumberLiteral(42)));
+            var nestedOk = new ResultExpression("Ok", new ResultExpression("Ok", new NumberLiteral(42)));
             var func = new FunctionDeclaration(
                 "complexResult",
                 new List<Parameter>(),
                 "Result<Result<int, string>, bool>",
                 new List<ASTNode> { new ReturnStatement(nestedOk) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
@@ -776,7 +776,7 @@ namespace Cadenza.Tests.Unit
                 "int",
                 new List<ASTNode> { new ReturnStatement(complexExpr) }
             );
-            var program = new Program(new List<ASTNode> { func });
+            var program = new ProgramNode(new List<ASTNode> { func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);

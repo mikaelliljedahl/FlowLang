@@ -1,19 +1,20 @@
+using Cadenza.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Cadenza.Package;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Cadenza.Tests.Unit.Package;
 
-[TestClass]
+[TestFixture]
 public class PackageManagerTests
 {
     private string _tempDir;
     private PackageManager _packageManager;
 
-    [TestInitialize]
+    [SetUp]
     public void Setup()
     {
         _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -31,7 +32,7 @@ public class PackageManagerTests
         _packageManager = new PackageManager();
     }
 
-    [TestCleanup]
+    [TearDown]
     public void Cleanup()
     {
         if (Directory.Exists(_tempDir))
@@ -40,35 +41,35 @@ public class PackageManagerTests
         }
     }
 
-    [TestMethod]
+    [Test]
     public async Task AddPackage_Should_AddToConfig()
     {
         // Act
         var result = await _packageManager.AddPackageAsync("TestPackage@1.0.0");
         
         // Assert
-        Assert.IsTrue(result.Success);
+        Assert.That(result.Success, Is.True);
         
         var config = await ConfigurationManager.LoadConfigAsync();
-        Assert.IsTrue(config.Dependencies.ContainsKey("TestPackage"));
-        Assert.AreEqual("1.0.0", config.Dependencies["TestPackage"]);
+        Assert.That(config.Dependencies.ContainsKey("TestPackage"), Is.True);
+        Assert.That(config.Dependencies["TestPackage"], Is.EqualTo("1.0.0"));
     }
 
-    [TestMethod]
+    [Test]
     public async Task AddPackage_WithDevFlag_Should_AddToDevDependencies()
     {
         // Act
         var result = await _packageManager.AddPackageAsync("TestDevPackage@1.0.0", isDev: true);
         
         // Assert
-        Assert.IsTrue(result.Success);
+        Assert.That(result.Success, Is.True);
         
         var config = await ConfigurationManager.LoadConfigAsync();
-        Assert.IsTrue(config.DevDependencies.ContainsKey("TestDevPackage"));
-        Assert.AreEqual("1.0.0", config.DevDependencies["TestDevPackage"]);
+        Assert.That(config.DevDependencies.ContainsKey("TestDevPackage"), Is.True);
+        Assert.That(config.DevDependencies["TestDevPackage"], Is.EqualTo("1.0.0"));
     }
 
-    [TestMethod]
+    [Test]
     public async Task RemovePackage_Should_RemoveFromConfig()
     {
         // Arrange
@@ -78,33 +79,33 @@ public class PackageManagerTests
         var result = await _packageManager.RemovePackageAsync("TestPackage");
         
         // Assert
-        Assert.IsTrue(result.Success);
+        Assert.That(result.Success, Is.True);
         
         var config = await ConfigurationManager.LoadConfigAsync();
-        Assert.IsFalse(config.Dependencies.ContainsKey("TestPackage"));
+        Assert.That(config.Dependencies.ContainsKey("TestPackage"), Is.False);
     }
 
-    [TestMethod]
+    [Test]
     public async Task SearchPackages_Should_ReturnResults()
     {
         // Act
         var results = await _packageManager.SearchPackagesAsync("json");
         
         // Assert
-        Assert.IsNotNull(results);
+        Assert.That(results, Is.Not.Null);
         // Note: Actual search would require network access
         // In real tests, we'd mock the registry clients
     }
 }
 
-[TestClass]
+[TestFixture]
 public class DependencyResolverTests
 {
     private MockPackageRegistry _mockRegistry;
     private MockNuGetClient _mockNuGetClient;
     private DependencyResolver _resolver;
 
-    [TestInitialize]
+    [SetUp]
     public void Setup()
     {
         _mockRegistry = new MockPackageRegistry();
@@ -112,7 +113,7 @@ public class DependencyResolverTests
         _resolver = new DependencyResolver(_mockRegistry, _mockNuGetClient);
     }
 
-    [TestMethod]
+    [Test]
     public async Task ResolveAsync_WithSimpleDependency_Should_Succeed()
     {
         // Arrange
@@ -127,12 +128,12 @@ public class DependencyResolverTests
         var result = await _resolver.ResolveAsync(config);
 
         // Assert
-        Assert.IsTrue(result.IsSuccessful);
-        Assert.AreEqual(1, result.ResolvedPackages.Count);
-        Assert.IsTrue(result.ResolvedPackages.ContainsKey("TestPackage"));
+        Assert.That(result.IsSuccessful, Is.True);
+        Assert.That(result.ResolvedPackages.Count, Is.EqualTo(1));
+        Assert.That(result.ResolvedPackages.ContainsKey("TestPackage"), Is.True);
     }
 
-    [TestMethod]
+    [Test]
     public async Task ResolveAsync_WithVersionConflict_Should_ReportConflict()
     {
         // Arrange
@@ -156,40 +157,40 @@ public class DependencyResolverTests
             "SharedDep", "2.0.0", "Shared dependency"));
 
         // Act & Assert
-        await Assert.ThrowsExceptionAsync<DependencyResolutionException>(
+        Assert.ThrowsAsync<DependencyResolutionException>(
             () => _resolver.ResolveAsync(config));
     }
 }
 
-[TestClass]
+[TestFixture]
 public class SemanticVersionTests
 {
-    [TestMethod]
+    [Test]
     public void Parse_ValidVersion_Should_ParseCorrectly()
     {
         // Act
         var version = SemanticVersion.Parse("1.2.3");
         
         // Assert
-        Assert.AreEqual(1, version.Major);
-        Assert.AreEqual(2, version.Minor);
-        Assert.AreEqual(3, version.Patch);
+        Assert.That(version.Major, Is.EqualTo(1));
+        Assert.That(version.Minor, Is.EqualTo(2));
+        Assert.That(version.Patch, Is.EqualTo(3));
     }
 
-    [TestMethod]
+    [Test]
     public void Parse_VersionWithPreRelease_Should_ParseCorrectly()
     {
         // Act
         var version = SemanticVersion.Parse("1.2.3-beta.1");
         
         // Assert
-        Assert.AreEqual(1, version.Major);
-        Assert.AreEqual(2, version.Minor);
-        Assert.AreEqual(3, version.Patch);
-        Assert.AreEqual("beta.1", version.PreRelease);
+        Assert.That(version.Major, Is.EqualTo(1));
+        Assert.That(version.Minor, Is.EqualTo(2));
+        Assert.That(version.Patch, Is.EqualTo(3));
+        Assert.That(version.PreRelease, Is.EqualTo("beta.1"));
     }
 
-    [TestMethod]
+    [Test]
     public void CompareTo_Should_OrderVersionsCorrectly()
     {
         // Arrange
@@ -199,45 +200,45 @@ public class SemanticVersionTests
         var v4 = SemanticVersion.Parse("2.0.0");
         
         // Assert
-        Assert.IsTrue(v1 < v2);
-        Assert.IsTrue(v2 < v3);
-        Assert.IsTrue(v3 < v4);
+        Assert.That(v1 < v2, Is.True);
+        Assert.That(v2 < v3, Is.True);
+        Assert.That(v3 < v4, Is.True);
     }
 
-    [TestMethod]
+    [Test]
     public void IsVersionCompatible_WithCaretRange_Should_HandleCorrectly()
     {
         // Arrange
         var resolver = new DependencyResolver(null!, null!);
         
         // Assert
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.3", "^1.0.0"));
-        Assert.IsTrue(resolver.IsVersionCompatible("1.9.9", "^1.0.0"));
-        Assert.IsFalse(resolver.IsVersionCompatible("2.0.0", "^1.0.0"));
-        Assert.IsFalse(resolver.IsVersionCompatible("0.9.9", "^1.0.0"));
+        Assert.That(resolver.IsVersionCompatible("1.2.3", "^1.0.0"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("1.9.9", "^1.0.0"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("2.0.0", "^1.0.0"), Is.False);
+        Assert.That(resolver.IsVersionCompatible("0.9.9", "^1.0.0"), Is.False);
     }
 
-    [TestMethod]
+    [Test]
     public void IsVersionCompatible_WithTildeRange_Should_HandleCorrectly()
     {
         // Arrange
         var resolver = new DependencyResolver(null!, null!);
         
         // Assert
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.3", "~1.2.0"));
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.9", "~1.2.0"));
-        Assert.IsFalse(resolver.IsVersionCompatible("1.3.0", "~1.2.0"));
-        Assert.IsFalse(resolver.IsVersionCompatible("1.1.9", "~1.2.0"));
+        Assert.That(resolver.IsVersionCompatible("1.2.3", "~1.2.0"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("1.2.9", "~1.2.0"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("1.3.0", "~1.2.0"), Is.False);
+        Assert.That(resolver.IsVersionCompatible("1.1.9", "~1.2.0"), Is.False);
     }
 }
 
-[TestClass]
+[TestFixture]
 public class SecurityScannerTests
 {
     private SecurityScanner _scanner;
     private string _tempDir;
 
-    [TestInitialize]
+    [SetUp]
     public void Setup()
     {
         _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -247,7 +248,7 @@ public class SecurityScannerTests
         _scanner = new SecurityScanner();
     }
 
-    [TestCleanup]
+    [TearDown]
     public void Cleanup()
     {
         if (Directory.Exists(_tempDir))
@@ -257,7 +258,7 @@ public class SecurityScannerTests
         _scanner?.Dispose();
     }
 
-    [TestMethod]
+    [Test]
     public async Task AuditAsync_WithNoPackages_Should_ReturnCleanReport()
     {
         // Arrange
@@ -268,28 +269,28 @@ public class SecurityScannerTests
         var report = await _scanner.AuditAsync();
         
         // Assert
-        Assert.IsFalse(report.HasVulnerabilities);
-        Assert.AreEqual(0, report.TotalPackagesScanned);
+        Assert.That(report.HasVulnerabilities, Is.False);
+        Assert.That(report.TotalPackagesScanned, Is.EqualTo(0));
     }
 
-    [TestMethod]
+    [Test]
     public async Task ScanPackage_Should_InferEffectsCorrectly()
     {
         // Act
         var vulnerabilities = await _scanner.ScanPackageAsync("System.Net.Http", "4.3.0", PackageType.NuGet);
         
         // Assert
-        Assert.IsNotNull(vulnerabilities);
+        Assert.That(vulnerabilities, Is.Not.Null);
         // Note: Real implementation would check actual vulnerability databases
     }
 }
 
-[TestClass]
+[TestFixture]
 public class ConfigurationManagerTests
 {
     private string _tempDir;
 
-    [TestInitialize]
+    [SetUp]
     public void Setup()
     {
         _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -297,7 +298,7 @@ public class ConfigurationManagerTests
         Directory.SetCurrentDirectory(_tempDir);
     }
 
-    [TestCleanup]
+    [TearDown]
     public void Cleanup()
     {
         if (Directory.Exists(_tempDir))
@@ -306,18 +307,18 @@ public class ConfigurationManagerTests
         }
     }
 
-    [TestMethod]
+    [Test]
     public async Task LoadConfigAsync_WithNoFile_Should_ReturnDefault()
     {
         // Act
         var config = await ConfigurationManager.LoadConfigAsync();
         
         // Assert
-        Assert.AreEqual("my-project", config.Name);
-        Assert.AreEqual("1.0.0", config.Version);
+        Assert.That(config.Name, Is.EqualTo("my-project"));
+        Assert.That(config.Version, Is.EqualTo("1.0.0"));
     }
 
-    [TestMethod]
+    [Test]
     public async Task SaveAndLoadConfig_Should_Persist()
     {
         // Arrange
@@ -333,14 +334,14 @@ public class ConfigurationManagerTests
         var loadedConfig = await ConfigurationManager.LoadConfigAsync();
         
         // Assert
-        Assert.AreEqual("test-project", loadedConfig.Name);
-        Assert.AreEqual("2.1.0", loadedConfig.Version);
-        Assert.AreEqual("Test description", loadedConfig.Description);
-        Assert.IsTrue(loadedConfig.Dependencies.ContainsKey("TestPkg"));
-        Assert.AreEqual("1.0.0", loadedConfig.Dependencies["TestPkg"]);
+        Assert.That(loadedConfig.Name, Is.EqualTo("test-project"));
+        Assert.That(loadedConfig.Version, Is.EqualTo("2.1.0"));
+        Assert.That(loadedConfig.Description, Is.EqualTo("Test description"));
+        Assert.That(loadedConfig.Dependencies.ContainsKey("TestPkg"), Is.True);
+        Assert.That(loadedConfig.Dependencies["TestPkg"], Is.EqualTo("1.0.0"));
     }
 
-    [TestMethod]
+    [Test]
     public async Task IsWorkspaceRoot_WithWorkspaceConfig_Should_ReturnTrue()
     {
         // Arrange
@@ -353,10 +354,10 @@ public class ConfigurationManagerTests
         var isWorkspace = ConfigurationManager.IsWorkspaceRoot();
         
         // Assert
-        Assert.IsTrue(isWorkspace);
+        Assert.That(isWorkspace, Is.True);
     }
 
-    [TestMethod]
+    [Test]
     public async Task DiscoverWorkspaceProjects_Should_FindProjects()
     {
         // Arrange
@@ -377,8 +378,8 @@ public class ConfigurationManagerTests
         var projects = await ConfigurationManager.DiscoverWorkspaceProjectsAsync();
         
         // Assert
-        Assert.AreEqual(1, projects.Count);
-        Assert.IsTrue(projects.Contains("libs/project1"));
+        Assert.That(projects.Count, Is.EqualTo(1));
+        Assert.That(projects.Contains("libs/project1"), Is.True);
     }
 }
 

@@ -3,6 +3,7 @@ using BenchmarkDotNet.Running;
 using System;
 using System.IO;
 using System.Collections.Generic;
+using Cadenza.Core;
 
 namespace Cadenza.Tests.Performance
 {
@@ -77,55 +78,55 @@ namespace Cadenza.Tests.Performance
         [Benchmark]
         public string TranspileSimpleFunction()
         {
-            return _transpiler.TranspileToCS(_simpleFunction);
+            return _transpiler.TranspileFromSource(_simpleFunction);
         }
 
         [Benchmark]
         public string TranspileComplexFunction()
         {
-            return _transpiler.TranspileToCS(_complexFunction);
+            return _transpiler.TranspileFromSource(_complexFunction);
         }
 
         [Benchmark]
         public string TranspileModuleCode()
         {
-            return _transpiler.TranspileToCS(_moduleCode);
+            return _transpiler.TranspileFromSource(_moduleCode);
         }
 
         [Benchmark]
         public string TranspileLargeProgram()
         {
-            return _transpiler.TranspileToCS(_largeProgram);
+            return _transpiler.TranspileFromSource(_largeProgram);
         }
 
         [Benchmark]
         public List<Token> LexSimpleFunction()
         {
             var lexer = new CadenzaLexer(_simpleFunction);
-            return lexer.Tokenize();
+            return lexer.ScanTokens();
         }
 
         [Benchmark]
         public List<Token> LexComplexFunction()
         {
             var lexer = new CadenzaLexer(_complexFunction);
-            return lexer.Tokenize();
+            return lexer.ScanTokens();
         }
 
         [Benchmark]
-        public Program ParseSimpleFunction()
+        public ProgramNode ParseSimpleFunction()
         {
             var lexer = new CadenzaLexer(_simpleFunction);
-            var tokens = lexer.Tokenize();
+            var tokens = lexer.ScanTokens();
             var parser = new CadenzaParser(tokens);
             return parser.Parse();
         }
 
         [Benchmark]
-        public Program ParseComplexFunction()
+        public ProgramNode ParseComplexFunction()
         {
             var lexer = new CadenzaLexer(_complexFunction);
-            var tokens = lexer.Tokenize();
+            var tokens = lexer.ScanTokens();
             var parser = new CadenzaParser(tokens);
             return parser.Parse();
         }

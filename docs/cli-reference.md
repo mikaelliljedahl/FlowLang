@@ -22,15 +22,15 @@ The Cadenza CLI (`cadenzac`) provides a comprehensive set of commands for creati
 ### Building the CLI
 
 ```bash
-# Build for development
-cd src
+# Build the Cadenza.Core project (the compiler itself)
+cd src/Cadenza.Core
 dotnet build
 
-# Create standalone executable
-dotnet publish src/Cadenza.Core/cadenzac-core.csproj -c Release -o bin/release --self-contained false
+# Create standalone executable for the compiler
+dotnet publish cadenzac-core.csproj -c Release -o ../../bin/release --self-contained false
 ```
 
-The standalone executable will be available at `bin/release/cadenzac-core`.
+The standalone executable for the compiler will be available at `bin/release/cadenzac-core` (relative to the project root).
 
 ### Running Commands
 
@@ -55,16 +55,16 @@ For convenience, you can create an alias:
 
 ```bash
 # Linux/macOS (using standalone executable)
-alias cadenzac="/path/to/cadenza/bin/release/cadenzac-core"
+alias cadenzac="$(pwd)/bin/release/cadenzac-core"
 
 # Linux/macOS (using dotnet run)
-alias cadenzac="dotnet run --project /path/to/cadenza/src/Cadenza.Core/cadenzac-core.csproj --"
+alias cadenzac="dotnet run --project $(pwd)/src/Cadenza.Core/cadenzac-core.csproj --"
 
 # Windows (PowerShell - using standalone executable)
-function cadenzac { C:\path\to\cadenza\bin\release\cadenzac-core.exe $args }
+function cadenzac { "$PSScriptRoot\bin\release\cadenzac-core.exe" $args }
 
 # Windows (PowerShell - using dotnet run)
-function cadenzac { dotnet run --project C:\path\to\cadenza\src\Cadenza.Core\cadenzac-core.csproj -- $args }
+function cadenzac { dotnet run --project "$PSScriptRoot\src\Cadenza.Core\cadenzac-core.csproj" -- $args }
 ```
 
 ## Global Options
@@ -152,10 +152,9 @@ dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --library <input-f
 The `compile` command transpiles Cadenza source to various target platforms:
 
 - **C#**: Full .NET compatibility with async/await, LINQ support
-- **Java**: JVM compatibility with streams and concurrent operations  
 - **JavaScript**: React components for frontend development
-- **WebAssembly**: Browser and edge computing scenarios
-- **Native**: High-performance C++ code generation
+
+
 
 #### Examples
 
@@ -588,6 +587,7 @@ dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- examples/hello.cdz
 Transpiled 'examples/hello.cdz' to '/tmp/hello.cs'
 Generated C# code:
 ==================================================
+```csharp
 /// <summary>
 /// Pure function - no side effects
 /// </summary>
@@ -595,7 +595,7 @@ Generated C# code:
 /// <returns>Returns string</returns>
 public static string greet(string name)
 {
-    return string.Format("Hello, {0}!", name);
+    return $"Hello, {name}!";
 }
 
 /// <summary>
@@ -606,6 +606,7 @@ public static string main()
 {
     return greet("World");
 }
+```
 ==================================================
 Run complete.
 ```

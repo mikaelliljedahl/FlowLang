@@ -235,20 +235,27 @@ The effect system makes side effects explicit, which is a major difference from 
 
 ### Database Operations
 
-**C#:**
+Cadenza's effect system makes side effects explicit. When a Cadenza function declares `Database` or `Network` effects, the transpiler will generate asynchronous C# code using `async` and `await` to handle these I/O-bound operations efficiently.
+
+**C# (Original or Transpiled from Cadenza with `Database` effect):**
 ```csharp
 public static class UserService
 {
-    public static void SaveUser(string name)
+    // This C# method would be generated from a Cadenza function
+    // that declares 'uses [Database]'
+    public static async Task<int> SaveUserAsync(string name)
     {
-        // Database operation - side effect not explicit
-        Database.Save(new User { Name = name });
+        // Database operation - now explicit and asynchronous
+        // The actual implementation of 'Database.SaveAsync' would be in the Cadenza runtime
+        return await Database.SaveAsync(new User { Name = name });
     }
     
-    public static User GetUser(int id)
+    // This C# method would be generated from a Cadenza function
+    // that declares 'uses [Database]'
+    public static async Task<User> GetUserAsync(int id)
     {
-        // Another implicit side effect
-        return Database.Get<User>(id);
+        // Another explicit and asynchronous side effect
+        return await Database.GetAsync<User>(id);
     }
 }
 ```
@@ -256,17 +263,48 @@ public static class UserService
 **Cadenza:**
 ```cadenza
 function saveUser(name: string) uses [Database] -> Result<int, string> {
-    // Side effect explicitly declared
+    // Side effect explicitly declared in Cadenza.
+    // This will transpile to an 'async Task<int>' C# method.
     return Ok(42)  // User ID
 }
 
 function getUser(id: int) uses [Database] -> Result<string, string> {
-    // Side effect explicitly declared
+    // Side effect explicitly declared in Cadenza.
+    // This will transpile to an 'async Task<User>' C# method.
     return Ok("User name")
 }
 ```
 
+### Network Operations
+
+Similar to `Database` effects, `Network` effects also result in `async`/`await` C# code.
+
+**C# (Original or Transpiled from Cadenza with `Network` effect):**
+```csharp
+public static class ExternalService
+{
+    // This C# method would be generated from a Cadenza function
+    // that declares 'uses [Network]'
+    public static async Task<string> FetchDataAsync(string url)
+    {
+        // Network operation - explicit and asynchronous
+        return await HttpClient.GetAsync(url);
+    }
+}
+```
+
+**Cadenza:**
+```cadenza
+function fetchData(url: string) uses [Network] -> Result<string, string> {
+    // Side effect explicitly declared in Cadenza.
+    // This will transpile to an 'async Task<string>' C# method.
+    return Ok("Data from network")
+}
+```
+
 ### Logging Operations
+
+Logging operations are typically synchronous, so they do not introduce `async`/`await`.
 
 **C#:**
 ```csharp

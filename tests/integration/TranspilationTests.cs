@@ -2,8 +2,11 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Cadenza.Core;
 
 namespace Cadenza.Tests.Integration
 {
@@ -11,11 +14,41 @@ namespace Cadenza.Tests.Integration
     public class TranspilationTests
     {
         private CadenzaTranspiler _transpiler;
+        private string _tempDir;
 
         [SetUp]
         public void SetUp()
         {
             _transpiler = new CadenzaTranspiler();
+            _tempDir = Path.Combine(Path.GetTempPath(), "cadenza_tests_" + Guid.NewGuid());
+            Directory.CreateDirectory(_tempDir);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (Directory.Exists(_tempDir))
+            {
+                Directory.Delete(_tempDir, true);
+            }
+        }
+
+        /// <summary>
+        /// Helper method to transpile code directly using the existing components
+        /// </summary>
+        private string TranspileCodeDirectly(string cadenzaCode)
+        {
+            // Use the existing components directly
+            var lexer = new CadenzaLexer(cadenzaCode);
+            var tokens = lexer.ScanTokens();
+            
+            var parser = new CadenzaParser(tokens);
+            var ast = parser.Parse();
+            
+            var generator = new CSharpGenerator();
+            var syntaxTree = generator.GenerateFromAST(ast);
+            
+            return syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
         }
 
         [Test]
@@ -25,7 +58,7 @@ namespace Cadenza.Tests.Integration
             var input = "function add(a: int, b: int) -> int { return a + b }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("public static int add(int a, int b)"));
@@ -40,7 +73,7 @@ namespace Cadenza.Tests.Integration
             var input = "pure function multiply(x: int, y: int) -> int { return x * y }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("/// Pure function - no side effects"));
@@ -58,7 +91,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("/// Effects: Database, Logging"));
@@ -80,7 +113,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("public class Result<T, E>"));
@@ -105,7 +138,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("if (x > 10)"));
@@ -129,7 +162,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("if (!(x > 0))"));
@@ -149,7 +182,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("var subtotal = base + tax;"));
@@ -168,7 +201,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("var result_result = parseNumber(input);"));
@@ -188,7 +221,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("string.Format"));
@@ -214,7 +247,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("namespace Math"));
@@ -235,7 +268,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("using Math;"));
@@ -252,7 +285,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("return (a + b * c) > 10 && (a - b) < c || c == 0;"));
@@ -272,7 +305,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("return fibonacci(n - 1) + fibonacci(n - 2);"));
@@ -297,7 +330,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("public static int add(int a, int b)"));
@@ -329,7 +362,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("if (x > 0)"));
@@ -348,7 +381,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("public static int doNothing()"));
@@ -366,7 +399,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("/// Pure function - no side effects"));
@@ -383,7 +416,7 @@ namespace Cadenza.Tests.Integration
             }";
 
             // Act
-            var output = _transpiler.TranspileToCS(input);
+            var output = TranspileCodeDirectly(input);
 
             // Assert
             Assert.That(output, Contains.Substring("return a && b || !c;"));

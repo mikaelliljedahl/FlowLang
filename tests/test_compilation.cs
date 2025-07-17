@@ -1,11 +1,10 @@
-#:package Microsoft.CodeAnalysis@4.5.0
-#:package Microsoft.CodeAnalysis.CSharp@4.5.0
 // Simple test for UI component compilation
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Cadenza.Compiler;
-using Cadenza.Targets;
+using Cadenza.Core;
+
+namespace Cadenza.Tests.Manual;
 
 class TestUICompilation
 {

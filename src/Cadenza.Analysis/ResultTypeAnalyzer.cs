@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cadenza.Core;
 
 namespace Cadenza.Analysis;
 
@@ -18,7 +19,7 @@ public class ResultTypeAnalyzer
         public override string Description => "All Result values must be handled or propagated";
         public override string Category => AnalysisCategories.ResultTypes;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new UnusedResultVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -27,12 +28,12 @@ public class ResultTypeAnalyzer
 
         private class UnusedResultVisitor : ASTVisitor
         {
-            private readonly List<(FunctionCall call, SourceLocation location)> _violations = new();
+            private readonly List<(CallExpression call, SourceLocation location)> _violations = new();
             private readonly Dictionary<string, string> _functionReturnTypes = new();
 
             public UnusedResultVisitor(string filePath, string sourceText) : base(filePath, sourceText) { }
 
-            public override void VisitProgram(Program program)
+            public override void VisitProgram(ProgramNode program)
             {
                 // First pass: collect function return types
                 foreach (var stmt in program.Statements)
@@ -75,7 +76,7 @@ public class ResultTypeAnalyzer
             {
                 switch (node)
                 {
-                    case FunctionCall call:
+                    case CallExpression call:
                         // Check if this function call returns a Result type and is not handled
                         if (IsResultReturningFunction(call) && !IsResultHandled(call))
                         {
@@ -111,7 +112,7 @@ public class ResultTypeAnalyzer
             {
                 switch (expression)
                 {
-                    case FunctionCall call:
+                    case CallExpression call:
                         if (IsResultReturningFunction(call))
                         {
                             var location = GetLocation(call.Name);
@@ -124,19 +125,19 @@ public class ResultTypeAnalyzer
                         CheckExpressionForUnusedResults(binary.Right);
                         break;
 
-                    case ErrorPropagationExpression:
+                    case ErrorPropagation:
                         // Error propagation properly handles results
                         break;
                 }
             }
 
-            private bool IsResultReturningFunction(FunctionCall call)
+            private bool IsResultReturningFunction(CallExpression call)
             {
                 return _functionReturnTypes.TryGetValue(call.Name, out var returnType) && 
                        returnType.StartsWith("Result<");
             }
 
-            private bool IsResultHandled(FunctionCall call)
+            private bool IsResultHandled(CallExpression call)
             {
                 // For now, assume all function calls in expressions are unhandled
                 // In a complete implementation, we'd check the parent context
@@ -163,7 +164,7 @@ public class ResultTypeAnalyzer
         public override string Description => "Functions returning Result must handle all error paths properly";
         public override string Category => AnalysisCategories.ResultTypes;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new ErrorHandlingVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -243,10 +244,10 @@ public class ResultTypeAnalyzer
             {
                 switch (expression)
                 {
-                    case OkExpression:
+                    case ResultExpression ok when ok.Type == "Ok":
                         hasOkReturn = true;
                         break;
-                    case ErrorExpression:
+                    case ResultExpression error when error.Type == "Error":
                         hasErrorReturn = true;
                         break;
                 }
@@ -256,7 +257,7 @@ public class ResultTypeAnalyzer
             {
                 switch (expression)
                 {
-                    case ErrorPropagationExpression:
+                    case ErrorPropagation:
                         hasErrorPropagation = true;
                         break;
                     case BinaryExpression binary:
@@ -286,7 +287,7 @@ public class ResultTypeAnalyzer
         public override string Description => "Error propagation operator (?) must be used correctly";
         public override string Category => AnalysisCategories.ResultTypes;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new ErrorPropagationValidator(filePath, sourceText);
             visitor.Visit(ast);
@@ -301,7 +302,7 @@ public class ResultTypeAnalyzer
 
             public ErrorPropagationValidator(string filePath, string sourceText) : base(filePath, sourceText) { }
 
-            public override void VisitProgram(Program program)
+            public override void VisitProgram(ProgramNode program)
             {
                 // Collect function return types
                 foreach (var stmt in program.Statements)
@@ -334,11 +335,11 @@ public class ResultTypeAnalyzer
             {
                 switch (node)
                 {
-                    case LetStatement let when let.Expression is ErrorPropagationExpression prop:
+                    case LetStatement let when let.Expression is ErrorPropagation prop:
                         ValidateErrorPropagation(prop);
                         break;
 
-                    case ReturnStatement ret when ret.Expression is ErrorPropagationExpression prop:
+                    case ReturnStatement ret when ret.Expression is ErrorPropagation prop:
                         ValidateErrorPropagation(prop);
                         break;
 
@@ -356,7 +357,7 @@ public class ResultTypeAnalyzer
                 }
             }
 
-            private void ValidateErrorPropagation(ErrorPropagationExpression prop)
+            private void ValidateErrorPropagation(ErrorPropagation prop)
             {
                 // Check if the current function can propagate errors
                 if (_currentFunction == null)
@@ -369,7 +370,7 @@ public class ResultTypeAnalyzer
                 }
 
                 // Check if the expression being propagated actually returns a Result
-                if (prop.Expression is FunctionCall call)
+                if (prop.Expression is CallExpression call)
                 {
                     if (_functionReturnTypes.TryGetValue(call.Name, out var returnType) && !returnType.StartsWith("Result<"))
                     {
@@ -399,7 +400,7 @@ public class ResultTypeAnalyzer
         public override string Description => "Detect unreachable error conditions in Result handling";
         public override string Category => AnalysisCategories.ResultTypes;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new DeadErrorPathVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -463,7 +464,7 @@ public class ResultTypeAnalyzer
                     IsErrorReturn(ifStmt.ThenBody[0]))
                 {
                     var errorStmt = ifStmt.ThenBody[0] as ReturnStatement;
-                    if (errorStmt?.Expression is ErrorExpression error &&
+                    if (errorStmt?.Expression is ResultExpression error && error.Type == "Error" &&
                         error.Value is StringLiteral errorMsg)
                     {
                         // Simple heuristic: check for contradictory conditions
@@ -497,12 +498,12 @@ public class ResultTypeAnalyzer
 
             private bool IsUnconditionalOkReturn(ASTNode statement)
             {
-                return statement is ReturnStatement ret && ret.Expression is OkExpression;
+                return statement is ReturnStatement ret && ret.Expression is ResultExpression ok && ok.Type == "Ok";
             }
 
             private bool IsErrorReturn(ASTNode statement)
             {
-                return statement is ReturnStatement ret && ret.Expression is ErrorExpression;
+                return statement is ReturnStatement ret && ret.Expression is ResultExpression error && error.Type == "Error";
             }
 
             public IEnumerable<AnalysisDiagnostic> GetDiagnostics(LintRule rule)
@@ -525,7 +526,7 @@ public class ResultTypeAnalyzer
         public override string Description => "Ensure consistent Result type usage across function signatures";
         public override string Category => AnalysisCategories.ResultTypes;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new ResultTypeConsistencyVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -587,7 +588,7 @@ public class ResultTypeAnalyzer
             {
                 switch (node)
                 {
-                    case ReturnStatement ret when ret.Expression is ErrorExpression error:
+                    case ReturnStatement ret when ret.Expression is ResultExpression error && error.Type == "Error":
                         if (error.Value is StringLiteral str)
                             errorTypes.Add("string");
                         else if (error.Value is NumberLiteral)
@@ -616,13 +617,13 @@ public class ResultTypeAnalyzer
                 switch (node)
                 {
                     case LetStatement let:
-                        return let.Expression is ErrorPropagationExpression;
+                        return let.Expression is ErrorPropagation;
                     case IfStatement ifStmt:
                         return ContainsErrorPropagation(ifStmt.Condition) ||
                                ifStmt.ThenBody.Any(ContainsErrorPropagation) ||
                                (ifStmt.ElseBody?.Any(ContainsErrorPropagation) ?? false);
                     case ReturnStatement ret:
-                        return ret.Expression is ErrorPropagationExpression;
+                        return ret.Expression is ErrorPropagation;
                     default:
                         return false;
                 }
@@ -638,7 +639,7 @@ public class ResultTypeAnalyzer
                 switch (node)
                 {
                     case ReturnStatement ret:
-                        return ret.Expression is ErrorExpression;
+                        return ret.Expression is ResultExpression error && error.Type == "Error";
                     case IfStatement ifStmt:
                         return ifStmt.ThenBody.Any(ContainsExplicitErrorHandling) ||
                                (ifStmt.ElseBody?.Any(ContainsExplicitErrorHandling) ?? false);

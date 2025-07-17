@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Cadenza.Analysis;
-using Xunit;
+using NUnit.Framework;
 
 namespace Cadenza.Tests.Integration.Analysis;
 
 public class StaticAnalysisIntegrationTests
 {
-    [Fact]
+    [Test]
     public async Task StaticAnalyzer_ShouldAnalyzeCompleteFlowProgram()
     {
         // Arrange
@@ -55,24 +55,24 @@ module TestModule {
         var report = analyzer.AnalyzeFile("test.cdz", sourceCode);
 
         // Assert
-        Assert.True(report.Diagnostics.Count > 0, "Should find multiple issues in the test code");
+        Assert.That(report.Diagnostics.Count > 0, "Should find multiple issues in the test code");
         
         // Check for specific rule violations
         var ruleIds = report.Diagnostics.Select(d => d.RuleId).ToHashSet();
         
         // Should detect various categories of issues
-        Assert.True(ruleIds.Count >= 3, $"Should detect issues from multiple rules. Found: {string.Join(", ", ruleIds)}");
+        Assert.That(ruleIds.Count >= 3, $"Should detect issues from multiple rules. Found: {string.Join(", ", ruleIds)}");
         
         // Verify metrics are collected
-        Assert.True(report.Metrics.TotalFunctions > 0);
-        Assert.Equal(1, report.Metrics.ModuleCount);
+        Assert.That(report.Metrics.TotalFunctions > 0, Is.True);
+        Assert.That(report.Metrics.ModuleCount, Is.EqualTo(1));
         
         // Should have both pure and effect functions
-        Assert.True(report.Metrics.PureFunctions > 0);
-        Assert.True(report.Metrics.FunctionsWithEffects > 0);
+        Assert.That(report.Metrics.PureFunctions > 0, Is.True);
+        Assert.That(report.Metrics.FunctionsWithEffects > 0, Is.True);
     }
 
-    [Fact]
+    [Test]
     public async Task StaticAnalyzer_ShouldRespectConfiguration()
     {
         // Arrange
@@ -109,11 +109,11 @@ function test_func() -> int {
         var lenientReport = lenientAnalyzer.AnalyzeFile("test.cdz", sourceCode);
 
         // Assert
-        Assert.True(strictReport.Diagnostics.Count >= lenientReport.Diagnostics.Count,
+        Assert.That(strictReport.Diagnostics.Count >= lenientReport.Diagnostics.Count,
             "Strict configuration should find more or equal issues than lenient");
     }
 
-    [Fact]
+    [Test]
     public async Task StaticAnalyzer_ShouldGenerateJsonOutput()
     {
         // Arrange
@@ -129,16 +129,16 @@ function bad_function() -> Result<int, string> {
         var json = report.ToJson();
 
         // Assert
-        Assert.NotEmpty(json);
-        Assert.Contains("\"diagnostics\"", json);
-        Assert.Contains("\"metrics\"", json);
-        Assert.Contains("\"ruleCounts\"", json);
+        Assert.That(json, Is.Not.Null);
+        Assert.That(json, Does.Contain("\"diagnostics\""));
+        Assert.That(json, Does.Contain("\"metrics\""));
+        Assert.That(json, Does.Contain("\"ruleCounts\""));
         
         // Should be valid JSON
         Assert.DoesNotThrow(() => System.Text.Json.JsonDocument.Parse(json));
     }
 
-    [Fact]
+    [Test]
     public async Task StaticAnalyzer_ShouldGenerateSarifOutput()
     {
         // Arrange
@@ -155,16 +155,16 @@ function security_issue() -> string {
         var sarif = report.ToSarif();
 
         // Assert
-        Assert.NotEmpty(sarif);
-        Assert.Contains("\"version\": \"2.1.0\"", sarif);
-        Assert.Contains("\"runs\"", sarif);
-        Assert.Contains("\"results\"", sarif);
+        Assert.That(sarif, Is.Not.Null);
+        Assert.That(sarif, Does.Contain("\"version\": \"2.1.0\""));
+        Assert.That(sarif, Does.Contain("\"runs\""));
+        Assert.That(sarif, Does.Contain("\"results\""));
         
         // Should be valid JSON
         Assert.DoesNotThrow(() => System.Text.Json.JsonDocument.Parse(sarif));
     }
 
-    [Fact]
+    [Test]
     public async Task StaticAnalyzer_ShouldAnalyzeRealWorldExample()
     {
         // Arrange - A more realistic Cadenza program
@@ -215,27 +215,27 @@ module UserService {
         var report = analyzer.AnalyzeFile("user_service.cdz", sourceCode);
 
         // Assert
-        Assert.Equal(1, report.FilesAnalyzed);
+        Assert.That(report.FilesAnalyzed, Is.EqualTo(1));
         
         // Should have found the module and functions
-        Assert.Equal(1, report.Metrics.ModuleCount);
-        Assert.Equal(3, report.Metrics.TotalFunctions);
-        Assert.Equal(1, report.Metrics.PureFunctions);
-        Assert.Equal(2, report.Metrics.FunctionsWithEffects);
+        Assert.That(report.Metrics.ModuleCount, Is.EqualTo(1));
+        Assert.That(report.Metrics.TotalFunctions, Is.EqualTo(3));
+        Assert.That(report.Metrics.PureFunctions, Is.EqualTo(1));
+        Assert.That(report.Metrics.FunctionsWithEffects, Is.EqualTo(2));
         
         // Should track effect usage
-        Assert.True(report.Metrics.EffectUsage.ContainsKey("Database"));
-        Assert.True(report.Metrics.EffectUsage.ContainsKey("Logging"));
-        Assert.True(report.Metrics.EffectUsage.ContainsKey("Network"));
+        Assert.That(report.Metrics.EffectUsage.ContainsKey("Database"));
+        Assert.That(report.Metrics.EffectUsage.ContainsKey("Logging"));
+        Assert.That(report.Metrics.EffectUsage.ContainsKey("Network"));
         
         // Should have proper Result type usage
-        Assert.True(report.Metrics.ResultTypeUsage > 0);
+        Assert.That(report.Metrics.ResultTypeUsage > 0, Is.True);
         
         // Should detect error propagation
-        Assert.True(report.Metrics.ErrorPropagationCount > 0);
+        Assert.That(report.Metrics.ErrorPropagationCount > 0, Is.True);
     }
 
-    [Fact]
+    [Test]
     public async Task StaticAnalyzer_ShouldHandleParseErrors()
     {
         // Arrange - Invalid Cadenza syntax
@@ -251,16 +251,17 @@ function invalid syntax here {
         var report = analyzer.AnalyzeFile("invalid.cdz", invalidSourceCode);
 
         // Assert
-        Assert.Equal(1, report.FilesAnalyzed);
-        Assert.True(report.Diagnostics.Count > 0);
+        Assert.That(report.FilesAnalyzed, Is.EqualTo(1));
+        Assert.That(report.Diagnostics.Count > 0, Is.True);
         
         // Should have a parse error
         var parseErrors = report.Diagnostics.Where(d => d.RuleId == "parse-error").ToList();
-        Assert.NotEmpty(parseErrors);
-        Assert.All(parseErrors, error => Assert.Equal(DiagnosticSeverity.Error, error.Severity));
+        Assert.That(parseErrors, Is.Not.Null);
+        foreach (var error in parseErrors)
+            Assert.That(error.Severity, Is.EqualTo(DiagnosticSeverity.Error));
     }
 
-    [Fact]
+    [Test]
     public async Task StaticAnalyzer_ShouldDetectSecurityIssues()
     {
         // Arrange - Code with potential security issues
@@ -285,14 +286,14 @@ function risky_operation(user_input: string) uses [Database] -> Result<string, s
 
         // Assert
         var securityIssues = report.GetDiagnosticsByCategory(AnalysisCategories.Security).ToList();
-        Assert.NotEmpty(securityIssues);
+        Assert.That(securityIssues, Is.Not.Null);
         
         // Should detect multiple security issues
         var ruleIds = securityIssues.Select(d => d.RuleId).ToHashSet();
-        Assert.True(ruleIds.Count > 0, "Should detect security-related issues");
+        Assert.That(ruleIds.Count > 0, "Should detect security-related issues");
     }
 
-    [Fact]
+    [Test]
     public async Task StaticAnalyzer_ShouldProvideFixSuggestions()
     {
         // Arrange
@@ -310,13 +311,13 @@ function example() -> Result<string, string> {
 
         // Assert
         var diagnosticsWithFixes = report.Diagnostics.Where(d => !string.IsNullOrEmpty(d.FixSuggestion)).ToList();
-        Assert.NotEmpty(diagnosticsWithFixes);
+        Assert.That(diagnosticsWithFixes, Is.Not.Null);
         
         // Fix suggestions should be helpful
-        Assert.All(diagnosticsWithFixes, d => 
+        foreach (var d in diagnosticsWithFixes)
         {
-            Assert.NotEmpty(d.FixSuggestion);
-            Assert.True(d.FixSuggestion!.Length > 10, "Fix suggestions should be descriptive");
-        });
+            Assert.That(d.FixSuggestion, Is.Not.Null);
+            Assert.That(d.FixSuggestion!.Length > 10, "Fix suggestions should be descriptive");
+        }
     }
 }

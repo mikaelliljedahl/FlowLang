@@ -1,6 +1,7 @@
 using System;
-using Math;
-using Utils;
+
+namespace Cadenza.Tests.Manual
+{
 
 // Math module
 namespace Math
@@ -47,7 +48,7 @@ namespace Utils
 }
 
 // Main program using the modules
-public static class Program
+public static class TestModulesProgram
 {
     public static int calculate()
     {
@@ -69,4 +70,6 @@ public static class Program
         Console.WriteLine(result);
         Console.WriteLine($"Calculate result: {calculate()}");
     }
+}
+
 }

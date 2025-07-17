@@ -20,6 +20,23 @@ namespace Cadenza.Core;
 
 public class CadenzaTranspiler
 {
+    public string TranspileFromSource(string source)
+    {
+        // Lex
+        var lexer = new CadenzaLexer(source);
+        var tokens = lexer.ScanTokens();
+        
+        // Parse
+        var parser = new CadenzaParser(tokens);
+        var ast = parser.Parse();
+        
+        // Generate C#
+        var generator = new CSharpGenerator();
+        var syntaxTree = generator.GenerateFromAST(ast);
+        
+        return syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+    }
+
     public async Task<string> TranspileAsync(string sourceFile, string? outputFile = null)
     {
         // Read source file

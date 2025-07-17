@@ -33,6 +33,7 @@ public record FunctionDeclaration(
 ) : ASTNode;
 
 public record Parameter(string Name, string Type);
+public record EffectAnnotation(List<string> Effects) : ASTNode;
 
 // Statement AST nodes
 public record ReturnStatement(ASTNode? Expression) : ASTNode;

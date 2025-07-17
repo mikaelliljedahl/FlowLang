@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Cadenza.Core;
 
 namespace Cadenza.Analysis;
 
@@ -217,7 +218,7 @@ public abstract class LintRule
     /// <summary>
     /// Analyze a single file and return diagnostics
     /// </summary>
-    public abstract IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText);
+    public abstract IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText);
     
     /// <summary>
     /// Create a diagnostic for this rule
@@ -282,7 +283,7 @@ public class LintRuleEngine
     /// <summary>
     /// Analyze a single file
     /// </summary>
-    public AnalysisReport AnalyzeFile(string filePath, string sourceText, Program ast)
+    public AnalysisReport AnalyzeFile(string filePath, string sourceText, ProgramNode ast)
     {
         var report = new AnalysisReport { FilesAnalyzed = 1 };
         
@@ -318,7 +319,7 @@ public class LintRuleEngine
     /// <summary>
     /// Analyze multiple files
     /// </summary>
-    public AnalysisReport AnalyzeFiles(IEnumerable<(string filePath, string sourceText, Program ast)> files)
+    public AnalysisReport AnalyzeFiles(IEnumerable<(string filePath, string sourceText, ProgramNode ast)> files)
     {
         var combinedReport = new AnalysisReport();
         var startTime = DateTime.UtcNow;

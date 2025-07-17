@@ -2,16 +2,16 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Cadenza.Package;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Cadenza.Tests.Integration.Package;
 
-[TestClass]
+[TestFixture]
 public class PackageIntegrationTests
 {
     private string _tempDir;
 
-    [TestInitialize]
+    [SetUp]
     public void Setup()
     {
         _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -19,7 +19,7 @@ public class PackageIntegrationTests
         Directory.SetCurrentDirectory(_tempDir);
     }
 
-    [TestCleanup]
+    [TearDown]
     public void Cleanup()
     {
         if (Directory.Exists(_tempDir))
@@ -28,7 +28,7 @@ public class PackageIntegrationTests
         }
     }
 
-    [TestMethod]
+    [Test]
     public async Task EndToEnd_PackageLifecycle_Should_Work()
     {
         // Arrange - Create a new Cadenza project
@@ -48,7 +48,7 @@ public class PackageIntegrationTests
         
         // Verify configuration was updated
         var updatedConfig = await ConfigurationManager.LoadConfigAsync();
-        Assert.IsTrue(updatedConfig.Dependencies.ContainsKey("TestPackage"));
+        Assert.That(updatedConfig.Dependencies.ContainsKey("TestPackage"), Is.False);
 
         // Act & Assert - Install packages
         var installResult = await packageManager.InstallPackagesAsync();
@@ -56,13 +56,13 @@ public class PackageIntegrationTests
 
         // Act & Assert - Remove package
         var removeResult = await packageManager.RemovePackageAsync("TestPackage");
-        Assert.IsTrue(removeResult.Success);
+        Assert.That(removeResult.Success, Is.True);
         
         var finalConfig = await ConfigurationManager.LoadConfigAsync();
-        Assert.IsFalse(finalConfig.Dependencies.ContainsKey("TestPackage"));
+        Assert.That(finalConfig.Dependencies.ContainsKey("TestPackage"), Is.False);
     }
 
-    [TestMethod]
+    [Test]
     public async Task Workspace_MultiProject_Should_ManageCorrectly()
     {
         // Arrange - Create workspace structure
@@ -99,13 +99,13 @@ public class PackageIntegrationTests
         var projects = await workspaceManager.GetWorkspaceProjectsAsync();
 
         // Assert
-        Assert.AreEqual(2, projects.Count);
-        Assert.IsTrue(projects.Contains("projects/project1"));
-        Assert.IsTrue(projects.Contains("projects/project2"));
-        Assert.IsFalse(projects.Any(p => p.Contains("excluded")));
+        Assert.That(projects.Count, Is.EqualTo(2));
+        Assert.That(projects.Contains("projects/project1"), Is.False);
+        Assert.That(projects.Contains("projects/project2"), Is.False);
+        Assert.That(projects.Any(p => p.Contains("excluded")), Is.False);
     }
 
-    [TestMethod]
+    [Test]
     public async Task PackageCreation_Should_GenerateValidPackage()
     {
         // Arrange - Create a complete Cadenza project
@@ -150,14 +150,14 @@ function main() -> int {
         var packagePath = await packageCreator.CreatePackageAsync(_tempDir, _tempDir);
 
         // Assert
-        Assert.IsTrue(File.Exists(packagePath));
-        Assert.IsTrue(packagePath.EndsWith("sample-package-1.0.0.zip"));
+        Assert.That(File.Exists(packagePath), Is.True);
+        Assert.That(packagePath.EndsWith("sample-package-1.0.0.zip"), Is.False);
         
         var fileInfo = new FileInfo(packagePath);
-        Assert.IsTrue(fileInfo.Length > 0);
+        Assert.That(fileInfo.Length, Is.GreaterThan(0));
     }
 
-    [TestMethod]
+    [Test]
     public async Task SecurityScanner_Should_DetectKnownVulnerabilities()
     {
         // Arrange - Create project with potentially vulnerable package
@@ -175,12 +175,12 @@ function main() -> int {
         var report = await scanner.AuditAsync();
 
         // Assert
-        Assert.IsNotNull(report);
-        Assert.AreEqual(1, report.TotalPackagesScanned);
+        Assert.That(report, Is.Not.Null);
+        Assert.That(report.TotalPackagesScanned, Is.EqualTo(1));
         // Note: Real vulnerabilities would require actual vulnerability database
     }
 
-    [TestMethod]
+    [Test]
     public async Task LockFile_Should_EnsureReproducibleBuilds()
     {
         // Arrange
@@ -203,10 +203,10 @@ function main() -> int {
         var lockFile2 = await ConfigurationManager.LoadLockFileAsync();
 
         // Assert - Lock files should be identical for reproducible builds
-        Assert.AreEqual(lockFile1.GeneratedAt, lockFile2.GeneratedAt);
+        Assert.That(lockFile1.GeneratedAt, Is.EqualTo(lockFile2.GeneratedAt));
     }
 
-    [TestMethod]
+    [Test]
     public async Task EffectInference_Should_MapNuGetPackagesCorrectly()
     {
         // Arrange
@@ -236,19 +236,19 @@ function main() -> int {
         var bindings = await bindingGenerator.GenerateBindingsAsync(httpPackage, emptyStream);
 
         // Assert
-        Assert.IsTrue(bindings.Contains("module System_Net_Http"));
-        Assert.IsTrue(bindings.Contains("uses [Network]"));
-        Assert.IsTrue(bindings.Contains("function get"));
-        Assert.IsTrue(bindings.Contains("Result<string, HttpError>"));
+        Assert.That(bindings.Contains("module System_Net_Http"), Is.False);
+        Assert.That(bindings.Contains("uses [Network]"), Is.False);
+        Assert.That(bindings.Contains("function get"), Is.False);
+        Assert.That(bindings.Contains("Result<string, HttpError>"), Is.False);
     }
 }
 
-[TestClass]
+[TestFixture]
 public class VersionManagementTests
 {
     private string _tempDir;
 
-    [TestInitialize]
+    [SetUp]
     public void Setup()
     {
         _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -256,7 +256,7 @@ public class VersionManagementTests
         Directory.SetCurrentDirectory(_tempDir);
     }
 
-    [TestCleanup]
+    [TearDown]
     public void Cleanup()
     {
         if (Directory.Exists(_tempDir))
@@ -265,7 +265,7 @@ public class VersionManagementTests
         }
     }
 
-    [TestMethod]
+    [Test]
     public async Task VersionBumping_Should_UpdateCorrectly()
     {
         // Arrange
@@ -283,7 +283,7 @@ public class VersionManagementTests
         await ConfigurationManager.SaveConfigAsync(patchConfig);
         
         var updatedConfig = await ConfigurationManager.LoadConfigAsync();
-        Assert.AreEqual("1.2.4", updatedConfig.Version);
+        Assert.That(updatedConfig.Version, Is.EqualTo("1.2.4"));
 
         // Test minor bump
         var minorVersion = new SemanticVersion(currentVersion.Major, currentVersion.Minor + 1, 0);
@@ -291,7 +291,7 @@ public class VersionManagementTests
         await ConfigurationManager.SaveConfigAsync(minorConfig);
         
         updatedConfig = await ConfigurationManager.LoadConfigAsync();
-        Assert.AreEqual("1.3.0", updatedConfig.Version);
+        Assert.That(updatedConfig.Version, Is.EqualTo("1.3.0"));
 
         // Test major bump
         var majorVersion = new SemanticVersion(currentVersion.Major + 1, 0, 0);
@@ -299,42 +299,42 @@ public class VersionManagementTests
         await ConfigurationManager.SaveConfigAsync(majorConfig);
         
         updatedConfig = await ConfigurationManager.LoadConfigAsync();
-        Assert.AreEqual("2.0.0", updatedConfig.Version);
+        Assert.That(updatedConfig.Version, Is.EqualTo("2.0.0"));
     }
 
-    [TestMethod]
+    [Test]
     public async Task ComplexVersionConstraints_Should_ResolveCorrectly()
     {
         // Test various version constraint patterns
         var resolver = new DependencyResolver(null!, null!);
 
         // Caret constraints (^1.2.3 allows >=1.2.3 <2.0.0)
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.3", "^1.2.3"));
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.4", "^1.2.3"));
-        Assert.IsTrue(resolver.IsVersionCompatible("1.9.9", "^1.2.3"));
-        Assert.IsFalse(resolver.IsVersionCompatible("2.0.0", "^1.2.3"));
-        Assert.IsFalse(resolver.IsVersionCompatible("1.2.2", "^1.2.3"));
+        Assert.That(resolver.IsVersionCompatible("1.2.3", "^1.2.3"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("1.2.4", "^1.2.3"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("1.9.9", "^1.2.3"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("2.0.0", "^1.2.3"), Is.False);
+        Assert.That(resolver.IsVersionCompatible("1.2.2", "^1.2.3"), Is.False);
 
         // Tilde constraints (~1.2.3 allows >=1.2.3 <1.3.0)
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.3", "~1.2.3"));
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.4", "~1.2.3"));
-        Assert.IsFalse(resolver.IsVersionCompatible("1.3.0", "~1.2.3"));
-        Assert.IsFalse(resolver.IsVersionCompatible("1.2.2", "~1.2.3"));
+        Assert.That(resolver.IsVersionCompatible("1.2.3", "~1.2.3"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("1.2.4", "~1.2.3"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("1.3.0", "~1.2.3"), Is.False);
+        Assert.That(resolver.IsVersionCompatible("1.2.2", "~1.2.3"), Is.False);
 
         // Range constraints
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.3", ">=1.2.0"));
-        Assert.IsTrue(resolver.IsVersionCompatible("2.0.0", ">=1.2.0"));
-        Assert.IsFalse(resolver.IsVersionCompatible("1.1.9", ">=1.2.0"));
+        Assert.That(resolver.IsVersionCompatible("1.2.3", ">=1.2.0"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("2.0.0", ">=1.2.0"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("1.1.9", ">=1.2.0"), Is.False);
 
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.3", "<=2.0.0"));
-        Assert.IsFalse(resolver.IsVersionCompatible("2.0.1", "<=2.0.0"));
+        Assert.That(resolver.IsVersionCompatible("1.2.3", "<=2.0.0"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("2.0.1", "<=2.0.0"), Is.False);
 
         // Exact version
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.3", "1.2.3"));
-        Assert.IsFalse(resolver.IsVersionCompatible("1.2.4", "1.2.3"));
+        Assert.That(resolver.IsVersionCompatible("1.2.3", "1.2.3"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("1.2.4", "1.2.3"), Is.False);
 
         // Wildcard
-        Assert.IsTrue(resolver.IsVersionCompatible("1.2.3", "*"));
-        Assert.IsTrue(resolver.IsVersionCompatible("99.99.99", "*"));
+        Assert.That(resolver.IsVersionCompatible("1.2.3", "*"), Is.True);
+        Assert.That(resolver.IsVersionCompatible("99.99.99", "*"), Is.True);
     }
 }

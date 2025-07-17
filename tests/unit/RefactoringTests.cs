@@ -1,6 +1,6 @@
+using Cadenza.Core;
 using NUnit.Framework;
 using System.Collections.Generic;
-using Cadenza.Core;
 
 namespace Cadenza.Tests.Unit;
 
@@ -12,10 +12,10 @@ public class RefactoringTests
     {
         // Test that Token record works correctly
         var token = new Token(TokenType.Identifier, "test", null, 1, 1);
-        Assert.AreEqual(TokenType.Identifier, token.Type);
-        Assert.AreEqual("test", token.Lexeme);
-        Assert.AreEqual(1, token.Line);
-        Assert.AreEqual(1, token.Column);
+        Assert.That(token.Type, Is.EqualTo(TokenType.Identifier));
+        Assert.That(token.Lexeme, Is.EqualTo("test"));
+        Assert.That(token.Line, Is.EqualTo(1));
+        Assert.That(token.Column, Is.EqualTo(1));
     }
 
     [Test]
@@ -26,10 +26,10 @@ public class RefactoringTests
         var lexer = new CadenzaLexer(source);
         var tokens = lexer.ScanTokens();
         
-        Assert.Greater(tokens.Count, 0);
-        Assert.AreEqual(TokenType.Function, tokens[0].Type);
-        Assert.AreEqual("function", tokens[0].Lexeme);
-        Assert.AreEqual(TokenType.EOF, tokens[tokens.Count - 1].Type);
+        Assert.That(tokens.Count, Is.GreaterThan(0));
+        Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Function));
+        Assert.That(tokens[0].Lexeme, Is.EqualTo("function"));
+        Assert.That(tokens[tokens.Count - 1].Type, Is.EqualTo(TokenType.EOF));
     }
 
     [Test]
@@ -42,13 +42,13 @@ public class RefactoringTests
         var parser = new CadenzaParser(tokens);
         var program = parser.Parse();
         
-        Assert.IsNotNull(program);
-        Assert.Greater(program.Statements.Count, 0);
-        Assert.IsInstanceOf<FunctionDeclaration>(program.Statements[0]);
+        Assert.That(program, Is.Not.Null);
+        Assert.That(program.Statements.Count, Is.GreaterThan(0));
+        Assert.That(program.Statements[0], Is.InstanceOf<FunctionDeclaration>());
         
         var func = (FunctionDeclaration)program.Statements[0];
-        Assert.AreEqual("test", func.Name);
-        Assert.AreEqual("int", func.ReturnType);
+        Assert.That(func.Name, Is.EqualTo("test"));
+        Assert.That(func.ReturnType, Is.EqualTo("int"));
     }
 
     [Test]
@@ -69,14 +69,14 @@ function test() -> int {
         var parser = new CadenzaParser(tokens);
         var program = parser.Parse();
         
-        Assert.IsNotNull(program);
-        Assert.Greater(program.Statements.Count, 0);
+        Assert.That(program, Is.Not.Null);
+        Assert.That(program.Statements.Count, Is.GreaterThan(0));
         
         var func = (FunctionDeclaration)program.Statements[0];
-        Assert.AreEqual("test", func.Name);
+        Assert.That(func.Name, Is.EqualTo("test"));
         
         // Should have parsed successfully without errors
-        Assert.AreEqual(2, func.Body.Count); // let and return statements
+        Assert.That(func.Body.Count, Is.EqualTo(2)); // let and return statements
     }
 
     [Test]
@@ -92,11 +92,11 @@ function test() -> int {
         var generator = new CSharpGenerator();
         var syntaxTree = generator.GenerateFromAST(program);
         
-        Assert.IsNotNull(syntaxTree);
+        Assert.That(syntaxTree, Is.Not.Null);
         var csharpCode = syntaxTree.ToString();
         
         // Should contain the generated function
-        Assert.IsTrue(csharpCode.Contains("int test()"));
-        Assert.IsTrue(csharpCode.Contains("return 42;"));
+        Assert.That(csharpCode.Contains("int test()"), Is.True);
+        Assert.That(csharpCode.Contains("return 42;"), Is.True);
     }
 }

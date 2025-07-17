@@ -1,8 +1,10 @@
 using System;
 using System.IO;
-using Cadenza.Compiler;
+using Cadenza.Core;
 
-class Program
+namespace Cadenza.Tests.Manual;
+
+class TestParserProgram
 {
     static void Main(string[] args)
     {

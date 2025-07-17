@@ -1,6 +1,3 @@
-#:package Microsoft.CodeAnalysis@4.5.0
-#:package Microsoft.CodeAnalysis.CSharp@4.5.0
-
 using System;
 using System.IO;
 using System.Net;

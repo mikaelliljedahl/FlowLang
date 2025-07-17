@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using Cadenza.Core;
 
 namespace Cadenza.Tests.Regression
 {
@@ -27,6 +28,24 @@ namespace Cadenza.Tests.Regression
             }
         }
 
+        /// <summary>
+        /// Helper method to transpile code directly using the existing components
+        /// </summary>
+        private string TranspileCodeDirectly(string cadenzaCode)
+        {
+            // Use the existing components directly
+            var lexer = new CadenzaLexer(cadenzaCode);
+            var tokens = lexer.ScanTokens();
+            
+            var parser = new CadenzaParser(tokens);
+            var ast = parser.Parse();
+            
+            var generator = new CSharpGenerator();
+            var syntaxTree = generator.GenerateFromAST(ast);
+            
+            return syntaxTree.GetRoot().ToFullString();
+        }
+
         [Test]
         public void Regression_PreventBreakingChanges()
         {
@@ -38,7 +57,7 @@ namespace Cadenza.Tests.Regression
             {
                 try
                 {
-                    var actual = _transpiler.TranspileToCS(testCase.Input);
+                    var actual = TranspileCodeDirectly(testCase.Input);
                     
                     // Verify the output still compiles and contains expected patterns
                     if (!VerifyOutputIntegrity(actual, testCase))
@@ -101,7 +120,7 @@ namespace Cadenza.Tests.Regression
 
             foreach (var testCase in testCases)
             {
-                var actual = _transpiler.TranspileToCS(testCase.Input);
+                var actual = TranspileCodeDirectly(testCase.Input);
                 
                 foreach (var pattern in testCase.ExpectedPatterns)
                 {
@@ -125,7 +144,7 @@ namespace Cadenza.Tests.Regression
 
             foreach (var errorCase in errorCases)
             {
-                Assert.Throws<Exception>(() => _transpiler.TranspileToCS(errorCase.Input), 
+                Assert.Throws<Exception>(() => TranspileCodeDirectly(errorCase.Input), 
                     $"Expected error for input: {errorCase.Input}");
             }
         }
@@ -141,7 +160,7 @@ namespace Cadenza.Tests.Regression
             for (int i = 0; i < iterations; i++)
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                _transpiler.TranspileToCS(largeInput);
+                TranspileCodeDirectly(largeInput);
                 stopwatch.Stop();
                 times.Add(stopwatch.ElapsedMilliseconds);
             }
@@ -170,7 +189,7 @@ namespace Cadenza.Tests.Regression
 
             foreach (var input in testInputs)
             {
-                var output = _transpiler.TranspileToCS(input);
+                var output = TranspileCodeDirectly(input);
                 ValidateGeneratedCodeCompiles(output);
             }
         }
@@ -190,7 +209,7 @@ namespace Cadenza.Tests.Regression
             {
                 try
                 {
-                    testCase.Output = _transpiler.TranspileToCS(testCase.Input);
+                    testCase.Output = TranspileCodeDirectly(testCase.Input);
                     testCase.Timestamp = DateTime.UtcNow;
                     SaveRegressionTestCase(testCase);
                 }

@@ -1,5 +1,7 @@
 using System;
 
+namespace Cadenza.Tests.Manual;
+
 // Manual test to demonstrate the C# code that Cadenza string features would generate
 
 public class ManualStringTest

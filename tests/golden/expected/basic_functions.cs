@@ -1,3 +1,10 @@
+using System;
+
+namespace Cadenza.Golden.BasicFunctions
+{
+
+public static class CadenzaProgram
+{
 /// <summary>
 /// </summary>
 /// <param name="a">Parameter of type int</param>
@@ -25,4 +32,8 @@ public static int multiply(int x, int y)
 public static bool is_positive(int n)
 {
     return n > 0;
+}
+
+}
+
 }

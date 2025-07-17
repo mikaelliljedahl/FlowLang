@@ -42,8 +42,8 @@ Cadenza Source → Lexer → Parser → AST → Code Generator → C# Code
 // Main transpiler class
 public class CadenzaTranspiler
 {
-    public string TranspileToCS(string flowLangSource)
-    public async Task TranspileAsync(string inputPath, string? outputPath = null)
+    public string TranspileFromSource(string cadenzaSource)
+    public async Task<string> TranspileAsync(string sourceFile, string? outputFile = null)
 }
 
 // Core pipeline components
@@ -61,10 +61,10 @@ The main entry point for transpilation operations.
 ```csharp
 public class CadenzaTranspiler
 {
-    public string TranspileToCS(string flowLangSource)
+    public string TranspileFromSource(string cadenzaSource)
     {
-        var lexer = new CadenzaLexer(flowLangSource);
-        var tokens = lexer.Tokenize();
+        var lexer = new CadenzaLexer(cadenzaSource);
+        var tokens = lexer.ScanTokens();
         
         var parser = new CadenzaParser(tokens);
         var ast = parser.Parse();
@@ -75,18 +75,12 @@ public class CadenzaTranspiler
         return syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
     }
     
-    public async Task TranspileAsync(string inputPath, string? outputPath = null)
+    public async Task<string> TranspileAsync(string sourceFile, string? outputFile = null)
     {
-        if (!File.Exists(inputPath))
-            throw new FileNotFoundException($"Input file not found: {inputPath}");
-
-        var flowLangSource = await File.ReadAllTextAsync(inputPath);
-        var csharpCode = TranspileToCS(flowLangSource);
-
-        if (outputPath == null)
-            outputPath = Path.ChangeExtension(inputPath, ".cs");
-
-        await File.WriteAllTextAsync(outputPath, csharpCode);
+        // ... (implementation details)
+        // This method orchestrates reading the source, lexing, parsing, and generating C#.
+        // It also handles writing the output to a file if specified.
+        throw new NotImplementedException(); // Simplified for documentation
     }
 }
 ```
@@ -132,7 +126,7 @@ public enum TokenType
 ### Token Record
 
 ```csharp
-public record Token(TokenType Type, string Value, int Line, int Column);
+public record Token(TokenType Type, string Lexeme, object? Literal, int Line, int Column);
 ```
 
 ### CadenzaLexer Class
@@ -141,58 +135,29 @@ public record Token(TokenType Type, string Value, int Line, int Column);
 public class CadenzaLexer
 {
     private readonly string _source;
-    private int _position = 0;
+    private readonly List<Token> _tokens = new();
+    private int _start = 0;
+    private int _current = 0;
     private int _line = 1;
     private int _column = 1;
-    private readonly Dictionary<string, TokenType> _keywords;
+
+    // Keywords dictionary would be initialized here
 
     public CadenzaLexer(string source)
     {
         _source = source;
-        // Initialize keyword dictionary
     }
 
-    public List<Token> Tokenize()
+    public List<Token> ScanTokens()
     {
-        var tokens = new List<Token>();
-        
-        while (!IsAtEnd())
-        {
-            var token = NextToken();
-            if (token != null)
-                tokens.Add(token);
-        }
-        
-        tokens.Add(new Token(TokenType.EOF, "", _line, _column));
-        return tokens;
+        // ... (implementation details)
+        // This method scans the source code and populates the _tokens list.
+        // It handles whitespace, comments, string literals, numbers, and identifiers.
+        throw new NotImplementedException(); // Simplified for documentation
     }
 
-    private Token? NextToken()
-    {
-        SkipWhitespace();
-        
-        if (IsAtEnd()) return null;
-        
-        var startLine = _line;
-        var startColumn = _column;
-        var c = Advance();
-
-        return c switch
-        {
-            '(' => new Token(TokenType.LeftParen, "(", startLine, startColumn),
-            ')' => new Token(TokenType.RightParen, ")", startLine, startColumn),
-            // ... other character mappings
-            _ when char.IsDigit(c) => ReadNumber(c, startLine, startColumn),
-            _ when char.IsLetter(c) || c == '_' => ReadIdentifier(c, startLine, startColumn),
-            _ => throw new Exception($"Unexpected character '{c}' at line {startLine}, column {startColumn}")
-        };
-    }
-
-    // Helper methods for tokenization
-    private Token ReadNumber(char firstChar, int line, int column) { /* ... */ }
-    private Token ReadString(int line, int column) { /* ... */ }
-    private Token ReadStringInterpolation(int line, int column) { /* ... */ }
-    private Token ReadIdentifier(char firstChar, int line, int column) { /* ... */ }
+    // Private helper methods like IsAtEnd(), Advance(), Match(), Peek(), etc.
+    // ...
 }
 ```
 
@@ -252,7 +217,7 @@ public class CadenzaParser
 
     // Parsing methods for different constructs
     private FunctionDeclaration ParseFunctionDeclaration() { /* ... */ }
-    private EffectAnnotation ParseEffectAnnotation() { /* ... */ }
+    private List<string> ParseEffectsList() { /* ... */ }
     private IfStatement ParseIfStatement() { /* ... */ }
     private GuardStatement ParseGuardStatement() { /* ... */ }
     private ModuleDeclaration ParseModuleDeclaration() { /* ... */ }
@@ -315,7 +280,7 @@ public abstract record ASTNode;
 ### Program and Top-level Nodes
 
 ```csharp
-public record Program(List<ASTNode> Statements) : ASTNode;
+public record ProgramNode(List<ASTNode> Statements) : ASTNode;
 
 // Module system AST nodes
 public record ModuleDeclaration(string Name, List<ASTNode> Body, List<string>? Exports = null) : ASTNode;
@@ -330,10 +295,12 @@ public record QualifiedName(string ModuleName, string Name) : ASTNode;
 public record FunctionDeclaration(
     string Name, 
     List<Parameter> Parameters, 
-    string ReturnType, 
+    string? ReturnType, 
     List<ASTNode> Body, 
-    EffectAnnotation? Effects = null, 
-    bool IsPure = false
+    bool IsPure = false,
+    List<string>? Effects = null,
+    bool IsExported = false,
+    SpecificationBlock? Specification = null
 ) : ASTNode;
 
 public record Parameter(string Name, string Type);
@@ -464,49 +431,21 @@ public class CSharpGenerator
             LetStatement let => GenerateLetStatement(let),
             IfStatement ifStmt => GenerateIfStatement(ifStmt),
             GuardStatement guardStmt => GenerateGuardStatement(guardStmt),
-            _ => throw new NotImplementedException($"Statement type {node.GetType().Name} not implemented")
+            _ => ExpressionStatement(GenerateExpression(node)) // Simplified for documentation
         };
     }
 
-    private StatementSyntax GenerateLetStatement(LetStatement let)
+    private LocalDeclarationStatementSyntax GenerateLetStatement(LetStatement letStmt)
     {
-        if (let.Expression is ErrorPropagationExpression errorProp)
-        {
-            // Generate error propagation handling
-            var tempVarName = $"{let.Name}_result";
-            var tempVarDeclaration = LocalDeclarationStatement(
-                VariableDeclaration(IdentifierName("var"))
-                    .WithVariables(SingletonSeparatedList(
-                        VariableDeclarator(tempVarName)
-                            .WithInitializer(EqualsValueClause(GenerateExpression(errorProp.Expression))))));
-            
-            var errorCheck = IfStatement(
-                MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    IdentifierName(tempVarName),
-                    IdentifierName("IsError")),
-                ReturnStatement(IdentifierName(tempVarName)));
-            
-            var valueExtraction = LocalDeclarationStatement(
-                VariableDeclaration(IdentifierName("var"))
-                    .WithVariables(SingletonSeparatedList(
-                        VariableDeclarator(let.Name)
-                            .WithInitializer(EqualsValueClause(
-                                MemberAccessExpression(
-                                    SyntaxKind.SimpleMemberAccessExpression,
-                                    IdentifierName(tempVarName),
-                                    IdentifierName("Value")))))));
-            
-            return Block(tempVarDeclaration, errorCheck, valueExtraction);
-        }
-        else
-        {
-            return LocalDeclarationStatement(
-                VariableDeclaration(IdentifierName("var"))
-                    .WithVariables(SingletonSeparatedList(
-                        VariableDeclarator(let.Name)
-                            .WithInitializer(EqualsValueClause(GenerateExpression(let.Expression))))));
-        }
+        var type = letStmt.Type != null ? ParseTypeName(letStmt.Type) : IdentifierName("var");
+        
+        var declarator = VariableDeclarator(Identifier(letStmt.Name))
+            .WithInitializer(EqualsValueClause(GenerateExpression(letStmt.Expression)));
+        
+        var declaration = VariableDeclaration(type)
+            .AddVariables(declarator);
+        
+        return LocalDeclarationStatement(declaration);
     }
 }
 ```

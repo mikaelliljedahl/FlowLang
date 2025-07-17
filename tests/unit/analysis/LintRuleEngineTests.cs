@@ -1,31 +1,33 @@
+using Cadenza.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cadenza.Analysis;
-using Xunit;
+using NUnit.Framework;
 
 namespace Cadenza.Tests.Unit.Analysis;
 
+[TestFixture]
 public class LintRuleEngineTests
 {
-    [Fact]
+    [Test]
     public void CreateDefaultConfiguration_ShouldHaveAllStandardRules()
     {
         // Arrange & Act
         var config = LintConfiguration.CreateDefaultConfiguration();
 
         // Assert
-        Assert.NotEmpty(config.Rules);
+        Assert.That(config.Rules, Is.Not.Null);
         
         // Check for key rule categories
-        Assert.True(config.Rules.ContainsKey("effect-completeness"));
-        Assert.True(config.Rules.ContainsKey("unused-results"));
-        Assert.True(config.Rules.ContainsKey("dead-code"));
-        Assert.True(config.Rules.ContainsKey("string-concatenation"));
-        Assert.True(config.Rules.ContainsKey("input-validation"));
+        Assert.That(config.Rules.ContainsKey("effect-completeness"), Is.True);
+        Assert.That(config.Rules.ContainsKey("unused-results"), Is.True);
+        Assert.That(config.Rules.ContainsKey("dead-code"), Is.True);
+        Assert.That(config.Rules.ContainsKey("string-concatenation"), Is.True);
+        Assert.That(config.Rules.ContainsKey("input-validation"), Is.True);
     }
 
-    [Fact]
+    [Test]
     public void LintConfiguration_ShouldRespectSeverityThreshold()
     {
         // Arrange
@@ -41,12 +43,12 @@ public class LintRuleEngineTests
         };
 
         // Act & Assert
-        Assert.True(config.IsRuleEnabled("test-error"));
-        Assert.True(config.IsRuleEnabled("test-warning"));
-        Assert.False(config.IsRuleEnabled("test-info"));
+        Assert.That(config.IsRuleEnabled("test-error"), Is.True);
+        Assert.That(config.IsRuleEnabled("test-warning"), Is.True);
+        Assert.That(config.IsRuleEnabled("test-info"), Is.False);
     }
 
-    [Fact]
+    [Test]
     public void LintConfiguration_ShouldExcludeFilesByPattern()
     {
         // Arrange
@@ -56,13 +58,13 @@ public class LintRuleEngineTests
         };
 
         // Act & Assert
-        Assert.True(config.ShouldExcludeFile("generated/auto.cdz"));
-        Assert.True(config.ShouldExcludeFile("example.test.cdz"));
-        Assert.True(config.ShouldExcludeFile("temp_output.cdz"));
-        Assert.False(config.ShouldExcludeFile("src/main.cdz"));
+        Assert.That(config.ShouldExcludeFile("generated/auto.cdz"), Is.True);
+        Assert.That(config.ShouldExcludeFile("example.test.cdz"), Is.True);
+        Assert.That(config.ShouldExcludeFile("temp_output.cdz"), Is.True);
+        Assert.That(config.ShouldExcludeFile("src/main.cdz"), Is.False);
     }
 
-    [Fact]
+    [Test]
     public void LintRule_ShouldGetParameterValues()
     {
         // Arrange
@@ -83,13 +85,13 @@ public class LintRuleEngineTests
         rule.SetConfiguration(config);
 
         // Act & Assert
-        Assert.Equal(100, rule.GetTestParameter("maxLength", 50));
-        Assert.True(rule.GetTestParameter("enabled", false));
-        Assert.Equal("test-*", rule.GetTestParameter("pattern", "default"));
-        Assert.Equal(42, rule.GetTestParameter("missing", 42));
+        Assert.That(rule.GetTestParameter("maxLength", 50), Is.EqualTo(100));
+        Assert.That(rule.GetTestParameter("enabled", false), Is.True);
+        Assert.That(rule.GetTestParameter("pattern", "default"), Is.EqualTo("test-*"));
+        Assert.That(rule.GetTestParameter("missing", 42), Is.EqualTo(42));
     }
 
-    [Fact]
+    [Test]
     public void AnalysisReport_ShouldAggregateMetricsCorrectly()
     {
         // Arrange
@@ -109,16 +111,16 @@ public class LintRuleEngineTests
             new SourceLocation("test.cdz", 3, 1), "test"));
 
         // Assert
-        Assert.Equal(3, report.Metrics.TotalIssues);
-        Assert.Equal(2, report.Metrics.Errors);
-        Assert.Equal(1, report.Metrics.Warnings);
-        Assert.Equal(0, report.Metrics.Infos);
+        Assert.That(report.Metrics.TotalIssues, Is.EqualTo(3));
+        Assert.That(report.Metrics.Errors, Is.EqualTo(2));
+        Assert.That(report.Metrics.Warnings, Is.EqualTo(1));
+        Assert.That(report.Metrics.Infos, Is.EqualTo(0));
         
-        Assert.Equal(2, report.RuleCounts["test-rule-1"]);
-        Assert.Equal(1, report.RuleCounts["test-rule-2"]);
+        Assert.That(report.RuleCounts["test-rule-1"], Is.EqualTo(2));
+        Assert.That(report.RuleCounts["test-rule-2"], Is.EqualTo(1));
     }
 
-    [Fact]
+    [Test]
     public void AnalysisReport_ShouldFilterDiagnosticsByCategory()
     {
         // Arrange
@@ -138,40 +140,42 @@ public class LintRuleEngineTests
         var category2Diagnostics = report.GetDiagnosticsByCategory("category2").ToList();
 
         // Assert
-        Assert.Equal(2, category1Diagnostics.Count);
-        Assert.Equal(1, category2Diagnostics.Count);
-        Assert.All(category1Diagnostics, d => Assert.Equal("category1", d.Category));
-        Assert.All(category2Diagnostics, d => Assert.Equal("category2", d.Category));
+        Assert.That(category1Diagnostics.Count, Is.EqualTo(2));
+        Assert.That(category2Diagnostics.Count, Is.EqualTo(1));
+        foreach (var d in category1Diagnostics)
+            Assert.That(d.Category, Is.EqualTo("category1"));
+        foreach (var d in category2Diagnostics)
+            Assert.That(d.Category, Is.EqualTo("category2"));
     }
 
-    [Fact]
+    [Test]
     public void AnalysisReport_ShouldDeterminePassingResult()
     {
         // Arrange
         var report = new AnalysisReport();
 
         // Act & Assert - Empty report should pass
-        Assert.True(report.HasPassingResult(DiagnosticSeverity.Error));
-        Assert.True(report.HasPassingResult(DiagnosticSeverity.Warning));
+        Assert.That(report.HasPassingResult(DiagnosticSeverity.Error), Is.True);
+        Assert.That(report.HasPassingResult(DiagnosticSeverity.Warning), Is.True);
 
         // Add warning
         report.AddDiagnostic(new AnalysisDiagnostic(
             "rule", "Warning", DiagnosticSeverity.Warning,
             new SourceLocation("test.cdz", 1, 1), "test"));
 
-        Assert.True(report.HasPassingResult(DiagnosticSeverity.Error));
-        Assert.False(report.HasPassingResult(DiagnosticSeverity.Warning));
+        Assert.That(report.HasPassingResult(DiagnosticSeverity.Error), Is.False);
+        Assert.That(report.HasPassingResult(DiagnosticSeverity.Warning), Is.True);
 
         // Add error
         report.AddDiagnostic(new AnalysisDiagnostic(
             "rule", "Error", DiagnosticSeverity.Error,
             new SourceLocation("test.cdz", 2, 1), "test"));
 
-        Assert.False(report.HasPassingResult(DiagnosticSeverity.Error));
-        Assert.False(report.HasPassingResult(DiagnosticSeverity.Warning));
+        Assert.That(report.HasPassingResult(DiagnosticSeverity.Error), Is.False);
+        Assert.That(report.HasPassingResult(DiagnosticSeverity.Warning), Is.True);
     }
 
-    [Fact]
+    [Test]
     public void LintRuleEngine_ShouldRegisterAndRunRules()
     {
         // Arrange
@@ -192,14 +196,14 @@ public class LintRuleEngineTests
         var report = engine.AnalyzeFile("test.cdz", "function test() -> int { return 42 }", ast);
 
         // Assert
-        Assert.Equal(1, report.FilesAnalyzed);
-        Assert.Single(report.Diagnostics);
-        Assert.Equal("test-rule", report.Diagnostics[0].RuleId);
+        Assert.That(report.FilesAnalyzed, Is.EqualTo(1));
+        Assert.That(report.Diagnostics.Count, Is.EqualTo(1));
+        Assert.That(report.Diagnostics[0].RuleId, Is.EqualTo("test-rule"));
     }
 
-    private Program CreateTestProgram()
+    private ProgramNode CreateTestProgram()
     {
-        return new Program(new List<ASTNode>
+        return new ProgramNode(new List<ASTNode>
         {
             new FunctionDeclaration(
                 "test",
@@ -220,7 +224,7 @@ public class LintRuleEngineTests
         public override string Description => "Test rule for unit tests";
         public override string Category => "test";
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             yield return CreateDiagnostic(
                 "Test diagnostic",

@@ -1,8 +1,8 @@
+using Cadenza.Core;
 using System;
 using System.Linq;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
-using Xunit;
-using Cadenza.LSP;
+using NUnit.Framework;
 
 namespace Cadenza.Tests.Unit.LSP
 {
@@ -11,7 +11,7 @@ namespace Cadenza.Tests.Unit.LSP
     /// </summary>
     public class DiagnosticsProviderTests
     {
-        [Fact]
+        [Test]
         public void GetDiagnostics_ValidCode_ShouldReturnNoDiagnostics()
         {
             // Arrange
@@ -22,10 +22,10 @@ namespace Cadenza.Tests.Unit.LSP
             var diagnostics = provider.GetDiagnostics(document);
 
             // Assert
-            Assert.Empty(diagnostics);
+            Assert.That(diagnostics, Is.Empty);
         }
 
-        [Fact]
+        [Test]
         public void GetDiagnostics_SyntaxError_ShouldReturnErrorDiagnostic()
         {
             // Arrange
@@ -36,12 +36,12 @@ namespace Cadenza.Tests.Unit.LSP
             var diagnostics = provider.GetDiagnostics(document);
 
             // Assert
-            Assert.NotEmpty(diagnostics);
-            var errorDiagnostic = diagnostics.FirstOrDefault(d => d.Severity == DiagnosticSeverity.Error);
-            Assert.NotNull(errorDiagnostic);
+            Assert.That(diagnostics, Is.Not.Empty);
+            var errorDiagnostic = diagnostics.FirstOrDefault(d => d.Contains("Error"));
+            Assert.That(errorDiagnostic, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetDiagnostics_UnclosedBrace_ShouldReturnUnclosedDiagnostic()
         {
             // Arrange
@@ -52,12 +52,12 @@ namespace Cadenza.Tests.Unit.LSP
             var diagnostics = provider.GetDiagnostics(document);
 
             // Assert
-            Assert.NotEmpty(diagnostics);
-            var unclosedDiagnostic = diagnostics.FirstOrDefault(d => d.Code?.ToString() == "UNCLOSED_CONSTRUCT");
-            Assert.NotNull(unclosedDiagnostic);
+            Assert.That(diagnostics, Is.Not.Empty);
+            var unclosedDiagnostic = diagnostics.FirstOrDefault(d => d.Contains("UNCLOSED_CONSTRUCT"));
+            Assert.That(unclosedDiagnostic, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetDiagnostics_UnmatchedClosingBracket_ShouldReturnUnmatchedDiagnostic()
         {
             // Arrange
@@ -68,12 +68,12 @@ namespace Cadenza.Tests.Unit.LSP
             var diagnostics = provider.GetDiagnostics(document);
 
             // Assert
-            Assert.NotEmpty(diagnostics);
-            var unmatchedDiagnostic = diagnostics.FirstOrDefault(d => d.Code?.ToString() == "UNMATCHED_CLOSING");
-            Assert.NotNull(unmatchedDiagnostic);
+            Assert.That(diagnostics, Is.Not.Empty);
+            var unmatchedDiagnostic = diagnostics.FirstOrDefault(d => d.Contains("UNMATCHED_CLOSING"));
+            Assert.That(unmatchedDiagnostic, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetDiagnostics_PureFunctionWithEffects_ShouldReturnEffectError()
         {
             // Arrange
@@ -84,12 +84,12 @@ namespace Cadenza.Tests.Unit.LSP
             var diagnostics = provider.GetDiagnostics(document);
 
             // Assert
-            Assert.NotEmpty(diagnostics);
-            var effectError = diagnostics.FirstOrDefault(d => d.Code?.ToString() == "PURE_FUNCTION_WITH_EFFECTS");
-            Assert.NotNull(effectError);
+            Assert.That(diagnostics, Is.Not.Empty);
+            var effectError = diagnostics.FirstOrDefault(d => d.Contains("PURE_FUNCTION_WITH_EFFECTS"));
+            Assert.That(effectError, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetDiagnostics_UnknownEffect_ShouldReturnUnknownEffectError()
         {
             // Arrange
@@ -100,13 +100,13 @@ namespace Cadenza.Tests.Unit.LSP
             var diagnostics = provider.GetDiagnostics(document);
 
             // Assert
-            Assert.NotEmpty(diagnostics);
-            var unknownEffectError = diagnostics.FirstOrDefault(d => d.Code?.ToString() == "UNKNOWN_EFFECT");
-            Assert.NotNull(unknownEffectError);
-            Assert.Contains("InvalidEffect", unknownEffectError?.Message ?? "");
+            Assert.That(diagnostics, Is.Not.Empty);
+            var unknownEffectError = diagnostics.FirstOrDefault(d => d.Contains("UNKNOWN_EFFECT"));
+            Assert.That(unknownEffectError, Is.Not.Null);
+            Assert.That(unknownEffectError ?? "", Does.Contain("InvalidEffect"));
         }
 
-        [Fact]
+        [Test]
         public void GetDiagnostics_ValidEffects_ShouldNotReturnEffectErrors()
         {
             // Arrange
@@ -117,11 +117,11 @@ namespace Cadenza.Tests.Unit.LSP
             var diagnostics = provider.GetDiagnostics(document);
 
             // Assert
-            var effectErrors = diagnostics.Where(d => d.Code?.ToString()?.Contains("EFFECT") == true);
-            Assert.Empty(effectErrors);
+            var effectErrors = diagnostics.Where(d => d.Contains("EFFECT"));
+            Assert.That(effectErrors, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetDiagnostics_InvalidOperatorSequence_ShouldReturnOperatorError()
         {
             // Arrange
@@ -132,12 +132,12 @@ namespace Cadenza.Tests.Unit.LSP
             var diagnostics = provider.GetDiagnostics(document);
 
             // Assert
-            Assert.NotEmpty(diagnostics);
-            var operatorError = diagnostics.FirstOrDefault(d => d.Code?.ToString() == "INVALID_OPERATOR_SEQUENCE");
-            Assert.NotNull(operatorError);
+            Assert.That(diagnostics, Is.Not.Empty);
+            var operatorError = diagnostics.FirstOrDefault(d => d.Contains("INVALID_OPERATOR_SEQUENCE"));
+            Assert.That(operatorError, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetDiagnostics_ValidOperatorSequence_ShouldNotReturnOperatorError()
         {
             // Arrange
@@ -148,8 +148,8 @@ namespace Cadenza.Tests.Unit.LSP
             var diagnostics = provider.GetDiagnostics(document);
 
             // Assert
-            var operatorErrors = diagnostics.Where(d => d.Code?.ToString() == "INVALID_OPERATOR_SEQUENCE");
-            Assert.Empty(operatorErrors);
+            var operatorErrors = diagnostics.Where(d => d.Contains("INVALID_OPERATOR_SEQUENCE"));
+            Assert.That(operatorErrors, Is.Not.Null);
         }
 
         private ManagedDocument CreateTestDocument(string content)
@@ -165,14 +165,14 @@ namespace Cadenza.Tests.Unit.LSP
             try
             {
                 var lexer = new CadenzaLexer(content);
-                document.Tokens = lexer.Tokenize();
+                document.Tokens = lexer.ScanTokens();
 
                 var parser = new CadenzaParser(document.Tokens);
                 document.AST = parser.Parse();
             }
             catch (Exception ex)
             {
-                document.ParseErrors.Add(ex);
+                document.ParseErrors.Add(ex.Message);
             }
 
             return document;

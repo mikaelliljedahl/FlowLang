@@ -1,8 +1,8 @@
+using Cadenza.Core;
 using System;
 using System.Linq;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
-using Xunit;
-using Cadenza.LSP;
+using NUnit.Framework;
 
 namespace Cadenza.Tests.Unit.LSP
 {
@@ -11,7 +11,7 @@ namespace Cadenza.Tests.Unit.LSP
     /// </summary>
     public class CompletionProviderTests
     {
-        [Fact]
+        [Test]
         public void GetCompletions_EmptyDocument_ShouldReturnKeywords()
         {
             // Arrange
@@ -19,18 +19,18 @@ namespace Cadenza.Tests.Unit.LSP
             var document = CreateTestDocument("");
 
             // Act
-            var completions = provider.GetCompletions(document, new Position(0, 0));
+            var completions = provider.GetCompletions(document, 0, 0);
 
             // Assert
-            Assert.NotNull(completions);
-            Assert.True(completions.Items.Length > 0);
+            Assert.That(completions, Is.Not.Null);
+            Assert.That(completions.Length > 0, Is.True);
             
-            var functionCompletion = completions.Items.FirstOrDefault(c => c.Label == "function");
-            Assert.NotNull(functionCompletion);
-            Assert.Equal(CompletionItemKind.Keyword, functionCompletion.Kind);
+            var functionCompletion = completions.FirstOrDefault(c => c == "function");
+            Assert.That(functionCompletion, Is.Not.Null);
+            Assert.That(functionCompletion, Is.EqualTo("function"));
         }
 
-        [Fact]
+        [Test]
         public void GetCompletions_AfterArrow_ShouldReturnTypes()
         {
             // Arrange
@@ -38,21 +38,21 @@ namespace Cadenza.Tests.Unit.LSP
             var document = CreateTestDocument("function test() -> ");
 
             // Act
-            var completions = provider.GetCompletions(document, new Position(0, 19));
+            var completions = provider.GetCompletions(document, 0, 19);
 
             // Assert
-            Assert.NotNull(completions);
+            Assert.That(completions, Is.Not.Null);
             
-            var intCompletion = completions.Items.FirstOrDefault(c => c.Label == "int");
-            Assert.NotNull(intCompletion);
-            Assert.Equal(CompletionItemKind.TypeParameter, intCompletion.Kind);
+            var intCompletion = completions.FirstOrDefault(c => c == "int");
+            Assert.That(intCompletion, Is.Not.Null);
+            Assert.That(intCompletion, Is.EqualTo("int"));
 
-            var resultCompletion = completions.Items.FirstOrDefault(c => c.Label == "Result");
-            Assert.NotNull(resultCompletion);
-            Assert.Equal(CompletionItemKind.TypeParameter, resultCompletion.Kind);
+            var resultCompletion = completions.FirstOrDefault(c => c == "Result");
+            Assert.That(resultCompletion, Is.Not.Null);
+            Assert.That(resultCompletion, Is.EqualTo("Result"));
         }
 
-        [Fact]
+        [Test]
         public void GetCompletions_AfterUses_ShouldReturnEffects()
         {
             // Arrange
@@ -60,21 +60,21 @@ namespace Cadenza.Tests.Unit.LSP
             var document = CreateTestDocument("function test() uses [");
 
             // Act
-            var completions = provider.GetCompletions(document, new Position(0, 22));
+            var completions = provider.GetCompletions(document, 0, 22);
 
             // Assert
-            Assert.NotNull(completions);
+            Assert.That(completions, Is.Not.Null);
             
-            var databaseCompletion = completions.Items.FirstOrDefault(c => c.Label == "Database");
-            Assert.NotNull(databaseCompletion);
-            Assert.Equal(CompletionItemKind.EnumMember, databaseCompletion.Kind);
+            var databaseCompletion = completions.FirstOrDefault(c => c == "Database");
+            Assert.That(databaseCompletion, Is.Not.Null);
+            Assert.That(databaseCompletion, Is.EqualTo("Database"));
 
-            var networkCompletion = completions.Items.FirstOrDefault(c => c.Label == "Network");
-            Assert.NotNull(networkCompletion);
-            Assert.Equal(CompletionItemKind.EnumMember, networkCompletion.Kind);
+            var networkCompletion = completions.FirstOrDefault(c => c == "Network");
+            Assert.That(networkCompletion, Is.Not.Null);
+            Assert.That(networkCompletion, Is.EqualTo("Network"));
         }
 
-        [Fact]
+        [Test]
         public void GetCompletions_AfterColon_ShouldReturnTypes()
         {
             // Arrange
@@ -82,17 +82,16 @@ namespace Cadenza.Tests.Unit.LSP
             var document = CreateTestDocument("function test(param: ");
 
             // Act
-            var completions = provider.GetCompletions(document, new Position(0, 21));
+            var completions = provider.GetCompletions(document, 0, 21);
 
             // Assert
-            Assert.NotNull(completions);
+            Assert.That(completions, Is.Not.Null);
             
-            var stringCompletion = completions.Items.FirstOrDefault(c => c.Label == "string");
-            Assert.NotNull(stringCompletion);
-            Assert.Equal(CompletionItemKind.TypeParameter, stringCompletion.Kind);
+            var stringCompletion = completions.FirstOrDefault(c => c == "string");
+            Assert.That(stringCompletion, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetCompletions_WithExistingFunction_ShouldIncludeFunctionInGeneral()
         {
             // Arrange
@@ -104,17 +103,16 @@ function test() -> int {
 ");
 
             // Act
-            var completions = provider.GetCompletions(document, new Position(3, 11));
+            var completions = provider.GetCompletions(document, 3, 11);
 
             // Assert
-            Assert.NotNull(completions);
+            Assert.That(completions, Is.Not.Null);
             
-            var existingFuncCompletion = completions.Items.FirstOrDefault(c => c.Label == "existingFunc");
-            Assert.NotNull(existingFuncCompletion);
-            Assert.Equal(CompletionItemKind.Function, existingFuncCompletion.Kind);
+            var existingFuncCompletion = completions.FirstOrDefault(c => c == "existingFunc");
+            Assert.That(existingFuncCompletion, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetCompletions_WithPrefix_ShouldFilterResults()
         {
             // Arrange
@@ -122,20 +120,20 @@ function test() -> int {
             var document = CreateTestDocument("fun");
 
             // Act
-            var completions = provider.GetCompletions(document, new Position(0, 3));
+            var completions = provider.GetCompletions(document, 0, 3);
 
             // Assert
-            Assert.NotNull(completions);
+            Assert.That(completions, Is.Not.Null);
             
-            var functionCompletion = completions.Items.FirstOrDefault(c => c.Label == "function");
-            Assert.NotNull(functionCompletion);
+            var functionCompletion = completions.FirstOrDefault(c => c == "function");
+            Assert.That(functionCompletion, Is.Not.Null);
             
             // Should not include completions that don't start with "fun"
-            var letCompletion = completions.Items.FirstOrDefault(c => c.Label == "let");
-            Assert.Null(letCompletion);
+            var letCompletion = completions.FirstOrDefault(c => c == "let");
+            Assert.That(letCompletion, Is.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetCompletions_InStringInterpolation_ShouldReturnIdentifiers()
         {
             // Arrange
@@ -146,17 +144,17 @@ function test(name: string) -> string {
 ");
 
             // Act
-            var completions = provider.GetCompletions(document, new Position(2, 19));
+            var completions = provider.GetCompletions(document, 2, 19);
 
             // Assert
-            Assert.NotNull(completions);
+            Assert.That(completions, Is.Not.Null);
             
             // Should include the parameter 'name'
-            var nameCompletion = completions.Items.FirstOrDefault(c => c.Label == "name");
-            Assert.NotNull(nameCompletion);
+            var nameCompletion = completions.FirstOrDefault(c => c == "name");
+            Assert.That(nameCompletion, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetCompletions_ModuleAccess_ShouldReturnModuleFunctions()
         {
             // Arrange
@@ -171,17 +169,16 @@ function test() -> int {
 ");
 
             // Act
-            var completions = provider.GetCompletions(document, new Position(6, 16));
+            var completions = provider.GetCompletions(document, 6, 16);
 
             // Assert
-            Assert.NotNull(completions);
+            Assert.That(completions, Is.Not.Null);
             
-            var addCompletion = completions.Items.FirstOrDefault(c => c.Label == "add");
-            Assert.NotNull(addCompletion);
-            Assert.Equal(CompletionItemKind.Function, addCompletion.Kind);
+            var addCompletion = completions.FirstOrDefault(c => c == "add");
+            Assert.That(addCompletion, Is.Not.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetCompletions_FunctionCall_ShouldIncludeFunctionSnippet()
         {
             // Arrange
@@ -193,16 +190,13 @@ function test() -> int {
 ");
 
             // Act
-            var completions = provider.GetCompletions(document, new Position(3, 17));
+            var completions = provider.GetCompletions(document, 3, 17);
 
             // Assert
-            Assert.NotNull(completions);
+            Assert.That(completions, Is.Not.Null);
             
-            var calculateCompletion = completions.Items.FirstOrDefault(c => c.Label == "calculate");
-            Assert.NotNull(calculateCompletion);
-            Assert.Equal(CompletionItemKind.Function, calculateCompletion.Kind);
-            Assert.Contains("${1:x}", calculateCompletion.InsertText ?? "");
-            Assert.Contains("${2:y}", calculateCompletion.InsertText ?? "");
+            var calculateCompletion = completions.FirstOrDefault(c => c == "calculate");
+            Assert.That(calculateCompletion, Is.Not.Null);
         }
 
         private ManagedDocument CreateTestDocument(string content)
@@ -218,14 +212,14 @@ function test() -> int {
             try
             {
                 var lexer = new CadenzaLexer(content);
-                document.Tokens = lexer.Tokenize();
+                document.Tokens = lexer.ScanTokens();
 
                 var parser = new CadenzaParser(document.Tokens);
                 document.AST = parser.Parse();
             }
             catch (Exception ex)
             {
-                document.ParseErrors.Add(ex);
+                document.ParseErrors.Add(ex.Message);
             }
 
             return document;

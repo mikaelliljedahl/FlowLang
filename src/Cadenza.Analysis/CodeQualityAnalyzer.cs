@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Cadenza.Core;
 
 namespace Cadenza.Analysis;
 
@@ -19,7 +20,7 @@ public class CodeQualityAnalyzer
         public override string Description => "Detect unused functions, variables, and imports";
         public override string Category => AnalysisCategories.CodeQuality;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new DeadCodeVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -36,7 +37,7 @@ public class CodeQualityAnalyzer
 
             public DeadCodeVisitor(string filePath, string sourceText) : base(filePath, sourceText) { }
 
-            public override void VisitProgram(Program program)
+            public override void VisitProgram(ProgramNode program)
             {
                 // First pass: collect declarations and imports
                 foreach (var stmt in program.Statements)
@@ -86,13 +87,16 @@ public class CodeQualityAnalyzer
             {
                 switch (node)
                 {
-                    case FunctionCall call:
+                    case CallExpression call:
                         _usedFunctions.Add(call.Name);
                         break;
 
-                    case QualifiedName qualified:
-                        _usedImports.Add(qualified.ModuleName);
-                        _usedFunctions.Add($"{qualified.ModuleName}.{qualified.Name}");
+                    case MemberAccessExpression qualified:
+                        if (qualified.Object is Identifier obj)
+                        {
+                            _usedImports.Add(obj.Name);
+                            _usedFunctions.Add($"{obj.Name}.{qualified.Member}");
+                        }
                         break;
 
                     case LetStatement let:
@@ -115,7 +119,7 @@ public class CodeQualityAnalyzer
                         AnalyzeStatementForUsage(binary.Right);
                         break;
 
-                    case ErrorPropagationExpression prop:
+                    case ErrorPropagation prop:
                         AnalyzeStatementForUsage(prop.Expression);
                         break;
                 }
@@ -164,7 +168,7 @@ public class CodeQualityAnalyzer
         public override string Description => "Detect code that can never be executed";
         public override string Category => AnalysisCategories.CodeQuality;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new UnreachableCodeVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -248,7 +252,7 @@ public class CodeQualityAnalyzer
         public override string Description => "Enforce consistent naming conventions";
         public override string Category => AnalysisCategories.CodeQuality;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new NamingConventionVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -361,7 +365,7 @@ public class CodeQualityAnalyzer
         public override string Description => "Ensure functions are not too complex";
         public override string Category => AnalysisCategories.CodeQuality;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new FunctionComplexityVisitor(filePath, sourceText, this);
             visitor.Visit(ast);
@@ -386,8 +390,8 @@ public class CodeQualityAnalyzer
 
             private void CheckFunctionComplexity(FunctionDeclaration func)
             {
-                var maxLines = _rule.GetParameter("maxLines", 50);
-                var maxParams = _rule.GetParameter("maxParams", 5);
+                var maxLines = 50;
+                var maxParams = 5;
 
                 // Check parameter count
                 if (func.Parameters.Count > maxParams)
@@ -496,7 +500,7 @@ public class CodeQualityAnalyzer
         public override string Description => "Detect variables that are declared but never used";
         public override string Category => AnalysisCategories.CodeQuality;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new UnusedVariablesVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -584,14 +588,14 @@ public class CodeQualityAnalyzer
                         AnalyzeExpressionForVariables(binary.Right);
                         break;
 
-                    case FunctionCall call:
+                    case CallExpression call:
                         foreach (var arg in call.Arguments)
                         {
                             AnalyzeExpressionForVariables(arg);
                         }
                         break;
 
-                    case ErrorPropagationExpression prop:
+                    case ErrorPropagation prop:
                         AnalyzeExpressionForVariables(prop.Expression);
                         break;
 

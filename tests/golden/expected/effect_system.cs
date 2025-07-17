@@ -1,3 +1,8 @@
+using System;
+
+namespace Cadenza.Golden.EffectSystem
+{
+
 public class Result<T, E>
 {
     public T Value { get; private set; }
@@ -23,6 +28,8 @@ public class Result<T, E>
     }
 }
 
+public static class CadenzaProgram
+{
 /// <summary>
 /// Effects: Database, Logging
 /// </summary>
@@ -35,7 +42,7 @@ public static Result<int, string> saveUser(string name, string email)
     if (userId_result.IsError)
         return userId_result;
     var userId = userId_result.Value;
-    return Result.Ok(userId);
+    return Result<int, string>.Ok(userId);
 }
 
 /// <summary>
@@ -45,7 +52,7 @@ public static Result<int, string> saveUser(string name, string email)
 /// <returns>Returns Result<string, string></returns>
 public static Result<string, string> fetchData(string url)
 {
-    return Result.Ok("data");
+    return Result<string, string>.Ok("data");
 }
 
 /// <summary>
@@ -59,7 +66,7 @@ public static Result<string, string> processFile(string path)
     if (content_result.IsError)
         return content_result;
     var content = content_result.Value;
-    return Result.Ok(content);
+    return Result<string, string>.Ok(content);
 }
 
 /// <summary>
@@ -71,4 +78,33 @@ public static Result<string, string> processFile(string path)
 public static int calculate(int x, int y)
 {
     return x + y * 2;
+}
+
+/// <summary>
+/// Helper function to generate an ID
+/// Effects: None (simplified for testing)
+/// </summary>
+/// <returns>Returns Result<int, string></returns>
+public static Result<int, string> generateId()
+{
+    return Result<int, string>.Ok(42); // Simplified for testing
+}
+
+/// <summary>
+/// Helper function to read a file
+/// Effects: FileSystem (simplified for testing)
+/// </summary>
+/// <param name="path">Parameter of type string</param>
+/// <returns>Returns Result<string, string></returns>
+public static Result<string, string> readFile(string path)
+{
+    if (string.IsNullOrEmpty(path))
+    {
+        return Result<string, string>.Error("Invalid file path");
+    }
+    return Result<string, string>.Ok($"contents of {path}");
+}
+
+}
+
 }

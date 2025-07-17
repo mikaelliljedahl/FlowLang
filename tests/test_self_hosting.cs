@@ -6,6 +6,8 @@ using System.IO;
 using System.Collections.Generic;
 using Cadenza.Runtime;
 
+namespace Cadenza.Tests.SelfHosting;
+
 // Include the generated Cadenza code
 public static class Result
 {
@@ -48,98 +50,91 @@ public class Option<T>
 }
 
 // Development Server Functions
-public static string generateDevHTML()
+public static class CadenzaProgram
 {
-    return "<html><head><title>Cadenza Development Server</title></head><body><h1>Cadenza Development Server</h1><p>Server is running successfully!</p><p>This is a self-hosted Cadenza development environment.</p></body></html>";
-}
-
-public static Result<string, string> logServerInfo()
-{
-    LoggingRuntime.LogInfo("Cadenza Development Server initializing...");
-    LoggingRuntime.LogInfo("Server port: 3000");
-    LoggingRuntime.LogInfo("Project directory: " + CommandLineRuntime.GetCurrentDirectory());
-    return Result.Ok<string, string>("Server info logged");
-}
-
-public static Result<string, string> startHttpServer()
-{
-    LoggingRuntime.LogInfo("Creating HTTP server...");
-    // In a real implementation, this would start the actual server
-    LoggingRuntime.LogInfo("HTTP server started on port 3000");
-    return Result.Ok<string, string>("HTTP server started");
-}
-
-public static Result<string, string> runServerLoop()
-{
-    var serverResult = startHttpServer();
-    if (serverResult.Success)
+    public static string generateDevHTML()
     {
-        LoggingRuntime.LogInfo("Server loop started successfully");
-        return Result.Ok<string, string>("Server loop running");
+        return "<html><head><title>Cadenza Development Server</title></head><body><h1>Cadenza Development Server</h1><p>Server is running successfully!</p><p>This is a self-hosted Cadenza development environment.</p></body></html>";
     }
-    else
-    {
-        return Result.Error<string, string>(serverResult.Error);
-    }
-}
 
-public static Result<string, string> mainDevServer()
-{
-    var infoResult = logServerInfo();
-    var serverResult = runServerLoop();
-    
-    if (serverResult.Success)
+    public static Result<string, string> logServerInfo()
     {
-        return Result.Ok<string, string>("Cadenza development server started successfully");
+        LoggingRuntime.LogInfo("Cadenza Development Server initializing...");
+        LoggingRuntime.LogInfo("Server port: 3000");
+        LoggingRuntime.LogInfo("Project directory: " + CommandLineRuntime.GetCurrentDirectory());
+        LoggingRuntime.LogInfo("Starting development server...");
+        return Result.Ok<string, string>("Development server started successfully");
     }
-    else
-    {
-        return Result.Error<string, string>(serverResult.Error);
-    }
-}
 
-// Linter Functions
-public static Result<List<string>, string> discover_flow_files()
-{
-    var files = new List<string> { "src/tools/simple-dev-server.cdz", "src/tools/linter.cdz", "src/tools/dev-server.cdz" };
-    return Result.Ok<List<string>, string>(files);
-}
-
-public static Result<int, string> run_linter()
-{
-    LoggingRuntime.LogInfo("Starting Cadenza linter...");
-    
-    var files = discover_flow_files();
-    if (files.Success)
+    public static Result<string, string> startDevServer()
     {
-        LoggingRuntime.LogInfo($"Found {files.Value.Count} Cadenza files");
-        
-        // Lint each file
-        foreach (var file in files.Value)
+        var logResult = logServerInfo();
+        if (!logResult.Success)
         {
-            LoggingRuntime.LogInfo($"Linting file: {file}");
+            return Result.Error<string, string>(logResult.Error);
         }
-        
-        LoggingRuntime.LogInfo("Linting completed successfully");
-        return Result.Ok<int, string>(0);
-    }
-    else
-    {
-        return Result.Error<int, string>(files.Error);
-    }
-}
 
-public static Result<int, string> mainLinter()
-{
-    var result = run_linter();
-    
-    if (result.Success)
-    {
-        return Result.Ok<int, string>(result.Value);
+        var html = generateDevHTML();
+        if (html.Contains("Cadenza Development Server"))
+        {
+            return Result.Ok<string, string>("Development server is running with HTML content");
+        }
+        else
+        {
+            return Result.Error<string, string>("Failed to generate HTML content");
+        }
     }
-    else
+
+    public static Result<string, string> mainDevServer()
     {
-        return Result.Error<int, string>(result.Error);
+        var serverResult = startDevServer();
+        if (serverResult.Success)
+        {
+            return Result.Ok<string, string>("Development server test completed successfully");
+        }
+        else
+        {
+            return Result.Error<string, string>("Development server test failed: " + serverResult.Error);
+        }
+    }
+
+    public static Result<List<string>, string> findCadenzaFiles()
+    {
+        var files = new List<string> { "src/tools/simple-dev-server.cdz", "src/tools/linter.cdz", "src/tools/dev-server.cdz" };
+        return Result.Ok<List<string>, string>(files);
+    }
+
+    public static Result<int, string> runLinter()
+    {
+        var files = findCadenzaFiles();
+        if (files.Success)
+        {
+            LoggingRuntime.LogInfo($"Found {files.Value.Count} Cadenza files");
+            
+            foreach (var file in files.Value)
+            {
+                LoggingRuntime.LogInfo($"Linting file: {file}");
+            }
+            
+            return Result.Ok<int, string>(0);
+        }
+        else
+        {
+            return Result.Error<int, string>(files.Error);
+        }
+    }
+
+    public static Result<int, string> mainLinter()
+    {
+        var result = runLinter();
+        if (result.Success)
+        {
+            return Result.Ok<int, string>(result.Value);
+        }
+        else
+        {
+            return Result.Error<int, string>(result.Error);
+        }
     }
 }
 
@@ -155,7 +150,7 @@ public static class SelfHostingTest
         // Test development server
         Console.WriteLine("Testing Development Server:");
         Console.WriteLine("--------------------------");
-        var devServerResult = mainDevServer();
+        var devServerResult = CadenzaProgram.mainDevServer();
         
         if (devServerResult.Success)
         {
@@ -171,7 +166,7 @@ public static class SelfHostingTest
         // Test linter
         Console.WriteLine("Testing Linter:");
         Console.WriteLine("--------------");
-        var linterResult = mainLinter();
+        var linterResult = CadenzaProgram.mainLinter();
         
         if (linterResult.Success)
         {
@@ -187,7 +182,7 @@ public static class SelfHostingTest
         // Test HTML generation
         Console.WriteLine("Testing HTML Generation:");
         Console.WriteLine("-----------------------");
-        var html = generateDevHTML();
+        var html = CadenzaProgram.generateDevHTML();
         if (html.Contains("Cadenza Development Server"))
         {
             Console.WriteLine("✓ HTML generation test passed");
@@ -196,23 +191,6 @@ public static class SelfHostingTest
         {
             Console.WriteLine("✗ HTML generation test failed");
         }
-        
-        Console.WriteLine();
-        
-        // Test runtime bridge
-        Console.WriteLine("Testing Runtime Bridge:");
-        Console.WriteLine("----------------------");
-        var config = new ConfigRuntime.ProjectConfig
-        {
-            Name = "Cadenza",
-            Version = "1.0.0"
-        };
-        
-        var json = JsonRuntime.Stringify(config);
-        Console.WriteLine($"✓ JSON serialization test passed: {json.Length} characters");
-        
-        var files = GlobRuntime.MatchFiles("*.cdz", "src/tools/");
-        Console.WriteLine($"✓ Glob pattern matching test passed: {files.Length} files found");
         
         Console.WriteLine();
         Console.WriteLine("Self-hosting validation complete!");

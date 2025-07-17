@@ -1,8 +1,8 @@
+using Cadenza.Core;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cadenza.Core;
 
 namespace Cadenza.Tests.Unit
 {
@@ -242,7 +242,7 @@ namespace Cadenza.Tests.Unit
             _lexer = new CadenzaLexer(source);
 
             // Act & Assert
-            Assert.Throws<Exception>(() => _lexer.Tokenize());
+            Assert.Throws<Exception>(() => _lexer.ScanTokens());
         }
 
         [Test]
@@ -253,7 +253,7 @@ namespace Cadenza.Tests.Unit
             _lexer = new CadenzaLexer(source);
 
             // Act & Assert
-            Assert.Throws<Exception>(() => _lexer.Tokenize());
+            Assert.Throws<Exception>(() => _lexer.ScanTokens());
         }
 
         [Test]
@@ -351,8 +351,8 @@ namespace Cadenza.Tests.Unit
             var nonEOFTokens = tokens.Where(t => t.Type != TokenType.EOF).ToList();
             Assert.That(nonEOFTokens.Count, Is.GreaterThan(12)); // function, test, (, ), ->, int, {, let, x, =, 42, return, x, }
             Assert.That(nonEOFTokens[0].Type, Is.EqualTo(TokenType.Function));
-            Assert.IsTrue(nonEOFTokens.Any(t => t.Type == TokenType.Let));
-            Assert.IsTrue(nonEOFTokens.Any(t => t.Type == TokenType.RightBrace));
+            Assert.That(nonEOFTokens.Any(t => t.Type == TokenType.Let));
+            Assert.That(nonEOFTokens.Any(t => t.Type == TokenType.RightBrace));
         }
 
         [Test]
@@ -488,7 +488,7 @@ namespace Cadenza.Tests.Unit
             _lexer = new CadenzaLexer(source);
 
             // Act & Assert
-            Assert.Throws<Exception>(() => _lexer.Tokenize());
+            Assert.Throws<Exception>(() => _lexer.ScanTokens());
         }
 
         [Test]

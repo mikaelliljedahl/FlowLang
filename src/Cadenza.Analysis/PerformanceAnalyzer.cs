@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cadenza.Core;
 
 namespace Cadenza.Analysis;
 
@@ -18,7 +19,7 @@ public class PerformanceAnalyzer
         public override string Description => "Suggest StringBuilder for multiple string concatenations";
         public override string Category => AnalysisCategories.Performance;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new StringConcatenationVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -124,7 +125,7 @@ public class PerformanceAnalyzer
         public override string Description => "Detect inefficient effect usage patterns";
         public override string Category => AnalysisCategories.Performance;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new InefficientEffectVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -149,7 +150,7 @@ public class PerformanceAnalyzer
 
             private void CheckForRedundantEffects(FunctionDeclaration func)
             {
-                var effects = func.Effects?.Effects ?? new List<string>();
+                var effects = func.Effects ?? new List<string>();
                 
                 // Check for redundant effect combinations
                 if (effects.Contains("Database") && effects.Contains("Network") && effects.Contains("IO"))
@@ -192,7 +193,7 @@ public class PerformanceAnalyzer
             {
                 var effects = new List<string>();
                 
-                if (node is FunctionCall call)
+                if (node is CallExpression call)
                 {
                     // Simple pattern matching for effect types
                     var name = call.Name.ToLower();
@@ -257,7 +258,7 @@ public class PerformanceAnalyzer
         public override string Description => "Optimize module imports for better performance";
         public override string Category => AnalysisCategories.Performance;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new ModuleImportOptimizationVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -272,7 +273,7 @@ public class PerformanceAnalyzer
 
             public ModuleImportOptimizationVisitor(string filePath, string sourceText) : base(filePath, sourceText) { }
 
-            public override void VisitProgram(Program program)
+            public override void VisitProgram(ProgramNode program)
             {
                 // First pass: collect imports
                 foreach (var stmt in program.Statements)
@@ -308,12 +309,15 @@ public class PerformanceAnalyzer
             {
                 switch (node)
                 {
-                    case FunctionCall call:
+                    case CallExpression call:
                         _usedFunctions.Add(call.Name);
                         break;
 
-                    case QualifiedName qualified:
-                        _usedFunctions.Add($"{qualified.ModuleName}.{qualified.Name}");
+                    case MemberAccessExpression qualified:
+                        if (qualified.Object is Identifier obj)
+                        {
+                            _usedFunctions.Add($"{obj.Name}.{qualified.Member}");
+                        }
                         break;
 
                     case LetStatement let:
@@ -401,7 +405,7 @@ public class PerformanceAnalyzer
         public override string Description => "Detect cases where error propagation could be optimized";
         public override string Category => AnalysisCategories.Performance;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new UnnecessaryErrorPropagationVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -427,7 +431,7 @@ public class PerformanceAnalyzer
                     var stmt = func.Body[i];
 
                     // Check for immediately returned propagated results
-                    if (stmt is LetStatement let && let.Expression is ErrorPropagationExpression)
+                    if (stmt is LetStatement let && let.Expression is ErrorPropagation)
                     {
                         // Check if this is the last statement or followed by return of the variable
                         if (i == func.Body.Count - 2 && func.Body[i + 1] is ReturnStatement ret)
@@ -449,8 +453,8 @@ public class PerformanceAnalyzer
             {
                 switch (node)
                 {
-                    case ReturnStatement ret when ret.Expression is ErrorPropagationExpression prop:
-                        if (prop.Expression is FunctionCall call && IsSimpleFunction(call))
+                    case ReturnStatement ret when ret.Expression is ErrorPropagation prop:
+                        if (prop.Expression is CallExpression call && IsSimpleFunction(call))
                         {
                             var location = GetLocation("return");
                             _violations.Add(("Consider handling the result explicitly instead of direct propagation for simple functions", location));
@@ -459,7 +463,7 @@ public class PerformanceAnalyzer
                 }
             }
 
-            private bool IsSimpleFunction(FunctionCall call)
+            private bool IsSimpleFunction(CallExpression call)
             {
                 // Heuristic: functions with no arguments or simple names might be simple
                 return call.Arguments.Count == 0 || call.Name.Length < 10;

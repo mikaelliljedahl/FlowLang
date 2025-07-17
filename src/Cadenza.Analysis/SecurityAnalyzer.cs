@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Cadenza.Core;
 
 namespace Cadenza.Analysis;
 
@@ -19,7 +20,7 @@ public class SecurityAnalyzer
         public override string Description => "Functions handling external input should validate it";
         public override string Category => AnalysisCategories.Security;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new InputValidationVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -44,7 +45,7 @@ public class SecurityAnalyzer
             private bool IsExternalInputFunction(FunctionDeclaration func)
             {
                 // Check if function has effects that suggest external input
-                var effects = func.Effects?.Effects ?? new List<string>();
+                var effects = func.Effects ?? new List<string>();
                 return effects.Contains("Network") || effects.Contains("IO") || effects.Contains("FileSystem") ||
                        func.Name.Contains("api") || func.Name.Contains("input") || func.Name.Contains("user") ||
                        func.Name.Contains("request") || func.Name.Contains("external");
@@ -85,7 +86,7 @@ public class SecurityAnalyzer
                     case GuardStatement guard:
                         return ContainsParameterCheck(guard.Condition, paramName);
 
-                    case LetStatement let when let.Expression is FunctionCall call:
+                    case LetStatement let when let.Expression is CallExpression call:
                         return call.Name.Contains("validate") && 
                                call.Arguments.Any(arg => arg is Identifier id && id.Name == paramName);
 
@@ -101,7 +102,7 @@ public class SecurityAnalyzer
                     case BinaryExpression binary:
                         return ContainsIdentifier(binary.Left, paramName) || ContainsIdentifier(binary.Right, paramName);
 
-                    case FunctionCall call:
+                    case CallExpression call:
                         return call.Arguments.Any(arg => arg is Identifier id && id.Name == paramName);
 
                     default:
@@ -134,7 +135,7 @@ public class SecurityAnalyzer
         public override string Description => "Ensure sensitive effects are properly contained";
         public override string Category => AnalysisCategories.Security;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new EffectLeakageVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -148,14 +149,14 @@ public class SecurityAnalyzer
 
             public EffectLeakageVisitor(string filePath, string sourceText) : base(filePath, sourceText) { }
 
-            public override void VisitProgram(Program program)
+            public override void VisitProgram(ProgramNode program)
             {
                 // First pass: collect function effects
                 foreach (var stmt in program.Statements)
                 {
                     if (stmt is FunctionDeclaration func)
                     {
-                        var effects = func.Effects?.Effects?.ToHashSet() ?? new HashSet<string>();
+                        var effects = func.Effects?.ToHashSet() ?? new HashSet<string>();
                         _functionEffects[func.Name] = effects;
                     }
                 }
@@ -185,7 +186,7 @@ public class SecurityAnalyzer
 
             private HashSet<string> GetSensitiveEffects(FunctionDeclaration func)
             {
-                var effects = func.Effects?.Effects ?? new List<string>();
+                var effects = func.Effects ?? new List<string>();
                 var sensitive = new HashSet<string>();
 
                 foreach (var effect in effects)
@@ -242,7 +243,7 @@ public class SecurityAnalyzer
             {
                 switch (node)
                 {
-                    case FunctionCall call:
+                    case CallExpression call:
                         return call.Name.Contains("auth") || call.Name.Contains("verify") || call.Name.Contains("check");
 
                     case IfStatement ifStmt:
@@ -291,7 +292,7 @@ public class SecurityAnalyzer
             ["Private Key"] = new Regex(@"-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----", RegexOptions.IgnoreCase)
         };
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new SecretDetectionVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -446,7 +447,7 @@ public class SecurityAnalyzer
         public override string Description => "Detect potentially unsafe string interpolation patterns";
         public override string Category => AnalysisCategories.Security;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new UnsafeStringInterpolationVisitor(filePath, sourceText);
             visitor.Visit(ast);

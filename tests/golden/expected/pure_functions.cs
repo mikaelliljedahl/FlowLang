@@ -1,3 +1,10 @@
+using System;
+
+namespace Cadenza.Golden.PureFunctions
+{
+
+public static class CadenzaProgram
+{
 /// <summary>
 /// Pure function - no side effects
 /// </summary>
@@ -24,4 +31,8 @@ public static int max(int a, int b)
     {
         return b;
     }
+}
+
+}
+
 }

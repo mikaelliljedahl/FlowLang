@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cadenza.Core;
 
 namespace Cadenza.Analysis;
 
@@ -18,7 +19,7 @@ public class EffectAnalyzer
         public override string Description => "Pure functions cannot declare or use any effects";
         public override string Category => AnalysisCategories.EffectSystem;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new PureFunctionVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -33,7 +34,7 @@ public class EffectAnalyzer
 
             public override void VisitFunctionDeclaration(FunctionDeclaration func)
             {
-                if (func.IsPure && func.Effects != null && func.Effects.Effects.Count > 0)
+                if (func.IsPure && func.Effects != null && func.Effects.Count > 0)
                 {
                     var location = GetLocation(func.Name);
                     _violations.Add((func, location));
@@ -45,9 +46,9 @@ public class EffectAnalyzer
             public IEnumerable<AnalysisDiagnostic> GetDiagnostics(LintRule rule)
             {
                 return _violations.Select(v => rule.CreateDiagnostic(
-                    $"Pure function '{v.func.Name}' cannot declare effects: {string.Join(", ", v.func.Effects?.Effects ?? new List<string>())}",
+                    $"Pure function '{v.func.Name}' cannot declare effects: {string.Join(", ", v.func.Effects ?? new List<string>())}",
                     v.location,
-                    $"Remove 'uses [{string.Join(", ", v.func.Effects?.Effects ?? new List<string>())}]' or remove 'pure' modifier"
+                    $"Remove 'uses [{string.Join(", ", v.func.Effects ?? new List<string>())}]' or remove 'pure' modifier"
                 ));
             }
         }
@@ -62,7 +63,7 @@ public class EffectAnalyzer
         public override string Description => "Functions must declare all effects they actually use";
         public override string Category => AnalysisCategories.EffectSystem;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new EffectUsageVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -84,7 +85,7 @@ public class EffectAnalyzer
                     return;
                 }
 
-                var declaredEffects = func.Effects?.Effects?.ToHashSet() ?? new HashSet<string>();
+                var declaredEffects = func.Effects?.ToHashSet() ?? new HashSet<string>();
                 var usedEffects = new HashSet<string>();
 
                 // Analyze function body for effect usage
@@ -113,7 +114,7 @@ public class EffectAnalyzer
             {
                 switch (node)
                 {
-                    case FunctionCall call:
+                    case CallExpression call:
                         // Check if called function has effects
                         if (_functionEffects.TryGetValue(call.Name, out var calleeEffects))
                         {
@@ -123,7 +124,7 @@ public class EffectAnalyzer
                             }
                         }
                         // Analyze known effect-inducing function patterns
-                        AnalyzeFunctionCallForEffects(call, usedEffects);
+                        AnalyzeCallExpressionForEffects(call, usedEffects);
                         break;
 
                     case LetStatement let:
@@ -145,13 +146,13 @@ public class EffectAnalyzer
                         AnalyzeStatementForEffects(ret.Expression, usedEffects);
                         break;
 
-                    case ErrorPropagationExpression prop:
+                    case ErrorPropagation prop:
                         AnalyzeStatementForEffects(prop.Expression, usedEffects);
                         break;
                 }
             }
 
-            private void AnalyzeFunctionCallForEffects(FunctionCall call, HashSet<string> usedEffects)
+            private void AnalyzeCallExpressionForEffects(CallExpression call, HashSet<string> usedEffects)
             {
                 // Pattern matching for common effect-inducing operations
                 var functionName = call.Name.ToLower();
@@ -213,7 +214,7 @@ public class EffectAnalyzer
         public override string Description => "Functions should not declare effects they don't use";
         public override string Category => AnalysisCategories.EffectSystem;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new UnusedEffectVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -228,13 +229,13 @@ public class EffectAnalyzer
 
             public override void VisitFunctionDeclaration(FunctionDeclaration func)
             {
-                if (func.Effects == null || func.Effects.Effects.Count == 0)
+                if (func.Effects == null || func.Effects.Count == 0)
                 {
                     base.VisitFunctionDeclaration(func);
                     return;
                 }
 
-                var declaredEffects = func.Effects.Effects.ToHashSet();
+                var declaredEffects = func.Effects.ToHashSet();
                 var usedEffects = new HashSet<string>();
 
                 // Simple analysis - check for obvious effect usage patterns
@@ -262,8 +263,8 @@ public class EffectAnalyzer
             {
                 switch (node)
                 {
-                    case FunctionCall call:
-                        AnalyzeFunctionCallForEffectUsage(call, usedEffects);
+                    case CallExpression call:
+                        AnalyzeCallExpressionForEffectUsage(call, usedEffects);
                         break;
                     case LetStatement let:
                         AnalyzeNodeForEffectUsage(let.Expression, usedEffects);
@@ -280,7 +281,7 @@ public class EffectAnalyzer
                 }
             }
 
-            private void AnalyzeFunctionCallForEffectUsage(FunctionCall call, HashSet<string> usedEffects)
+            private void AnalyzeCallExpressionForEffectUsage(CallExpression call, HashSet<string> usedEffects)
             {
                 var name = call.Name.ToLower();
                 
@@ -319,7 +320,7 @@ public class EffectAnalyzer
         public override string Description => "Callers must declare effects of functions they call";
         public override string Category => AnalysisCategories.EffectSystem;
 
-        public override IEnumerable<AnalysisDiagnostic> Analyze(Program ast, string filePath, string sourceText)
+        public override IEnumerable<AnalysisDiagnostic> Analyze(ProgramNode ast, string filePath, string sourceText)
         {
             var visitor = new EffectPropagationVisitor(filePath, sourceText);
             visitor.Visit(ast);
@@ -333,14 +334,14 @@ public class EffectAnalyzer
 
             public EffectPropagationVisitor(string filePath, string sourceText) : base(filePath, sourceText) { }
 
-            public override void VisitProgram(Program program)
+            public override void VisitProgram(ProgramNode program)
             {
                 // First pass: collect all function effect declarations
                 foreach (var stmt in program.Statements)
                 {
                     if (stmt is FunctionDeclaration func)
                     {
-                        var effects = func.Effects?.Effects?.ToHashSet() ?? new HashSet<string>();
+                        var effects = func.Effects?.ToHashSet() ?? new HashSet<string>();
                         _functionEffects[func.Name] = effects;
                     }
                 }
@@ -354,7 +355,7 @@ public class EffectAnalyzer
                 if (func.IsPure)
                 {
                     // Pure functions cannot call functions with effects
-                    CheckPureFunctionCalls(func);
+                    CheckPureCallExpressions(func);
                 }
                 else
                 {
@@ -365,9 +366,9 @@ public class EffectAnalyzer
                 base.VisitFunctionDeclaration(func);
             }
 
-            private void CheckPureFunctionCalls(FunctionDeclaration pureFunc)
+            private void CheckPureCallExpressions(FunctionDeclaration pureFunc)
             {
-                var calls = ExtractFunctionCalls(pureFunc.Body);
+                var calls = ExtractCallExpressions(pureFunc.Body);
                 foreach (var call in calls)
                 {
                     if (_functionEffects.TryGetValue(call.Name, out var calleeEffects) && calleeEffects.Count > 0)
@@ -380,8 +381,8 @@ public class EffectAnalyzer
 
             private void CheckEffectPropagation(FunctionDeclaration func)
             {
-                var declaredEffects = func.Effects?.Effects?.ToHashSet() ?? new HashSet<string>();
-                var calls = ExtractFunctionCalls(func.Body);
+                var declaredEffects = func.Effects?.ToHashSet() ?? new HashSet<string>();
+                var calls = ExtractCallExpressions(func.Body);
 
                 foreach (var call in calls)
                 {
@@ -397,41 +398,41 @@ public class EffectAnalyzer
                 }
             }
 
-            private List<FunctionCall> ExtractFunctionCalls(List<ASTNode> body)
+            private List<CallExpression> ExtractCallExpressions(List<ASTNode> body)
             {
-                var calls = new List<FunctionCall>();
+                var calls = new List<CallExpression>();
                 foreach (var stmt in body)
                 {
-                    ExtractFunctionCallsFromNode(stmt, calls);
+                    ExtractCallExpressionsFromNode(stmt, calls);
                 }
                 return calls;
             }
 
-            private void ExtractFunctionCallsFromNode(ASTNode node, List<FunctionCall> calls)
+            private void ExtractCallExpressionsFromNode(ASTNode node, List<CallExpression> calls)
             {
                 switch (node)
                 {
-                    case FunctionCall call:
+                    case CallExpression call:
                         calls.Add(call);
                         break;
                     case LetStatement let:
-                        ExtractFunctionCallsFromNode(let.Expression, calls);
+                        ExtractCallExpressionsFromNode(let.Expression, calls);
                         break;
                     case IfStatement ifStmt:
-                        ExtractFunctionCallsFromNode(ifStmt.Condition, calls);
+                        ExtractCallExpressionsFromNode(ifStmt.Condition, calls);
                         foreach (var stmt in ifStmt.ThenBody)
-                            ExtractFunctionCallsFromNode(stmt, calls);
+                            ExtractCallExpressionsFromNode(stmt, calls);
                         if (ifStmt.ElseBody != null)
                         {
                             foreach (var stmt in ifStmt.ElseBody)
-                                ExtractFunctionCallsFromNode(stmt, calls);
+                                ExtractCallExpressionsFromNode(stmt, calls);
                         }
                         break;
                     case ReturnStatement ret:
-                        ExtractFunctionCallsFromNode(ret.Expression, calls);
+                        ExtractCallExpressionsFromNode(ret.Expression, calls);
                         break;
-                    case ErrorPropagationExpression prop:
-                        ExtractFunctionCallsFromNode(prop.Expression, calls);
+                    case ErrorPropagation prop:
+                        ExtractCallExpressionsFromNode(prop.Expression, calls);
                         break;
                 }
             }
@@ -483,7 +484,7 @@ public abstract class ASTVisitor
     {
         switch (node)
         {
-            case Program program:
+            case ProgramNode program:
                 VisitProgram(program);
                 break;
             case FunctionDeclaration func:
@@ -498,7 +499,7 @@ public abstract class ASTVisitor
         }
     }
 
-    public virtual void VisitProgram(Program program)
+    public virtual void VisitProgram(ProgramNode program)
     {
         foreach (var stmt in program.Statements)
         {

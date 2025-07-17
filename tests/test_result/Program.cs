@@ -1,5 +1,7 @@
 using System;
 
+namespace Cadenza.Tests.Result;
+
 public class Result<T, E>
 {
     public T Value { get; private set; } = default(T)!;
@@ -17,7 +19,7 @@ public class Result<T, E>
     }
 }
 
-class Program
+class TestResultProgram
 {
     public static Result<int, string> divide(int a, int b)
     {

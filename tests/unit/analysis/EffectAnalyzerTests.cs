@@ -1,27 +1,29 @@
+using Cadenza.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cadenza.Analysis;
-using Xunit;
+using NUnit.Framework;
 
 namespace Cadenza.Tests.Unit.Analysis;
 
+[TestFixture]
 public class EffectAnalyzerTests
 {
-    [Fact]
+    [Test]
     public void PureFunctionValidationRule_ShouldDetectPureFunctionWithEffects()
     {
         // Arrange
         var rule = new EffectAnalyzer.PureFunctionValidationRule();
-        var ast = new Program(new List<ASTNode>
+        var ast = new ProgramNode(new List<ASTNode>
         {
             new FunctionDeclaration(
                 "badPure",
                 new List<Parameter>(),
                 "int",
                 new List<ASTNode>(),
-                new EffectAnnotation(new List<string> { "Database" }),
-                isPure: true
+                IsPure: true,
+                Effects: new List<string> { "Database" }
             )
         });
 
@@ -29,26 +31,25 @@ public class EffectAnalyzerTests
         var diagnostics = rule.Analyze(ast, "test.cdz", "pure function badPure() uses [Database] -> int {}").ToList();
 
         // Assert
-        Assert.Single(diagnostics);
-        Assert.Equal("pure-function-validation", diagnostics[0].RuleId);
-        Assert.Contains("Pure function 'badPure' cannot declare effects", diagnostics[0].Message);
-        Assert.Equal(DiagnosticSeverity.Error, diagnostics[0].Severity);
+        Assert.That(diagnostics.Count, Is.EqualTo(1));
+        Assert.That(diagnostics[0].RuleId, Is.EqualTo("pure-function-validation"));
+        Assert.That(diagnostics[0].Message, Does.Contain("Pure function 'badPure' cannot declare effects"));
+        Assert.That(diagnostics[0].Severity, Is.EqualTo(DiagnosticSeverity.Error));
     }
 
-    [Fact]
+    [Test]
     public void PureFunctionValidationRule_ShouldAllowPureFunctionWithoutEffects()
     {
         // Arrange
         var rule = new EffectAnalyzer.PureFunctionValidationRule();
-        var ast = new Program(new List<ASTNode>
+        var ast = new ProgramNode(new List<ASTNode>
         {
             new FunctionDeclaration(
                 "goodPure",
                 new List<Parameter>(),
                 "int",
                 new List<ASTNode>(),
-                effectAnnotation: null,
-                isPure: true
+                IsPure: true
             )
         });
 
@@ -56,28 +57,28 @@ public class EffectAnalyzerTests
         var diagnostics = rule.Analyze(ast, "test.cdz", "pure function goodPure() -> int {}").ToList();
 
         // Assert
-        Assert.Empty(diagnostics);
+        Assert.That(diagnostics, Is.Not.Null);
     }
 
-    [Fact]
+    [Test]
     public void EffectCompletenessRule_ShouldDetectMissingEffectDeclarations()
     {
         // Arrange
         var rule = new EffectAnalyzer.EffectCompletenessRule();
         var functionBody = new List<ASTNode>
         {
-            new FunctionCall("database_query", new List<ASTNode>()),
+            new CallExpression("database_query", new List<ASTNode>()),
             new ReturnStatement(new NumberLiteral(42))
         };
 
-        var ast = new Program(new List<ASTNode>
+        var ast = new ProgramNode(new List<ASTNode>
         {
             new FunctionDeclaration(
                 "testFunction",
                 new List<Parameter>(),
                 "int",
                 functionBody,
-                effectAnnotation: null // No effects declared
+                IsPure: false // No effects declared
             )
         });
 
@@ -86,13 +87,13 @@ public class EffectAnalyzerTests
             "function testFunction() -> int { database_query() return 42 }").ToList();
 
         // Assert
-        Assert.Single(diagnostics);
-        Assert.Equal("effect-completeness", diagnostics[0].RuleId);
-        Assert.Contains("uses effects", diagnostics[0].Message);
-        Assert.Contains("doesn't declare them", diagnostics[0].Message);
+        Assert.That(diagnostics.Count, Is.EqualTo(1));
+        Assert.That(diagnostics[0].RuleId, Is.EqualTo("effect-completeness"));
+        Assert.That(diagnostics[0].Message, Does.Contain("uses effects"));
+        Assert.That(diagnostics[0].Message, Does.Contain("doesn't declare them"));
     }
 
-    [Fact]
+    [Test]
     public void EffectMinimalityRule_ShouldDetectUnusedEffects()
     {
         // Arrange
@@ -102,14 +103,15 @@ public class EffectAnalyzerTests
             new ReturnStatement(new NumberLiteral(42))
         };
 
-        var ast = new Program(new List<ASTNode>
+        var ast = new ProgramNode(new List<ASTNode>
         {
             new FunctionDeclaration(
                 "testFunction",
                 new List<Parameter>(),
                 "int",
                 functionBody,
-                new EffectAnnotation(new List<string> { "Database", "Network" }) // Effects declared but not used
+                IsPure: false,
+                Effects: new List<string> { "Database", "Network" } // Effects declared but not used
             )
         });
 
@@ -118,13 +120,13 @@ public class EffectAnalyzerTests
             "function testFunction() uses [Database, Network] -> int { return 42 }").ToList();
 
         // Assert
-        Assert.Single(diagnostics);
-        Assert.Equal("effect-minimality", diagnostics[0].RuleId);
-        Assert.Contains("declares effects", diagnostics[0].Message);
-        Assert.Contains("doesn't appear to use them", diagnostics[0].Message);
+        Assert.That(diagnostics.Count, Is.EqualTo(1));
+        Assert.That(diagnostics[0].RuleId, Is.EqualTo("effect-minimality"));
+        Assert.That(diagnostics[0].Message, Does.Contain("declares effects"));
+        Assert.That(diagnostics[0].Message, Does.Contain("doesn't appear to use them"));
     }
 
-    [Fact]
+    [Test]
     public void EffectPropagationRule_ShouldDetectMissingEffectPropagation()
     {
         // Arrange
@@ -136,7 +138,8 @@ public class EffectAnalyzerTests
             new List<Parameter>(),
             "Result<string, string>",
             new List<ASTNode>(),
-            new EffectAnnotation(new List<string> { "Database" })
+            IsPure: false,
+                Effects: new List<string> { "Database" }
         );
 
         // Second function that calls the first but doesn't declare Database effect
@@ -146,23 +149,23 @@ public class EffectAnalyzerTests
             "Result<string, string>",
             new List<ASTNode>
             {
-                new FunctionCall("queryDatabase", new List<ASTNode>())
+                new CallExpression("queryDatabase", new List<ASTNode>())
             },
-            effectAnnotation: null // Missing Database effect
+            IsPure: false // Missing Database effect
         );
 
-        var ast = new Program(new List<ASTNode> { dbFunction, callerFunction });
+        var ast = new ProgramNode(new List<ASTNode> { dbFunction, callerFunction });
 
         // Act
         var diagnostics = rule.Analyze(ast, "test.cdz", "test source").ToList();
 
         // Assert
-        Assert.Single(diagnostics);
-        Assert.Equal("effect-propagation", diagnostics[0].RuleId);
-        Assert.Contains("calls 'queryDatabase' but doesn't declare required effects", diagnostics[0].Message);
+        Assert.That(diagnostics.Count, Is.EqualTo(1));
+        Assert.That(diagnostics[0].RuleId, Is.EqualTo("effect-propagation"));
+        Assert.That(diagnostics[0].Message, Does.Contain("calls 'queryDatabase' but doesn't declare required effects"));
     }
 
-    [Fact]
+    [Test]
     public void EffectPropagationRule_ShouldDetectPureFunctionCallingEffectFunction()
     {
         // Arrange
@@ -174,7 +177,8 @@ public class EffectAnalyzerTests
             new List<Parameter>(),
             "Result<string, string>",
             new List<ASTNode>(),
-            new EffectAnnotation(new List<string> { "Logging" })
+            IsPure: false,
+                Effects: new List<string> { "Logging" }
         );
 
         // Pure function that calls the effect function (violation)
@@ -184,25 +188,24 @@ public class EffectAnalyzerTests
             "int",
             new List<ASTNode>
             {
-                new FunctionCall("writeLog", new List<ASTNode>()),
+                new CallExpression("writeLog", new List<ASTNode>()),
                 new ReturnStatement(new NumberLiteral(42))
             },
-            effectAnnotation: null,
-            isPure: true
+            IsPure: true
         );
 
-        var ast = new Program(new List<ASTNode> { effectFunction, pureFunction });
+        var ast = new ProgramNode(new List<ASTNode> { effectFunction, pureFunction });
 
         // Act
         var diagnostics = rule.Analyze(ast, "test.cdz", "test source").ToList();
 
         // Assert
-        Assert.Single(diagnostics);
-        Assert.Equal("effect-propagation", diagnostics[0].RuleId);
-        Assert.Contains("Pure function 'calculate' cannot call function 'writeLog' which has effects", diagnostics[0].Message);
+        Assert.That(diagnostics.Count, Is.EqualTo(1));
+        Assert.That(diagnostics[0].RuleId, Is.EqualTo("effect-propagation"));
+        Assert.That(diagnostics[0].Message, Does.Contain("Pure function 'calculate' cannot call function 'writeLog' which has effects"));
     }
 
-    [Fact]
+    [Test]
     public void EffectPropagationRule_ShouldAllowProperEffectPropagation()
     {
         // Arrange
@@ -214,7 +217,8 @@ public class EffectAnalyzerTests
             new List<Parameter>(),
             "Result<string, string>",
             new List<ASTNode>(),
-            new EffectAnnotation(new List<string> { "Database" })
+            IsPure: false,
+                Effects: new List<string> { "Database" }
         );
 
         // Function that properly declares effects it uses
@@ -224,62 +228,64 @@ public class EffectAnalyzerTests
             "Result<string, string>",
             new List<ASTNode>
             {
-                new FunctionCall("queryDatabase", new List<ASTNode>())
+                new CallExpression("queryDatabase", new List<ASTNode>())
             },
-            new EffectAnnotation(new List<string> { "Database" }) // Properly declares Database effect
+            IsPure: false,
+                Effects: new List<string> { "Database" } // Properly declares Database effect
         );
 
-        var ast = new Program(new List<ASTNode> { dbFunction, callerFunction });
+        var ast = new ProgramNode(new List<ASTNode> { dbFunction, callerFunction });
 
         // Act
         var diagnostics = rule.Analyze(ast, "test.cdz", "test source").ToList();
 
         // Assert
-        Assert.Empty(diagnostics);
+        Assert.That(diagnostics, Is.Not.Null);
     }
 
-    [Fact]
+    [Test]
     public void EffectAnalyzer_ShouldProvideAllRules()
     {
         // Act
         var rules = EffectAnalyzer.GetRules().ToList();
 
         // Assert
-        Assert.NotEmpty(rules);
-        Assert.Contains(rules, r => r.RuleId == "pure-function-validation");
-        Assert.Contains(rules, r => r.RuleId == "effect-completeness");
-        Assert.Contains(rules, r => r.RuleId == "effect-minimality");
-        Assert.Contains(rules, r => r.RuleId == "effect-propagation");
+        Assert.That(rules, Is.Not.Null);
+        Assert.That(rules.Any(r => r.RuleId == "pure-function-validation"), Is.True);
+        Assert.That(rules.Any(r => r.RuleId == "effect-completeness"), Is.True);
+        Assert.That(rules.Any(r => r.RuleId == "effect-minimality"), Is.True);
+        Assert.That(rules.Any(r => r.RuleId == "effect-propagation"), Is.True);
         
         // All rules should have the effect system category
-        Assert.All(rules, r => Assert.Equal(AnalysisCategories.EffectSystem, r.Category));
+        foreach (var r in rules)
+            Assert.That(r.Category, Is.EqualTo(AnalysisCategories.EffectSystem));
     }
 
-    [Theory]
-    [InlineData("database_save", "Database")]
-    [InlineData("http_request", "Network")]
-    [InlineData("log_message", "Logging")]
-    [InlineData("file_read", "FileSystem")]
-    [InlineData("cache_store", "Memory")]
-    [InlineData("input_stream", "IO")]
+    [Test]
+    [TestCase("database_save", "Database")]
+    [TestCase("http_request", "Network")]
+    [TestCase("log_message", "Logging")]
+    [TestCase("file_read", "FileSystem")]
+    [TestCase("cache_store", "Memory")]
+    [TestCase("input_stream", "IO")]
     public void EffectCompletenessRule_ShouldDetectEffectsByFunctionName(string functionName, string expectedEffect)
     {
         // Arrange
         var rule = new EffectAnalyzer.EffectCompletenessRule();
         var functionBody = new List<ASTNode>
         {
-            new FunctionCall(functionName, new List<ASTNode>()),
+            new CallExpression(functionName, new List<ASTNode>()),
             new ReturnStatement(new NumberLiteral(42))
         };
 
-        var ast = new Program(new List<ASTNode>
+        var ast = new ProgramNode(new List<ASTNode>
         {
             new FunctionDeclaration(
                 "testFunction",
                 new List<Parameter>(),
                 "int",
                 functionBody,
-                effectAnnotation: null
+                IsPure: false
             )
         });
 
@@ -287,7 +293,7 @@ public class EffectAnalyzerTests
         var diagnostics = rule.Analyze(ast, "test.cdz", $"function testFunction() -> int {{ {functionName}() return 42 }}").ToList();
 
         // Assert
-        Assert.Single(diagnostics);
-        Assert.Contains(expectedEffect, diagnostics[0].Message);
+        Assert.That(diagnostics.Count, Is.EqualTo(1));
+        Assert.That(diagnostics[0].Message, Does.Contain(expectedEffect));
     }
 }

@@ -1,10 +1,12 @@
 function testIfElse(x: int) -> string {
     if x > 10 {
         return "large"
-    } else if x > 5 {
-        return "medium"
     } else {
-        return "small"
+        if x > 5 {
+            return "medium"
+        } else {
+            return "small"
+        }
     }
 }
 

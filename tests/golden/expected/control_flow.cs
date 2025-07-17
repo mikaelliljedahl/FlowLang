@@ -1,3 +1,10 @@
+using System;
+
+namespace Cadenza.Golden.ControlFlow
+{
+
+public static class CadenzaProgram
+{
 /// <summary>
 /// </summary>
 /// <param name="x">Parameter of type int</param>
@@ -55,4 +62,8 @@ public static string testNestedControl(int x, int y)
     {
         return "x not positive";
     }
+}
+
+}
+
 }

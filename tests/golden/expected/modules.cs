@@ -1,6 +1,6 @@
-using Math;
+using System;
 
-namespace Math
+namespace Cadenza.Golden.Modules
 {
     public static class MathModule
     {
@@ -34,15 +34,18 @@ namespace Math
             return x * x;
         }
     }
-}
-
-/// <summary>
-/// </summary>
-/// <param name="x">Parameter of type int</param>
-/// <param name="y">Parameter of type int</param>
-/// <returns>Returns int</returns>
-public static int calculate(int x, int y)
-{
-    var sum = MathModule.add(x, y);
-    return MathModule.square(sum);
+    
+    public static class CadenzaProgram
+    {
+        /// <summary>
+        /// </summary>
+        /// <param name="x">Parameter of type int</param>
+        /// <param name="y">Parameter of type int</param>
+        /// <returns>Returns int</returns>
+        public static int calculate(int x, int y)
+        {
+            var sum = MathModule.add(x, y);
+            return MathModule.square(sum);
+        }
+    }
 }

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Cadenza.Core;
 
 namespace Cadenza.Analysis;
 
@@ -65,7 +66,7 @@ public class StaticAnalyzer
         {
             // Parse the Cadenza source
             var lexer = new CadenzaLexer(sourceText);
-            var tokens = lexer.Tokenize();
+            var tokens = lexer.ScanTokens();
 
             var parser = new CadenzaParser(tokens);
             var ast = parser.Parse();
@@ -98,7 +99,7 @@ public class StaticAnalyzer
     /// </summary>
     public async Task<AnalysisReport> AnalyzeAsync(IEnumerable<string> paths)
     {
-        var files = new List<(string filePath, string sourceText, Program ast)>();
+        var files = new List<(string filePath, string sourceText, ProgramNode ast)>();
 
         foreach (var path in paths)
         {
@@ -134,7 +135,7 @@ public class StaticAnalyzer
         return report with { Metrics = combinedMetrics };
     }
 
-    private async Task ProcessFile(string filePath, List<(string, string, Program)> files)
+    private async Task ProcessFile(string filePath, List<(string, string, ProgramNode)> files)
     {
         if (!filePath.EndsWith(".cdz") || _configuration.ShouldExcludeFile(filePath))
         {
@@ -145,7 +146,7 @@ public class StaticAnalyzer
         {
             var sourceText = await File.ReadAllTextAsync(filePath);
             var lexer = new CadenzaLexer(sourceText);
-            var tokens = lexer.Tokenize();
+            var tokens = lexer.ScanTokens();
             var parser = new CadenzaParser(tokens);
             var ast = parser.Parse();
 
@@ -157,7 +158,7 @@ public class StaticAnalyzer
         }
     }
 
-    private async Task ProcessDirectory(string directoryPath, List<(string, string, Program)> files)
+    private async Task ProcessDirectory(string directoryPath, List<(string, string, ProgramNode)> files)
     {
         var flowFiles = Directory.GetFiles(directoryPath, "*.cdz", SearchOption.AllDirectories);
         
@@ -167,7 +168,7 @@ public class StaticAnalyzer
         }
     }
 
-    private void CollectMetrics(Program ast, AnalysisMetrics metrics)
+    private void CollectMetrics(ProgramNode ast, AnalysisMetrics metrics)
     {
         foreach (var stmt in ast.Statements)
         {
@@ -183,10 +184,10 @@ public class StaticAnalyzer
                 metrics.TotalFunctions++;
                 if (func.IsPure)
                     metrics.PureFunctions++;
-                if (func.Effects != null && func.Effects.Effects.Count > 0)
+                if (func.Effects != null && func.Effects.Count > 0)
                 {
                     metrics.FunctionsWithEffects++;
-                    foreach (var effect in func.Effects.Effects)
+                    foreach (var effect in func.Effects)
                     {
                         metrics.EffectUsage[effect] = metrics.EffectUsage.GetValueOrDefault(effect, 0) + 1;
                     }
@@ -224,7 +225,7 @@ public class StaticAnalyzer
     {
         switch (node)
         {
-            case ErrorPropagationExpression:
+            case ErrorPropagation:
                 metrics.ErrorPropagationCount++;
                 break;
 

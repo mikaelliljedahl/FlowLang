@@ -1,8 +1,11 @@
+using Cadenza.Core;
 using System;
 using System.Linq;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
-using Xunit;
-using Cadenza.LSP;
+using NUnit.Framework;
+using LspPosition = Microsoft.VisualStudio.LanguageServer.Protocol.Position;
+using LspRange = Microsoft.VisualStudio.LanguageServer.Protocol.Range;
+using LspTextDocumentContentChangeEvent = Microsoft.VisualStudio.LanguageServer.Protocol.TextDocumentContentChangeEvent;
 
 namespace Cadenza.Tests.Unit.LSP
 {
@@ -11,7 +14,7 @@ namespace Cadenza.Tests.Unit.LSP
     /// </summary>
     public class DocumentManagerTests
     {
-        [Fact]
+        [Test]
         public void OpenDocument_ShouldParseAndStoreDocument()
         {
             // Arrange
@@ -24,14 +27,14 @@ namespace Cadenza.Tests.Unit.LSP
 
             // Assert
             var document = manager.GetDocument(uri);
-            Assert.NotNull(document);
-            Assert.Equal(uri, document.Uri);
-            Assert.Equal(content, document.Content);
-            Assert.Equal(1, document.Version);
-            Assert.True(document.Tokens.Count > 0);
+            Assert.That(document, Is.Not.Null);
+            Assert.That(document.Uri, Is.EqualTo(uri));
+            Assert.That(document.Content, Is.EqualTo(content));
+            Assert.That(document.Version, Is.EqualTo(1));
+            Assert.That(document.Tokens.Count > 0, Is.True);
         }
 
-        [Fact]
+        [Test]
         public void UpdateDocument_ShouldApplyFullTextChange()
         {
             // Arrange
@@ -44,7 +47,7 @@ namespace Cadenza.Tests.Unit.LSP
 
             var changes = new[]
             {
-                new TextDocumentContentChangeEvent
+                new Cadenza.Core.TextDocumentContentChangeEvent
                 {
                     Text = updatedContent
                 }
@@ -55,12 +58,12 @@ namespace Cadenza.Tests.Unit.LSP
 
             // Assert
             var document = manager.GetDocument(uri);
-            Assert.NotNull(document);
-            Assert.Equal(updatedContent, document.Content);
-            Assert.Equal(2, document.Version);
+            Assert.That(document, Is.Not.Null);
+            Assert.That(document.Content, Is.EqualTo(updatedContent));
+            Assert.That(document.Version, Is.EqualTo(2));
         }
 
-        [Fact]
+        [Test]
         public void UpdateDocument_ShouldApplyIncrementalChange()
         {
             // Arrange
@@ -72,11 +75,11 @@ namespace Cadenza.Tests.Unit.LSP
 
             var changes = new[]
             {
-                new TextDocumentContentChangeEvent
+                new Cadenza.Core.TextDocumentContentChangeEvent
                 {
-                    Range = new Range(
-                        new Position(0, 19), // Start after "int"
-                        new Position(0, 22)  // End after "int"
+                    Range = new Cadenza.Core.Range(
+                        new Cadenza.Core.Position(0, 19), // Start after "int"
+                        new Cadenza.Core.Position(0, 22)  // End after "int"
                     ),
                     Text = "string"
                 }
@@ -87,12 +90,12 @@ namespace Cadenza.Tests.Unit.LSP
 
             // Assert
             var document = manager.GetDocument(uri);
-            Assert.NotNull(document);
-            Assert.Contains("string", document.Content);
-            Assert.DoesNotContain("int", document.Content);
+            Assert.That(document, Is.Not.Null);
+            Assert.That(document.Content, Does.Contain("string"));
+            Assert.That(document.Content, Does.Not.Contain("int"));
         }
 
-        [Fact]
+        [Test]
         public void CloseDocument_ShouldRemoveDocument()
         {
             // Arrange
@@ -101,17 +104,17 @@ namespace Cadenza.Tests.Unit.LSP
             var content = "function test() -> int { return 42 }";
 
             manager.OpenDocument(uri, content, 1);
-            Assert.True(manager.HasDocument(uri));
+            Assert.That(manager.HasDocument(uri));
 
             // Act
             manager.CloseDocument(uri);
 
             // Assert
-            Assert.False(manager.HasDocument(uri));
-            Assert.Null(manager.GetDocument(uri));
+            Assert.That(manager.HasDocument(uri), Is.False);
+            Assert.That(manager.GetDocument(uri), Is.Null);
         }
 
-        [Fact]
+        [Test]
         public void GetTokenAtPosition_ShouldReturnCorrectToken()
         {
             // Arrange
@@ -123,15 +126,15 @@ namespace Cadenza.Tests.Unit.LSP
             var document = manager.GetDocument(uri);
 
             // Act
-            var token = manager.GetTokenAtPosition(document!, new Position(0, 9)); // Position at "test"
+            var token = manager.GetTokenAtPosition(document!, new Cadenza.Core.Position(0, 9)); // Position at "test"
 
             // Assert
-            Assert.NotNull(token);
-            Assert.Equal("test", token.Value);
-            Assert.Equal(TokenType.Identifier, token.Type);
+            Assert.That(token, Is.Not.Null);
+            Assert.That(token.Lexeme, Is.EqualTo("test"));
+            Assert.That(token.Type, Is.EqualTo(TokenType.Identifier));
         }
 
-        [Fact]
+        [Test]
         public void GetWordAtPosition_ShouldReturnCorrectWord()
         {
             // Arrange
@@ -143,13 +146,13 @@ namespace Cadenza.Tests.Unit.LSP
             var document = manager.GetDocument(uri);
 
             // Act
-            var word = manager.GetWordAtPosition(document!, new Position(0, 12)); // Position in "test_function"
+            var word = manager.GetWordAtPosition(document!, new Cadenza.Core.Position(0, 12)); // Position in "test_function"
 
             // Assert
-            Assert.Equal("test_function", word);
+            Assert.That(word, Is.EqualTo("test_function"));
         }
 
-        [Fact]
+        [Test]
         public void PositionToOffset_ShouldCalculateCorrectOffset()
         {
             // Arrange
@@ -159,13 +162,13 @@ namespace Cadenza.Tests.Unit.LSP
             };
 
             // Act & Assert
-            Assert.Equal(0, document.PositionToOffset(new Position(0, 0))); // Start of first line
-            Assert.Equal(9, document.PositionToOffset(new Position(0, 9))); // At "test"
-            Assert.Equal(18, document.PositionToOffset(new Position(1, 0))); // Start of second line
-            Assert.Equal(26, document.PositionToOffset(new Position(1, 8))); // At "42"
+            Assert.That(document.PositionToOffset(new Cadenza.Core.Position(0, 0)), Is.EqualTo(0)); // Start of first line
+            Assert.That(document.PositionToOffset(new Cadenza.Core.Position(0, 9)), Is.EqualTo(9)); // At "test"
+            Assert.That(document.PositionToOffset(new Cadenza.Core.Position(1, 0)), Is.EqualTo(18)); // Start of second line
+            Assert.That(document.PositionToOffset(new Cadenza.Core.Position(1, 8)), Is.EqualTo(26)); // At "42"
         }
 
-        [Fact]
+        [Test]
         public void OffsetToPosition_ShouldCalculateCorrectPosition()
         {
             // Arrange
@@ -176,16 +179,16 @@ namespace Cadenza.Tests.Unit.LSP
 
             // Act & Assert
             var pos1 = document.OffsetToPosition(0);
-            Assert.Equal(0, pos1.Line);
-            Assert.Equal(0, pos1.Character);
+            Assert.That(pos1.Line, Is.EqualTo(0));
+            Assert.That(pos1.Character, Is.EqualTo(0));
 
             var pos2 = document.OffsetToPosition(9);
-            Assert.Equal(0, pos2.Line);
-            Assert.Equal(9, pos2.Character);
+            Assert.That(pos2.Line, Is.EqualTo(0));
+            Assert.That(pos2.Character, Is.EqualTo(9));
 
             var pos3 = document.OffsetToPosition(18);
-            Assert.Equal(1, pos3.Line);
-            Assert.Equal(0, pos3.Character);
+            Assert.That(pos3.Line, Is.EqualTo(1));
+            Assert.That(pos3.Character, Is.EqualTo(0));
         }
     }
 }
