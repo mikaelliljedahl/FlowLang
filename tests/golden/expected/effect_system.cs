@@ -1,110 +1,98 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Cadenza.Runtime;
 
-namespace Cadenza.Golden.EffectSystem
+public struct Result<T, E>
 {
-
-public class Result<T, E>
-{
-    public T Value { get; private set; }
-    public E ErrorValue { get; private set; }
-    public bool IsError { get; private set; }
-
-    public static Result<T, E> Ok(T value)
+    public readonly bool IsSuccess;
+    public readonly T Value;
+    public readonly E Error;
+    public Result(bool isSuccess, T value, E error)
     {
-        return new Result<T, E>
-        {
-            Value = value,
-            IsError = false
-        };
+        IsSuccess = isSuccess;
+        Value = value;
+        Error = error;
+    }
+}
+
+public static class Result
+{
+    public static Result<T, E> Ok<T, E>(T value)
+    {
+        return new Result<T, E>(true, value, default);
     }
 
-    public static Result<T, E> Error(E error)
+    public static Result<T, E> Error<T, E>(E error)
     {
-        return new Result<T, E>
-        {
-            ErrorValue = error,
-            IsError = true
-        };
+        return new Result<T, E>(false, default, error);
+    }
+}
+
+public struct Option<T>
+{
+    public readonly bool HasValue;
+    public readonly T Value;
+    public Option(bool hasValue, T value)
+    {
+        HasValue = hasValue;
+        Value = value;
+    }
+}
+
+public static class Option
+{
+    public static Option<T> Some<T>(T value)
+    {
+        return new Option<T>(true, value);
+    }
+
+    public static Option<T> None<T>()
+    {
+        return new Option<T>(false, default);
     }
 }
 
 public static class CadenzaProgram
 {
-/// <summary>
-/// Effects: Database, Logging
-/// </summary>
-/// <param name="name">Parameter of type string</param>
-/// <param name="email">Parameter of type string</param>
-/// <returns>Returns Result<int, string></returns>
-public static Result<int, string> saveUser(string name, string email)
-{
-    var userId_result = generateId();
-    if (userId_result.IsError)
-        return userId_result;
-    var userId = userId_result.Value;
-    return Result<int, string>.Ok(userId);
-}
-
-/// <summary>
-/// Effects: Network, Logging
-/// </summary>
-/// <param name="url">Parameter of type string</param>
-/// <returns>Returns Result<string, string></returns>
-public static Result<string, string> fetchData(string url)
-{
-    return Result<string, string>.Ok("data");
-}
-
-/// <summary>
-/// Effects: FileSystem, Logging
-/// </summary>
-/// <param name="path">Parameter of type string</param>
-/// <returns>Returns Result<string, string></returns>
-public static Result<string, string> processFile(string path)
-{
-    var content_result = readFile(path);
-    if (content_result.IsError)
-        return content_result;
-    var content = content_result.Value;
-    return Result<string, string>.Ok(content);
-}
-
-/// <summary>
-/// Pure function - no side effects
-/// </summary>
-/// <param name="x">Parameter of type int</param>
-/// <param name="y">Parameter of type int</param>
-/// <returns>Returns int</returns>
-public static int calculate(int x, int y)
-{
-    return x + y * 2;
-}
-
-/// <summary>
-/// Helper function to generate an ID
-/// Effects: None (simplified for testing)
-/// </summary>
-/// <returns>Returns Result<int, string></returns>
-public static Result<int, string> generateId()
-{
-    return Result<int, string>.Ok(42); // Simplified for testing
-}
-
-/// <summary>
-/// Helper function to read a file
-/// Effects: FileSystem (simplified for testing)
-/// </summary>
-/// <param name="path">Parameter of type string</param>
-/// <returns>Returns Result<string, string></returns>
-public static Result<string, string> readFile(string path)
-{
-    if (string.IsNullOrEmpty(path))
+    /// <summary>
+    /// Effects: Database, Logging
+    /// </summary>
+    /// <param name="name">Parameter of type string</param>
+    /// <param name="email">Parameter of type string</param>
+    /// <returns>Returns Result<int, string></returns>
+    public static Result<int, string> saveUser(string name, string email)
     {
-        return Result<string, string>.Error("Invalid file path");
+        var userId = generateId();
+        return Result.Ok<object, string>(userId);
     }
-    return Result<string, string>.Ok($"contents of {path}");
-}
 
-}
+    /// <summary>
+    /// Effects: Network, Logging
+    /// </summary>
+    /// <param name="url">Parameter of type string</param>
+    /// <returns>Returns Result<string, string></returns>
+    public static Result<string, string> fetchData(string url)
+    {
+        return Result.Ok<object, string>("data");
+    }
 
+    /// <summary>
+    /// Effects: FileSystem, Logging
+    /// </summary>
+    /// <param name="path">Parameter of type string</param>
+    /// <returns>Returns Result<string, string></returns>
+    public static Result<string, string> processFile(string path)
+    {
+        var content = readFile(path);
+        return Result.Ok<object, string>(content);
+    }
+
+    /// <param name="x">Parameter of type int</param>
+    /// <param name="y">Parameter of type int</param>
+    /// <returns>Returns int</returns>
+    public static int calculate(int x, int y)
+    {
+        return x + y * 2;
+    }
 }

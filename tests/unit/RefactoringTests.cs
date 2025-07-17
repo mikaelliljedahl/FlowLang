@@ -8,7 +8,7 @@ namespace Cadenza.Tests.Unit;
 public class RefactoringTests
 {
     [Test]
-    public void TestTokenCreation()
+    public void Tokens_Token_ShouldCreateCorrectly()
     {
         // Test that Token record works correctly
         var token = new Token(TokenType.Identifier, "test", null, 1, 1);
@@ -19,7 +19,7 @@ public class RefactoringTests
     }
 
     [Test]
-    public void TestLexerBasicFunctionality()
+    public void Lexer_BasicFunctionality_ShouldWork()
     {
         // Test that CadenzaLexer works correctly
         var source = "function test() -> int { return 42; }";
@@ -33,7 +33,7 @@ public class RefactoringTests
     }
 
     [Test]
-    public void TestParserBasicFunctionality()
+    public void Parser_BasicFunctionality_ShouldWork()
     {
         // Test that CadenzaParser works correctly
         var source = "function test() -> int { return 42; }";
@@ -52,7 +52,7 @@ public class RefactoringTests
     }
 
     [Test]
-    public void TestMatchExpressionParsing()
+    public void Parser_MatchExpression_ShouldParseCorrectly()
     {
         // Test that match expressions are parsed correctly
         var source = @"
@@ -80,7 +80,7 @@ function test() -> int {
     }
 
     [Test]
-    public void TestCSharpGeneratorBasicFunctionality()
+    public void CodeGenerator_BasicFunctionality_ShouldWork()
     {
         // Test that CSharpGenerator works correctly
         var source = "function test() -> int { return 42; }";

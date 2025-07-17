@@ -99,130 +99,165 @@ public class CadenzaLexer
                 _column = 1;
                 break;
             case '(':
+                _column++;
                 AddToken(TokenType.LeftParen);
                 break;
             case ')':
+                _column++;
                 AddToken(TokenType.RightParen);
                 break;
             case '{':
+                _column++;
                 AddToken(TokenType.LeftBrace);
                 break;
             case '}':
+                _column++;
                 AddToken(TokenType.RightBrace);
                 break;
             case '[':
+                _column++;
                 AddToken(TokenType.LeftBracket);
                 break;
             case ']':
+                _column++;
                 AddToken(TokenType.RightBracket);
                 break;
             case ',':
+                _column++;
                 AddToken(TokenType.Comma);
                 break;
             case ';':
+                _column++;
                 AddToken(TokenType.Semicolon);
                 break;
             case ':':
+                _column++;
                 AddToken(TokenType.Colon);
                 break;
             case '+':
+                _column++;
                 AddToken(TokenType.Plus);
                 break;
             case '*':
+                _column++;
                 AddToken(TokenType.Multiply);
                 break;
             case '/':
                 if (Match('/'))
                 {
+                    _column += 2; // For the //
                     // Line comment
-                    while (Peek() != '\n' && !IsAtEnd()) Advance();
+                    while (Peek() != '\n' && !IsAtEnd()) 
+                    {
+                        _column++;
+                        Advance();
+                    }
                 }
                 else if (Match('*'))
                 {
+                    _column += 2; // For the /*
                     // Check for specification block comment
                     ScanSpecificationOrComment();
                 }
                 else
                 {
+                    _column++;
                     AddToken(TokenType.Divide);
                 }
                 break;
             case '%':
+                _column++;
                 AddToken(TokenType.Modulo);
                 break;
             case '?':
+                _column++;
                 AddToken(TokenType.Question);
                 break;
             case '.':
+                _column++;
                 AddToken(TokenType.Dot);
                 break;
             case '-':
                 if (Match('>'))
                 {
+                    _column += 2; // For the ->
                     AddToken(TokenType.Arrow);
                 }
                 else
                 {
+                    _column++;
                     AddToken(TokenType.Minus);
                 }
                 break;
             case '=':
                 if (Match('='))
                 {
+                    _column += 2; // For the ==
                     AddToken(TokenType.Equal);
                 }
                 else
                 {
+                    _column++;
                     AddToken(TokenType.Assign);
                 }
                 break;
             case '!':
                 if (Match('='))
                 {
+                    _column += 2; // For the !=
                     AddToken(TokenType.NotEqual);
                 }
                 else
                 {
+                    _column++;
                     AddToken(TokenType.Not);
                 }
                 break;
             case '<':
                 if (Match('='))
                 {
+                    _column += 2; // For the <=
                     AddToken(TokenType.LessEqual);
                 }
                 else
                 {
+                    _column++;
                     AddToken(TokenType.Less);
                 }
                 break;
             case '>':
                 if (Match('='))
                 {
+                    _column += 2; // For the >=
                     AddToken(TokenType.GreaterEqual);
                 }
                 else
                 {
+                    _column++;
                     AddToken(TokenType.Greater);
                 }
                 break;
             case '&':
                 if (Match('&'))
                 {
+                    _column += 2; // For the &&
                     AddToken(TokenType.And);
                 }
                 else
                 {
+                    _column++;
                     throw new Exception($"Unexpected character '&' at line {_line}, column {_column}");
                 }
                 break;
             case '|':
                 if (Match('|'))
                 {
+                    _column += 2; // For the ||
                     AddToken(TokenType.Or);
                 }
                 else
                 {
+                    _column++;
                     throw new Exception($"Unexpected character '|' at line {_line}, column {_column}");
                 }
                 break;
@@ -232,11 +267,13 @@ public class CadenzaLexer
             case '$':
                 if (Peek() == '"')
                 {
+                    _column++; // for the $
                     Advance(); // consume the "
                     InterpolatedString();
                 }
                 else
                 {
+                    _column++;
                     throw new Exception($"Unexpected character '$' at line {_line}, column {_column}");
                 }
                 break;
@@ -259,7 +296,6 @@ public class CadenzaLexer
 
     private char Advance()
     {
-        _column++;
         return _source[_current++];
     }
 
@@ -269,7 +305,6 @@ public class CadenzaLexer
         if (_source[_current] != expected) return false;
 
         _current++;
-        _column++;
         return true;
     }
 
@@ -377,18 +412,34 @@ public class CadenzaLexer
 
     private void StringLiteral()
     {
+        _column++; // for the opening quote
         while (Peek() != '"' && !IsAtEnd())
         {
-            if (Peek() == '\n')
+            if (Peek() == '\\' && PeekNext() == '"')
+            {
+                // Skip the escaped quote
+                Advance(); // consume the backslash
+                Advance(); // consume the quote
+                _column += 2;
+            }
+            else if (Peek() == '\\' && PeekNext() != '\0')
+            {
+                // Skip the backslash and the next character
+                Advance(); // consume the backslash
+                Advance(); // consume the next character
+                _column += 2;
+            }
+            else if (Peek() == '\n')
             {
                 _line++;
                 _column = 1;
+                Advance();
             }
             else
             {
                 _column++;
+                Advance();
             }
-            Advance();
         }
 
         if (IsAtEnd())
@@ -397,6 +448,7 @@ public class CadenzaLexer
         }
 
         // The closing "
+        _column++;
         Advance();
 
         // Trim the surrounding quotes and handle escape sequences
@@ -478,15 +530,25 @@ public class CadenzaLexer
 
     private void Number()
     {
-        while (IsDigit(Peek())) Advance();
+        _column++; // for the first digit
+        while (IsDigit(Peek())) 
+        {
+            _column++;
+            Advance();
+        }
 
         // Look for a fractional part
         if (Peek() == '.' && IsDigit(PeekNext()))
         {
             // Consume the "."
+            _column++;
             Advance();
 
-            while (IsDigit(Peek())) Advance();
+            while (IsDigit(Peek()))
+            {
+                _column++;
+                Advance();
+            }
         }
 
         string numberStr = _source.Substring(_start, _current - _start);
@@ -502,7 +564,12 @@ public class CadenzaLexer
 
     private void Identifier()
     {
-        while (IsAlphaNumeric(Peek())) Advance();
+        _column++; // for the first character
+        while (IsAlphaNumeric(Peek()))
+        {
+            _column++;
+            Advance();
+        }
 
         string text = _source.Substring(_start, _current - _start);
         TokenType type = Keywords.ContainsKey(text) ? Keywords[text] : TokenType.Identifier;

@@ -1,4 +1,5 @@
 using Cadenza.Core;
+using Cadenza.LanguageServer;
 using System;
 using System.Linq;
 using Microsoft.VisualStudio.LanguageServer.Protocol;

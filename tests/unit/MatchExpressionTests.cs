@@ -9,7 +9,7 @@ namespace Cadenza.Tests.Unit;
 public class MatchExpressionTests
 {
     [Test]
-    public void TestMatchExpressionParsing()
+    public void Parser_MatchExpression_ShouldParseCorrectly()
     {
         // Test that match expressions are parsed correctly
         var source = @"
@@ -57,7 +57,7 @@ function test_match() -> int {
     }
 
     [Test]
-    public void TestMatchExpressionCodeGeneration()
+    public void CodeGenerator_MatchExpression_ShouldGenerateCorrectCode()
     {
         // Test that match expressions generate correct C# code
         var source = @"
@@ -86,7 +86,7 @@ function test_match() -> int {
     }
 
     [Test]
-    public void TestMatchWithSimplePatterns()
+    public void Parser_MatchExpression_ShouldParseSimplePatterns()
     {
         // Test match with simple patterns (not just Result types)
         var source = @"

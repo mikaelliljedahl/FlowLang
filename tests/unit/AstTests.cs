@@ -9,7 +9,7 @@ namespace Cadenza.Tests.Unit
 public class AstTests
 {
     [Test]
-    public void Program_Creation_ShouldStoreStatements()
+    public void Ast_Program_ShouldStoreStatements()
     {
         // Arrange
         var statements = new List<ASTNode>
@@ -28,7 +28,7 @@ public class AstTests
     }
 
     [Test]
-    public void FunctionDeclaration_Creation_ShouldStoreAllProperties()
+    public void Ast_FunctionDeclaration_ShouldStoreAllProperties()
     {
         // Arrange
         var name = "testFunction";
@@ -53,7 +53,7 @@ public class AstTests
     }
 
     [Test]
-    public void Parameter_Creation_ShouldStoreNameAndType()
+    public void Ast_Parameter_ShouldStoreNameAndType()
     {
         // Arrange
         var name = "testParam";
@@ -68,7 +68,7 @@ public class AstTests
     }
 
     [Test]
-    public void LetStatement_Creation_ShouldStoreAllProperties()
+    public void Ast_LetStatement_ShouldStoreAllProperties()
     {
         // Arrange
         var name = "testVar";
@@ -85,7 +85,7 @@ public class AstTests
     }
 
     [Test]
-    public void IfStatement_Creation_ShouldStoreAllProperties()
+    public void Ast_IfStatement_ShouldStoreAllProperties()
     {
         // Arrange
         var condition = new BooleanLiteral(true);
@@ -102,7 +102,7 @@ public class AstTests
     }
 
     [Test]
-    public void BinaryExpression_Creation_ShouldStoreAllProperties()
+    public void Ast_BinaryExpression_ShouldStoreAllProperties()
     {
         // Arrange
         var left = new NumberLiteral(5);
@@ -119,7 +119,7 @@ public class AstTests
     }
 
     [Test]
-    public void CallExpression_Creation_ShouldStoreAllProperties()
+    public void Ast_CallExpression_ShouldStoreAllProperties()
     {
         // Arrange
         var name = "testFunction";
@@ -134,7 +134,7 @@ public class AstTests
     }
 
     [Test]
-    public void NumberLiteral_Creation_ShouldStoreValue()
+    public void Ast_NumberLiteral_ShouldStoreValue()
     {
         // Arrange
         var value = 42;
@@ -147,7 +147,7 @@ public class AstTests
     }
 
     [Test]
-    public void StringLiteral_Creation_ShouldStoreValue()
+    public void Ast_StringLiteral_ShouldStoreValue()
     {
         // Arrange
         var value = "test string";
@@ -160,7 +160,7 @@ public class AstTests
     }
 
     [Test]
-    public void BooleanLiteral_Creation_ShouldStoreValue()
+    public void Ast_BooleanLiteral_ShouldStoreValue()
     {
         // Arrange
         var value = true;
@@ -173,7 +173,7 @@ public class AstTests
     }
 
     [Test]
-    public void ResultExpression_Creation_ShouldStoreAllProperties()
+    public void Ast_ResultExpression_ShouldStoreAllProperties()
     {
         // Arrange
         var type = "Ok";
@@ -188,7 +188,7 @@ public class AstTests
     }
 
     [Test]
-    public void ErrorPropagation_Creation_ShouldStoreExpression()
+    public void Ast_ErrorPropagation_ShouldStoreExpression()
     {
         // Arrange
         var expression = new CallExpression("riskyFunction", new List<ASTNode>());
@@ -201,7 +201,7 @@ public class AstTests
     }
 
     [Test]
-    public void MatchExpression_Creation_ShouldStoreAllProperties()
+    public void Ast_MatchExpression_ShouldStoreAllProperties()
     {
         // Arrange
         var value = new Identifier("result");
@@ -220,7 +220,7 @@ public class AstTests
     }
 
     [Test]
-    public void MatchCase_Creation_ShouldStoreAllProperties()
+    public void Ast_MatchCase_ShouldStoreAllProperties()
     {
         // Arrange
         var pattern = "Ok";
@@ -237,7 +237,7 @@ public class AstTests
     }
 
     [Test]
-    public void ModuleDeclaration_Creation_ShouldStoreAllProperties()
+    public void Ast_ModuleDeclaration_ShouldStoreAllProperties()
     {
         // Arrange
         var name = "TestModule";
@@ -254,7 +254,7 @@ public class AstTests
     }
 
     [Test]
-    public void ImportStatement_Creation_ShouldStoreAllProperties()
+    public void Ast_ImportStatement_ShouldStoreAllProperties()
     {
         // Arrange
         var moduleName = "TestModule";
@@ -271,7 +271,7 @@ public class AstTests
     }
 
     [Test]
-    public void ExportStatement_Creation_ShouldStoreExportedNames()
+    public void Ast_ExportStatement_ShouldStoreExportedNames()
     {
         // Arrange
         var exportedNames = new List<string> { "function1", "function2" };
@@ -284,7 +284,7 @@ public class AstTests
     }
 
     [Test]
-    public void SpecificationBlock_Creation_ShouldStoreAllProperties()
+    public void Ast_SpecificationBlock_ShouldStoreAllProperties()
     {
         // Arrange
         var intent = "This function calculates the sum of two numbers";
@@ -303,7 +303,7 @@ public class AstTests
     }
 
     [Test]
-    public void GuardStatement_Creation_ShouldStoreAllProperties()
+    public void Ast_GuardStatement_ShouldStoreAllProperties()
     {
         // Arrange
         var condition = new BooleanLiteral(true);
@@ -318,7 +318,7 @@ public class AstTests
     }
 
     [Test]
-    public void TernaryExpression_Creation_ShouldStoreAllProperties()
+    public void Ast_TernaryExpression_ShouldStoreAllProperties()
     {
         // Arrange
         var condition = new BooleanLiteral(true);
@@ -335,7 +335,7 @@ public class AstTests
     }
 
     [Test]
-    public void AllASTNodes_ShouldInheritFromASTNode()
+    public void Ast_AllASTNodes_ShouldInheritFromASTNode()
     {
         // Test that all AST node types properly inherit from ASTNode
         Assert.That(new ProgramNode(new List<ASTNode>()), Is.InstanceOf<ASTNode>());

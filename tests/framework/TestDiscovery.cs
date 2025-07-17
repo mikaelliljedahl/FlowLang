@@ -127,7 +127,10 @@ namespace Cadenza.Tests.Framework
         private bool IsWellNamedTestMethod(string methodName)
         {
             // Test methods should follow pattern: Component_ShouldBehavior or Component_ShouldBehavior_WhenCondition
-            var validPrefixes = new[] { "Lexer_", "Parser_", "CodeGenerator_", "Transpiler_", "GoldenFile_", "Regression_", "Discovery_" };
+            var validPrefixes = new[] { 
+                "Lexer_", "Parser_", "CodeGenerator_", "Transpiler_", "GoldenFile_", "Regression_", "Discovery_",
+                "Ast_", "Tokens_", "PackageManager_", "Analysis_"
+            };
             
             if (!validPrefixes.Any(prefix => methodName.StartsWith(prefix)))
                 return false;

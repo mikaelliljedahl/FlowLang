@@ -8,7 +8,7 @@ namespace Cadenza.Tests.Unit
 public class TokensTests
 {
     [Test]
-    public void Token_Creation_ShouldSetAllProperties()
+    public void Tokens_Token_ShouldSetAllProperties()
     {
         // Arrange
         var type = TokenType.Identifier;
@@ -29,7 +29,7 @@ public class TokensTests
     }
 
     [Test]
-    public void Token_WithNullLiteral_ShouldAcceptNull()
+    public void Tokens_Token_ShouldAcceptNull_WhenNullLiteral()
     {
         // Arrange & Act
         var token = new Token(TokenType.Identifier, "test", null, 1, 1);
@@ -43,7 +43,7 @@ public class TokensTests
     }
 
     [Test]
-    public void TokenType_Enum_ShouldContainExpectedValues()
+    public void Tokens_TokenType_ShouldContainExpectedValues()
     {
         // Test that key token types exist
         Assert.That(System.Enum.IsDefined(typeof(TokenType), TokenType.Function));
@@ -56,7 +56,7 @@ public class TokensTests
     }
 
     [Test]
-    public void TokenType_ShouldHaveOperatorTokens()
+    public void Tokens_TokenType_ShouldHaveOperatorTokens()
     {
         // Test that operator tokens exist
         Assert.That(System.Enum.IsDefined(typeof(TokenType), TokenType.Plus));
@@ -69,7 +69,7 @@ public class TokensTests
     }
 
     [Test]
-    public void TokenType_ShouldHaveEffectTokens()
+    public void Tokens_TokenType_ShouldHaveEffectTokens()
     {
         // Test that effect tokens exist
         Assert.That(System.Enum.IsDefined(typeof(TokenType), TokenType.Database));
@@ -81,7 +81,7 @@ public class TokensTests
     }
 
     [Test]
-    public void TokenType_ShouldHaveModuleTokens()
+    public void Tokens_TokenType_ShouldHaveModuleTokens()
     {
         // Test that module system tokens exist
         Assert.That(System.Enum.IsDefined(typeof(TokenType), TokenType.Module));
@@ -91,7 +91,7 @@ public class TokensTests
     }
 
     [Test]
-    public void TokenType_ShouldHaveUITokens()
+    public void Tokens_TokenType_ShouldHaveUITokens()
     {
         // Test that UI component tokens exist
         Assert.That(System.Enum.IsDefined(typeof(TokenType), TokenType.Component));

@@ -11,7 +11,7 @@ namespace Cadenza.Tests.Unit.Analysis;
 public class EffectAnalyzerTests
 {
     [Test]
-    public void PureFunctionValidationRule_ShouldDetectPureFunctionWithEffects()
+    public void Analysis_PureFunctionValidationRule_ShouldDetectPureFunctionWithEffects()
     {
         // Arrange
         var rule = new EffectAnalyzer.PureFunctionValidationRule();
@@ -38,7 +38,7 @@ public class EffectAnalyzerTests
     }
 
     [Test]
-    public void PureFunctionValidationRule_ShouldAllowPureFunctionWithoutEffects()
+    public void Analysis_PureFunctionValidationRule_ShouldAllowPureFunctionWithoutEffects()
     {
         // Arrange
         var rule = new EffectAnalyzer.PureFunctionValidationRule();
@@ -61,7 +61,7 @@ public class EffectAnalyzerTests
     }
 
     [Test]
-    public void EffectCompletenessRule_ShouldDetectMissingEffectDeclarations()
+    public void Analysis_EffectCompletenessRule_ShouldDetectMissingEffectDeclarations()
     {
         // Arrange
         var rule = new EffectAnalyzer.EffectCompletenessRule();
@@ -94,7 +94,7 @@ public class EffectAnalyzerTests
     }
 
     [Test]
-    public void EffectMinimalityRule_ShouldDetectUnusedEffects()
+    public void Analysis_EffectMinimalityRule_ShouldDetectUnusedEffects()
     {
         // Arrange
         var rule = new EffectAnalyzer.EffectMinimalityRule();
@@ -127,7 +127,7 @@ public class EffectAnalyzerTests
     }
 
     [Test]
-    public void EffectPropagationRule_ShouldDetectMissingEffectPropagation()
+    public void Analysis_EffectPropagationRule_ShouldDetectMissingEffectPropagation()
     {
         // Arrange
         var rule = new EffectAnalyzer.EffectPropagationRule();
@@ -166,7 +166,7 @@ public class EffectAnalyzerTests
     }
 
     [Test]
-    public void EffectPropagationRule_ShouldDetectPureFunctionCallingEffectFunction()
+    public void Analysis_EffectPropagationRule_ShouldDetectPureFunctionCallingEffectFunction()
     {
         // Arrange
         var rule = new EffectAnalyzer.EffectPropagationRule();
@@ -206,7 +206,7 @@ public class EffectAnalyzerTests
     }
 
     [Test]
-    public void EffectPropagationRule_ShouldAllowProperEffectPropagation()
+    public void Analysis_EffectPropagationRule_ShouldAllowProperEffectPropagation()
     {
         // Arrange
         var rule = new EffectAnalyzer.EffectPropagationRule();
@@ -244,7 +244,7 @@ public class EffectAnalyzerTests
     }
 
     [Test]
-    public void EffectAnalyzer_ShouldProvideAllRules()
+    public void Analysis_EffectAnalyzer_ShouldProvideAllRules()
     {
         // Act
         var rules = EffectAnalyzer.GetRules().ToList();
@@ -268,7 +268,7 @@ public class EffectAnalyzerTests
     [TestCase("file_read", "FileSystem")]
     [TestCase("cache_store", "Memory")]
     [TestCase("input_stream", "IO")]
-    public void EffectCompletenessRule_ShouldDetectEffectsByFunctionName(string functionName, string expectedEffect)
+    public void Analysis_EffectCompletenessRule_ShouldDetectEffectsByFunctionName(string functionName, string expectedEffect)
     {
         // Arrange
         var rule = new EffectAnalyzer.EffectCompletenessRule();

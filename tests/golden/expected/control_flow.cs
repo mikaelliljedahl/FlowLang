@@ -1,69 +1,110 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Cadenza.Runtime;
 
-namespace Cadenza.Golden.ControlFlow
+public struct Result<T, E>
 {
+    public readonly bool IsSuccess;
+    public readonly T Value;
+    public readonly E Error;
+    public Result(bool isSuccess, T value, E error)
+    {
+        IsSuccess = isSuccess;
+        Value = value;
+        Error = error;
+    }
+}
+
+public static class Result
+{
+    public static Result<T, E> Ok<T, E>(T value)
+    {
+        return new Result<T, E>(true, value, default);
+    }
+
+    public static Result<T, E> Error<T, E>(E error)
+    {
+        return new Result<T, E>(false, default, error);
+    }
+}
+
+public struct Option<T>
+{
+    public readonly bool HasValue;
+    public readonly T Value;
+    public Option(bool hasValue, T value)
+    {
+        HasValue = hasValue;
+        Value = value;
+    }
+}
+
+public static class Option
+{
+    public static Option<T> Some<T>(T value)
+    {
+        return new Option<T>(true, value);
+    }
+
+    public static Option<T> None<T>()
+    {
+        return new Option<T>(false, default);
+    }
+}
 
 public static class CadenzaProgram
 {
-/// <summary>
-/// </summary>
-/// <param name="x">Parameter of type int</param>
-/// <returns>Returns string</returns>
-public static string testIfElse(int x)
-{
-    if (x > 10)
+    /// <param name="x">Parameter of type int</param>
+    /// <returns>Returns string</returns>
+    public static string testIfElse(int x)
     {
-        return "large";
-    }
-    else
-    {
-        if (x > 5)
+        if (x > 10)
         {
-            return "medium";
+            return "large";
         }
         else
         {
-            return "small";
+            if (x > 5)
+            {
+                return "medium";
+            }
+            else
+            {
+                return "small";
+            }
         }
     }
-}
 
-/// <summary>
-/// </summary>
-/// <param name="x">Parameter of type int</param>
-/// <returns>Returns int</returns>
-public static int testGuard(int x)
-{
-    if (!(x > 0))
+    /// <param name="x">Parameter of type int</param>
+    /// <returns>Returns int</returns>
+    public static int testGuard(int x)
     {
-        return 0;
-    }
-
-    return x * 2;
-}
-
-/// <summary>
-/// </summary>
-/// <param name="x">Parameter of type int</param>
-/// <param name="y">Parameter of type int</param>
-/// <returns>Returns string</returns>
-public static string testNestedControl(int x, int y)
-{
-    if (x > 0)
-    {
-        if (!(y > 0))
+        if (!(x > 0))
         {
-            return "x positive, y not positive";
+            return 0;
         }
 
-        return "both positive";
+        return x * 2;
     }
-    else
+
+    /// <param name="x">Parameter of type int</param>
+    /// <param name="y">Parameter of type int</param>
+    /// <returns>Returns string</returns>
+    public static string testNestedControl(int x, int y)
     {
-        return "x not positive";
+        if (x > 0)
+        {
+            if (!(y > 0))
+            {
+                return "x positive, y not positive";
+            }
+
+            return "both positive";
+        }
+        else
+        {
+            return "x not positive";
+        }
     }
-}
-
-}
-
 }

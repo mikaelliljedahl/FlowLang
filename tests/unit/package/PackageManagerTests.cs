@@ -42,7 +42,7 @@ public class PackageManagerTests
     }
 
     [Test]
-    public async Task AddPackage_Should_AddToConfig()
+    public async Task PackageManager_AddPackage_ShouldAddToConfig()
     {
         // Act
         var result = await _packageManager.AddPackageAsync("TestPackage@1.0.0");
@@ -56,7 +56,7 @@ public class PackageManagerTests
     }
 
     [Test]
-    public async Task AddPackage_WithDevFlag_Should_AddToDevDependencies()
+    public async Task PackageManager_AddPackage_ShouldAddToDevDependencies_WhenDevFlag()
     {
         // Act
         var result = await _packageManager.AddPackageAsync("TestDevPackage@1.0.0", isDev: true);
@@ -70,7 +70,7 @@ public class PackageManagerTests
     }
 
     [Test]
-    public async Task RemovePackage_Should_RemoveFromConfig()
+    public async Task PackageManager_RemovePackage_ShouldRemoveFromConfig()
     {
         // Arrange
         await _packageManager.AddPackageAsync("TestPackage@1.0.0");
@@ -86,7 +86,7 @@ public class PackageManagerTests
     }
 
     [Test]
-    public async Task SearchPackages_Should_ReturnResults()
+    public async Task PackageManager_SearchPackages_ShouldReturnResults()
     {
         // Act
         var results = await _packageManager.SearchPackagesAsync("json");
@@ -114,7 +114,7 @@ public class DependencyResolverTests
     }
 
     [Test]
-    public async Task ResolveAsync_WithSimpleDependency_Should_Succeed()
+    public async Task PackageManager_ResolveAsync_ShouldSucceed_WithSimpleDependency()
     {
         // Arrange
         var config = new EnhancedFlowcConfig(
@@ -134,7 +134,7 @@ public class DependencyResolverTests
     }
 
     [Test]
-    public async Task ResolveAsync_WithVersionConflict_Should_ReportConflict()
+    public async Task PackageManager_ResolveAsync_ShouldReportConflict_WithVersionConflict()
     {
         // Arrange
         var config = new EnhancedFlowcConfig(
@@ -166,7 +166,7 @@ public class DependencyResolverTests
 public class SemanticVersionTests
 {
     [Test]
-    public void Parse_ValidVersion_Should_ParseCorrectly()
+    public void PackageManager_Parse_ShouldParseCorrectly_ValidVersion()
     {
         // Act
         var version = SemanticVersion.Parse("1.2.3");
@@ -178,7 +178,7 @@ public class SemanticVersionTests
     }
 
     [Test]
-    public void Parse_VersionWithPreRelease_Should_ParseCorrectly()
+    public void PackageManager_Parse_ShouldParseCorrectly_VersionWithPreRelease()
     {
         // Act
         var version = SemanticVersion.Parse("1.2.3-beta.1");
@@ -191,7 +191,7 @@ public class SemanticVersionTests
     }
 
     [Test]
-    public void CompareTo_Should_OrderVersionsCorrectly()
+    public void PackageManager_CompareTo_ShouldOrderVersionsCorrectly()
     {
         // Arrange
         var v1 = SemanticVersion.Parse("1.0.0");
@@ -206,7 +206,7 @@ public class SemanticVersionTests
     }
 
     [Test]
-    public void IsVersionCompatible_WithCaretRange_Should_HandleCorrectly()
+    public void PackageManager_IsVersionCompatible_ShouldHandleCorrectly_WithCaretRange()
     {
         // Arrange
         var resolver = new DependencyResolver(null!, null!);
@@ -219,7 +219,7 @@ public class SemanticVersionTests
     }
 
     [Test]
-    public void IsVersionCompatible_WithTildeRange_Should_HandleCorrectly()
+    public void PackageManager_IsVersionCompatible_ShouldHandleCorrectly_WithTildeRange()
     {
         // Arrange
         var resolver = new DependencyResolver(null!, null!);
@@ -259,7 +259,7 @@ public class SecurityScannerTests
     }
 
     [Test]
-    public async Task AuditAsync_WithNoPackages_Should_ReturnCleanReport()
+    public async Task PackageManager_AuditAsync_ShouldReturnCleanReport_WithNoPackages()
     {
         // Arrange
         var lockFile = new LockFile();
@@ -274,7 +274,7 @@ public class SecurityScannerTests
     }
 
     [Test]
-    public async Task ScanPackage_Should_InferEffectsCorrectly()
+    public async Task PackageManager_ScanPackage_ShouldInferEffectsCorrectly()
     {
         // Act
         var vulnerabilities = await _scanner.ScanPackageAsync("System.Net.Http", "4.3.0", PackageType.NuGet);
@@ -308,7 +308,7 @@ public class ConfigurationManagerTests
     }
 
     [Test]
-    public async Task LoadConfigAsync_WithNoFile_Should_ReturnDefault()
+    public async Task PackageManager_LoadConfigAsync_ShouldReturnDefault_WithNoFile()
     {
         // Act
         var config = await ConfigurationManager.LoadConfigAsync();
@@ -319,7 +319,7 @@ public class ConfigurationManagerTests
     }
 
     [Test]
-    public async Task SaveAndLoadConfig_Should_Persist()
+    public async Task PackageManager_SaveAndLoadConfig_ShouldPersist()
     {
         // Arrange
         var originalConfig = new EnhancedFlowcConfig(
@@ -342,7 +342,7 @@ public class ConfigurationManagerTests
     }
 
     [Test]
-    public async Task IsWorkspaceRoot_WithWorkspaceConfig_Should_ReturnTrue()
+    public async Task PackageManager_IsWorkspaceRoot_ShouldReturnTrue_WithWorkspaceConfig()
     {
         // Arrange
         var config = new EnhancedFlowcConfig(
@@ -358,7 +358,7 @@ public class ConfigurationManagerTests
     }
 
     [Test]
-    public async Task DiscoverWorkspaceProjects_Should_FindProjects()
+    public async Task PackageManager_DiscoverWorkspaceProjects_ShouldFindProjects()
     {
         // Arrange
         var config = new EnhancedFlowcConfig(

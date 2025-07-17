@@ -228,10 +228,10 @@ namespace Cadenza.Tests.Unit
             // Assert
             Assert.That(tokens[0].Line, Is.EqualTo(1));
             Assert.That(tokens[0].Column, Is.EqualTo(1));
-            Assert.That(tokens[1].Line, Is.EqualTo(1));
-            Assert.That(tokens[1].Column, Is.EqualTo(9));
+            Assert.That(tokens[1].Line, Is.EqualTo(2));
+            Assert.That(tokens[1].Column, Is.EqualTo(1));
             Assert.That(tokens[2].Line, Is.EqualTo(2));
-            Assert.That(tokens[2].Column, Is.EqualTo(1));
+            Assert.That(tokens[2].Column, Is.EqualTo(5));
         }
 
         [Test]
@@ -459,10 +459,10 @@ namespace Cadenza.Tests.Unit
             // Assert
             Assert.That(tokens[0].Line, Is.EqualTo(1));
             Assert.That(tokens[0].Column, Is.EqualTo(1));
-            Assert.That(tokens[2].Line, Is.EqualTo(2));
+            Assert.That(tokens[1].Line, Is.EqualTo(2));
+            Assert.That(tokens[1].Column, Is.EqualTo(1));
+            Assert.That(tokens[2].Line, Is.EqualTo(3));
             Assert.That(tokens[2].Column, Is.EqualTo(1));
-            Assert.That(tokens[4].Line, Is.EqualTo(3));
-            Assert.That(tokens[4].Column, Is.EqualTo(1));
         }
 
         [Test]

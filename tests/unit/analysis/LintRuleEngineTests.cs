@@ -11,7 +11,7 @@ namespace Cadenza.Tests.Unit.Analysis;
 public class LintRuleEngineTests
 {
     [Test]
-    public void CreateDefaultConfiguration_ShouldHaveAllStandardRules()
+    public void Analysis_CreateDefaultConfiguration_ShouldHaveAllStandardRules()
     {
         // Arrange & Act
         var config = LintConfiguration.CreateDefaultConfiguration();
@@ -28,7 +28,7 @@ public class LintRuleEngineTests
     }
 
     [Test]
-    public void LintConfiguration_ShouldRespectSeverityThreshold()
+    public void Analysis_LintConfiguration_ShouldRespectSeverityThreshold()
     {
         // Arrange
         var config = new LintConfiguration
@@ -49,7 +49,7 @@ public class LintRuleEngineTests
     }
 
     [Test]
-    public void LintConfiguration_ShouldExcludeFilesByPattern()
+    public void Analysis_LintConfiguration_ShouldExcludeFilesByPattern()
     {
         // Arrange
         var config = new LintConfiguration
@@ -65,7 +65,7 @@ public class LintRuleEngineTests
     }
 
     [Test]
-    public void LintRule_ShouldGetParameterValues()
+    public void Analysis_LintRule_ShouldGetParameterValues()
     {
         // Arrange
         var config = new LintConfiguration
@@ -92,7 +92,7 @@ public class LintRuleEngineTests
     }
 
     [Test]
-    public void AnalysisReport_ShouldAggregateMetricsCorrectly()
+    public void Analysis_AnalysisReport_ShouldAggregateMetricsCorrectly()
     {
         // Arrange
         var report = new AnalysisReport();
@@ -121,7 +121,7 @@ public class LintRuleEngineTests
     }
 
     [Test]
-    public void AnalysisReport_ShouldFilterDiagnosticsByCategory()
+    public void Analysis_AnalysisReport_ShouldFilterDiagnosticsByCategory()
     {
         // Arrange
         var report = new AnalysisReport();
@@ -149,7 +149,7 @@ public class LintRuleEngineTests
     }
 
     [Test]
-    public void AnalysisReport_ShouldDeterminePassingResult()
+    public void Analysis_AnalysisReport_ShouldDeterminePassingResult()
     {
         // Arrange
         var report = new AnalysisReport();
@@ -176,7 +176,7 @@ public class LintRuleEngineTests
     }
 
     [Test]
-    public void LintRuleEngine_ShouldRegisterAndRunRules()
+    public void Analysis_LintRuleEngine_ShouldRegisterAndRunRules()
     {
         // Arrange
         var config = new LintConfiguration

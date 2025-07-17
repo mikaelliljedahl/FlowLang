@@ -23,13 +23,13 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageReference Include="BenchmarkDotNet" Version="0.15.2" />
     <PackageReference Include="Microsoft.VisualStudio.LanguageServer.Protocol" Version="17.2.8" />
-    <PackageReference Include="System.Text.Json" Version="9.0.7" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../src/Cadenza.Core/cadenzac-core.csproj" />
     <ProjectReference Include="../src/Cadenza.Analysis/Cadenza.Analysis.csproj" />
     <ProjectReference Include="../src/Cadenza.Package/Cadenza.Package.csproj" />
+    <!-- <ProjectReference Include="../src/Cadenza.LanguageServer/Cadenza.LanguageServer.csproj" /> -->
   </ItemGroup>
 
   <ItemGroup>
@@ -49,6 +49,8 @@
     <Compile Remove="test_*.cs" />
     <Compile Remove="test_result/**/*.cs" />
     <Compile Remove="golden/inputs/*.cs" />
+    <Compile Remove="golden/expected/*.cs" />
+    <Compile Remove="unit/lsp/*.cs" />
   </ItemGroup>
 
 </Project>

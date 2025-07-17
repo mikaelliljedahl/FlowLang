@@ -43,43 +43,43 @@ namespace Cadenza.Tests.Golden
         }
 
         [Test]
-        public void GoldenFile_BasicFunctions()
+        public void GoldenFile_BasicFunctions_ShouldMatch()
         {
             ExecuteGoldenFileTest("basic_functions");
         }
 
         [Test]
-        public void GoldenFile_ControlFlow()
+        public void GoldenFile_ControlFlow_ShouldMatch()
         {
             ExecuteGoldenFileTest("control_flow");
         }
 
         [Test]
-        public void GoldenFile_ResultTypes()
+        public void GoldenFile_ResultTypes_ShouldMatch()
         {
             ExecuteGoldenFileTest("result_types");
         }
 
         [Test]
-        public void GoldenFile_Modules()
+        public void GoldenFile_Modules_ShouldMatch()
         {
             ExecuteGoldenFileTest("modules");
         }
 
         [Test]
-        public void GoldenFile_StringInterpolation()
+        public void GoldenFile_StringInterpolation_ShouldMatch()
         {
             ExecuteGoldenFileTest("string_interpolation");
         }
 
         [Test]
-        public void GoldenFile_EffectSystem()
+        public void GoldenFile_EffectSystem_ShouldMatch()
         {
             ExecuteGoldenFileTest("effect_system");
         }
 
         [Test]
-        public void GoldenFile_PureFunctions()
+        public void GoldenFile_PureFunctions_ShouldMatch()
         {
             ExecuteGoldenFileTest("pure_functions");
         }
@@ -176,7 +176,7 @@ namespace Cadenza.Tests.Golden
         }
 
         [Test]
-        public void GoldenFile_AllInputsHaveExpectedOutputs()
+        public void GoldenFile_AllInputs_ShouldHaveExpectedOutputs()
         {
             // Verify that every input file has a corresponding expected output file
             var inputFiles = Directory.GetFiles(_goldenInputsPath, "*.cdz");
@@ -198,7 +198,7 @@ namespace Cadenza.Tests.Golden
         }
 
         [Test]
-        public void GoldenFile_AllOutputsHaveInputs()
+        public void GoldenFile_AllOutputs_ShouldHaveInputs()
         {
             // Verify that every expected output file has a corresponding input file
             var outputFiles = Directory.GetFiles(_goldenExpectedPath, "*.cs");
@@ -220,7 +220,7 @@ namespace Cadenza.Tests.Golden
         }
 
         [Test]
-        public void GoldenFile_ValidateAllExpectedOutputsCompile()
+        public void GoldenFile_ExpectedOutputs_ShouldCompile()
         {
             // Ensure all expected output files contain valid C# code
             var outputFiles = Directory.GetFiles(_goldenExpectedPath, "*.cs");
@@ -246,7 +246,7 @@ namespace Cadenza.Tests.Golden
         }
 
         [Test]
-        public void GoldenFile_RegenerateExpectedOutputs()
+        public void GoldenFile_ExpectedOutputs_ShouldRegenerate()
         {
             // Helper test to regenerate all expected outputs from current transpiler
             // This should only be run when we want to update the golden files
@@ -277,7 +277,7 @@ namespace Cadenza.Tests.Golden
         }
 
         [Test]
-        public void GoldenFile_TestCoverageAnalysis()
+        public void GoldenFile_TestCoverage_ShouldAnalyze()
         {
             // Analyze what language features are covered by golden tests
             var inputFiles = Directory.GetFiles(_goldenInputsPath, "*.cdz");
