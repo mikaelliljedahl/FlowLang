@@ -3,33 +3,24 @@ using System.IO;
 using System.Threading.Tasks;
 using Cadenza.Package;
 using NUnit.Framework;
+using Cadenza.Tests.Framework;
+using Cadenza.Core;
 
 namespace Cadenza.Tests.Integration.Package;
 
 [TestFixture]
-public class PackageIntegrationTests
+public class PackageIntegrationTests : TestBase
 {
-    private string _tempDir;
-
     [SetUp]
-    public void Setup()
+    public override void SetUp()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(_tempDir);
-        Directory.SetCurrentDirectory(_tempDir);
-    }
-
-    [TearDown]
-    public void Cleanup()
-    {
-        if (Directory.Exists(_tempDir))
-        {
-            Directory.Delete(_tempDir, true);
-        }
+        base.SetUp();
+        // Switch to temp directory for package operations
+        Directory.SetCurrentDirectory(TestTempDirectory);
     }
 
     [Test]
-    public async Task EndToEnd_PackageLifecycle_Should_Work()
+    public async Task PackageIntegration_EndToEnd_PackageLifecycle_Should_Work()
     {
         // Arrange - Create a new Cadenza project
         var config = new EnhancedFlowcConfig(
@@ -63,7 +54,7 @@ public class PackageIntegrationTests
     }
 
     [Test]
-    public async Task Workspace_MultiProject_Should_ManageCorrectly()
+    public async Task PackageIntegration_Workspace_MultiProject_Should_ManageCorrectly()
     {
         // Arrange - Create workspace structure
         var workspaceConfig = new EnhancedFlowcConfig(
@@ -76,7 +67,7 @@ public class PackageIntegrationTests
         await ConfigurationManager.SaveConfigAsync(workspaceConfig);
 
         // Create project structure
-        var projectsDir = Path.Combine(_tempDir, "projects");
+        var projectsDir = Path.Combine(TestTempDirectory, "projects");
         var project1Dir = Path.Combine(projectsDir, "project1");
         var project2Dir = Path.Combine(projectsDir, "project2");
         var excludedDir = Path.Combine(projectsDir, "excluded");
@@ -95,7 +86,7 @@ public class PackageIntegrationTests
         await ConfigurationManager.SaveConfigAsync(excludedConfig, Path.Combine(excludedDir, "cadenzac.json"));
 
         // Act
-        var workspaceManager = new WorkspaceManager();
+        var workspaceManager = new Cadenza.Package.WorkspaceManager();
         var projects = await workspaceManager.GetWorkspaceProjectsAsync();
 
         // Assert
@@ -106,7 +97,7 @@ public class PackageIntegrationTests
     }
 
     [Test]
-    public async Task PackageCreation_Should_GenerateValidPackage()
+    public async Task PackageIntegration_PackageCreation_Should_GenerateValidPackage()
     {
         // Arrange - Create a complete Cadenza project
         var config = new EnhancedFlowcConfig(
@@ -117,7 +108,7 @@ public class PackageIntegrationTests
         await ConfigurationManager.SaveConfigAsync(config);
 
         // Create source structure
-        var srcDir = Path.Combine(_tempDir, "src");
+        var srcDir = Path.Combine(TestTempDirectory, "src");
         Directory.CreateDirectory(srcDir);
         
         var mainFlow = @"
@@ -143,11 +134,11 @@ function main() -> int {
     return add(1, 2)
 }
 ```";
-        await File.WriteAllTextAsync(Path.Combine(_tempDir, "README.md"), readme);
+        await File.WriteAllTextAsync(Path.Combine(TestTempDirectory, "README.md"), readme);
 
         // Act
-        var packageCreator = new PackageCreator();
-        var packagePath = await packageCreator.CreatePackageAsync(_tempDir, _tempDir);
+        var packageCreator = new Cadenza.Package.PackageCreator();
+        var packagePath = await packageCreator.CreatePackageAsync(TestTempDirectory, TestTempDirectory);
 
         // Assert
         Assert.That(File.Exists(packagePath), Is.True);
@@ -158,7 +149,7 @@ function main() -> int {
     }
 
     [Test]
-    public async Task SecurityScanner_Should_DetectKnownVulnerabilities()
+    public async Task PackageIntegration_SecurityScanner_Should_DetectKnownVulnerabilities()
     {
         // Arrange - Create project with potentially vulnerable package
         var lockFile = new LockFile();
@@ -181,7 +172,7 @@ function main() -> int {
     }
 
     [Test]
-    public async Task LockFile_Should_EnsureReproducibleBuilds()
+    public async Task PackageIntegration_LockFile_Should_EnsureReproducibleBuilds()
     {
         // Arrange
         var config = new EnhancedFlowcConfig(
@@ -207,17 +198,17 @@ function main() -> int {
     }
 
     [Test]
-    public async Task EffectInference_Should_MapNuGetPackagesCorrectly()
+    public async Task PackageManager_EffectInference_ShouldMapNuGetPackagesCorrectly()
     {
         // Arrange
-        var bindingGenerator = new BindingGenerator(new Dictionary<string, List<string>>
+        var bindingGenerator = new Cadenza.Package.BindingGenerator(new Dictionary<string, List<string>>
         {
             { "System.Net.Http", new() { "Network" } },
             { "System.Data.SqlClient", new() { "Database" } }
         });
 
         // Create mock NuGet package
-        var httpPackage = new NuGetPackage(
+        var httpPackage = new Cadenza.Package.NuGetPackage(
             Id: "System.Net.Http",
             Version: "4.3.4",
             Description: "HTTP client library",
@@ -244,29 +235,18 @@ function main() -> int {
 }
 
 [TestFixture]
-public class VersionManagementTests
+public class VersionManagementTests : TestBase
 {
-    private string _tempDir;
-
     [SetUp]
-    public void Setup()
+    public override void SetUp()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(_tempDir);
-        Directory.SetCurrentDirectory(_tempDir);
-    }
-
-    [TearDown]
-    public void Cleanup()
-    {
-        if (Directory.Exists(_tempDir))
-        {
-            Directory.Delete(_tempDir, true);
-        }
+        base.SetUp();
+        // Switch to temp directory for package operations
+        Directory.SetCurrentDirectory(TestTempDirectory);
     }
 
     [Test]
-    public async Task VersionBumping_Should_UpdateCorrectly()
+    public async Task PackageIntegration_VersionBumping_Should_UpdateCorrectly()
     {
         // Arrange
         var config = new EnhancedFlowcConfig(
@@ -303,7 +283,7 @@ public class VersionManagementTests
     }
 
     [Test]
-    public async Task ComplexVersionConstraints_Should_ResolveCorrectly()
+    public async Task PackageIntegration_VersionManagement_ComplexVersionConstraints_ShouldResolveCorrectly()
     {
         // Test various version constraint patterns
         var resolver = new DependencyResolver(null!, null!);

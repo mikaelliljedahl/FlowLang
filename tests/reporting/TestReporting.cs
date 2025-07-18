@@ -28,7 +28,7 @@ namespace Cadenza.Tests.Reporting
         }
 
         [Test]
-        public void Reporting_GenerateComprehensiveTestReport()
+        public void Reporting_GenerateComprehensiveTestReport_ShouldGenerateReport()
         {
             var report = _reportGenerator.GenerateComprehensiveReport();
             
@@ -46,7 +46,7 @@ namespace Cadenza.Tests.Reporting
         }
 
         [Test]
-        public void Reporting_GenerateCodeCoverageAnalysis()
+        public void Reporting_GenerateCodeCoverageAnalysis_ShouldAnalyzeCoverage()
         {
             var coverage = _reportGenerator.AnalyzeCodeCoverage();
             
@@ -68,7 +68,7 @@ namespace Cadenza.Tests.Reporting
         }
 
         [Test]
-        public void Reporting_GeneratePerformanceReport()
+        public void Reporting_GeneratePerformanceReport_ShouldGenerateReport()
         {
             var performance = _reportGenerator.GeneratePerformanceReport();
             
@@ -90,7 +90,7 @@ namespace Cadenza.Tests.Reporting
         }
 
         [Test]
-        public void Reporting_GenerateHtmlReport()
+        public void Reporting_GenerateHtmlReport_ShouldGenerateHtml()
         {
             var report = _reportGenerator.GenerateComprehensiveReport();
             var htmlGenerator = new HtmlReportGenerator();
@@ -105,7 +105,7 @@ namespace Cadenza.Tests.Reporting
         }
 
         [Test]
-        public void Reporting_ValidateTestMetrics()
+        public void Reporting_ValidateTestMetrics_ShouldValidateMetrics()
         {
             var metrics = _reportGenerator.CalculateTestMetrics();
             

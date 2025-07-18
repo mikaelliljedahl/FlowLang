@@ -24,6 +24,8 @@ public class CSharpGenerator
     private readonly HashSet<string> _generatedNamespaces = new();
     private readonly List<string> _usingStatements = new();
     private readonly Dictionary<string, string> _importedSymbols = new(); // Track imported symbols
+    private readonly Dictionary<string, string> _moduleNamespaces = new(); // Track module name to namespace mapping
+    private string? _currentFunctionReturnType; // Track current function's return type for Result type inference
     
     public SyntaxTree GenerateFromAST(ProgramNode program)
     {
@@ -38,12 +40,20 @@ public class CSharpGenerator
         var optionTypes = GenerateOptionTypes();
         globalMembers.AddRange(optionTypes);
         
-        // First pass: Process imports to build symbol mapping
+        // First pass: Process imports and modules to build symbol mapping
         foreach (var statement in program.Statements)
         {
             if (statement is ImportStatement import)
             {
                 ProcessImportStatement(import);
+            }
+            else if (statement is ModuleDeclaration module)
+            {
+                // Register the module for qualified call resolution
+                _moduleNamespaces[module.Name] = $"Cadenza.Modules.{module.Name}";
+                
+                // Add using statement for the module namespace
+                _usingStatements.Add($"Cadenza.Modules.{module.Name}");
             }
         }
         
@@ -339,6 +349,9 @@ public class CSharpGenerator
     
     private MethodDeclarationSyntax GenerateFunctionDeclaration(FunctionDeclaration func)
     {
+        // Set the current function return type for Result type inference
+        _currentFunctionReturnType = func.ReturnType;
+        
         var method = MethodDeclaration(
             ParseTypeName(MapCadenzaTypeToCSharp(func.ReturnType ?? "void")),
             func.Name)
@@ -385,6 +398,9 @@ public class CSharpGenerator
         }
         
         method = method.WithBody(Block(statements));
+        
+        // Clear the current function return type
+        _currentFunctionReturnType = null;
         
         return method;
     }
@@ -462,6 +478,7 @@ public class CSharpGenerator
             LetStatement let => GenerateLetStatement(let),
             IfStatement ifStmt => GenerateIfStatement(ifStmt),
             GuardStatement guard => GenerateGuardStatement(guard),
+            MatchExpression match => ExpressionStatement(GenerateMatchExpression(match)),
             CallExpression call => ExpressionStatement(GenerateCallExpression(call)),
             MethodCallExpression methodCall => ExpressionStatement(GenerateMethodCallExpression(methodCall)),
             _ => ExpressionStatement(GenerateExpression(statement))
@@ -603,18 +620,52 @@ public class CSharpGenerator
     {
         ExpressionSyntax expression;
         
-        // Handle member access calls like Console.WriteLine
+        // Handle member access calls like Console.WriteLine and module-qualified calls like Math.add
         if (call.Name.Contains('.'))
         {
             var parts = call.Name.Split('.');
-            expression = IdentifierName(parts[0]);
-            for (int i = 1; i < parts.Length; i++)
+            var moduleName = parts[0];
+            var functionName = parts[1];
+            
+            // Check if this is a module-qualified call (like Math.add)
+            if (_moduleNamespaces.ContainsKey(moduleName))
             {
+                // Generate fully qualified call: Cadenza.Modules.Math.Math.add
+                var moduleNamespace = _moduleNamespaces[moduleName];
+                expression = IdentifierName("Cadenza");
                 expression = MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
                     expression,
-                    IdentifierName(parts[i])
+                    IdentifierName("Modules")
                 );
+                expression = MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    expression,
+                    IdentifierName(moduleName)
+                );
+                expression = MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    expression,
+                    IdentifierName(moduleName) // Class name same as module name
+                );
+                expression = MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    expression,
+                    IdentifierName(functionName)
+                );
+            }
+            else
+            {
+                // Regular member access like Console.WriteLine
+                expression = IdentifierName(parts[0]);
+                for (int i = 1; i < parts.Length; i++)
+                {
+                    expression = MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        expression,
+                        IdentifierName(parts[i])
+                    );
+                }
             }
         }
         else
@@ -652,16 +703,17 @@ public class CSharpGenerator
     {
         var methodName = result.Type == "Ok" ? "Ok" : "Error";
         
-        // For now, use common type combinations - in a full implementation, 
-        // this would need proper type inference from the function signature
+        // Parse the Result type from the current function's return type
+        var (successType, errorType) = ParseResultType(_currentFunctionReturnType);
+        
         var typeArgs = result.Type == "Ok" ? 
             GenericName("Ok").WithTypeArgumentList(TypeArgumentList(SeparatedList<TypeSyntax>(new[] { 
-                IdentifierName("object"), 
-                IdentifierName("string") 
+                IdentifierName(successType), 
+                IdentifierName(errorType) 
             }))) :
             GenericName("Error").WithTypeArgumentList(TypeArgumentList(SeparatedList<TypeSyntax>(new[] { 
-                IdentifierName("object"), 
-                IdentifierName("string") 
+                IdentifierName(successType), 
+                IdentifierName(errorType) 
             })));
         
         return InvocationExpression(
@@ -673,11 +725,89 @@ public class CSharpGenerator
         ).AddArgumentListArguments(Argument(GenerateExpression(result.Value)));
     }
     
+    /// <summary>
+    /// Parse Result<T, E> type to extract T and E types
+    /// </summary>
+    private (string successType, string errorType) ParseResultType(string? returnType)
+    {
+        if (string.IsNullOrEmpty(returnType))
+        {
+            return ("object", "string"); // Default fallback
+        }
+        
+        // Handle Result<T, E> pattern
+        if (returnType.StartsWith("Result<") && returnType.EndsWith(">"))
+        {
+            var genericPart = returnType.Substring(7, returnType.Length - 8); // Remove "Result<" and ">"
+            var parts = genericPart.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            
+            if (parts.Length == 2)
+            {
+                var successType = parts[0].Trim();
+                var errorType = parts[1].Trim();
+                
+                // Map Cadenza types to C# types
+                successType = MapCadenzaTypeToCSharp(successType);
+                errorType = MapCadenzaTypeToCSharp(errorType);
+                
+                return (successType, errorType);
+            }
+        }
+        
+        // Default fallback if parsing fails
+        return ("object", "string");
+    }
+    
     private ExpressionSyntax GenerateErrorPropagation(ErrorPropagation error)
     {
-        // For now, just generate the expression - in a full implementation,
-        // this would need more sophisticated handling
-        return GenerateExpression(error.Expression);
+        // Generate the expression that returns a Result
+        var resultExpr = GenerateExpression(error.Expression);
+        
+        // For error propagation, we need to:
+        // 1. Check if the result is an error
+        // 2. If error, return it
+        // 3. If success, extract the value
+        
+        // Generate: !resultExpr.IsSuccess ? throw new InvalidOperationException(resultExpr.Error) : resultExpr.Value
+        // But we need to handle the early return case properly
+        
+        // For now, create a conditional expression that extracts the value
+        // In a full implementation, this would generate proper early return logic
+        return ConditionalExpression(
+            PrefixUnaryExpression(
+                SyntaxKind.LogicalNotExpression,
+                MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    resultExpr,
+                    IdentifierName("IsSuccess")
+                )
+            ),
+            // If error, we should return (but can't in expression context)
+            // So we'll throw for now - this needs proper statement-level handling
+            ThrowExpression(
+                ObjectCreationExpression(
+                    IdentifierName("InvalidOperationException")
+                ).WithArgumentList(
+                    ArgumentList(
+                        SingletonSeparatedList(
+                            Argument(
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    resultExpr,
+                                    IdentifierName("Error")
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            // If success, extract the value
+            MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                resultExpr,
+                IdentifierName("Value")
+            )
+        );
     }
     
     private MemberAccessExpressionSyntax GenerateMemberAccess(MemberAccessExpression member)
@@ -1069,8 +1199,12 @@ public class CSharpGenerator
         // Handle wildcard imports like: import Math.*
         else if (import.IsWildcard)
         {
-            // For now, wildcards are not supported - could be implemented later
-            // Would require knowing all exported symbols from the module
+            // Add the module namespace to using statements so all symbols are available
+            var moduleNamespace = $"Cadenza.Modules.{import.ModuleName}";
+            if (!_usingStatements.Contains(moduleNamespace))
+            {
+                _usingStatements.Add(moduleNamespace);
+            }
         }
     }
 }

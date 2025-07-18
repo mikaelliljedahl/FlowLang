@@ -1,3 +1,11 @@
+function generateId() uses [Database] -> Result<int, string> {
+    return Ok(42)
+}
+
+function readFile(path: string) uses [FileSystem] -> Result<string, string> {
+    return Ok("file content")
+}
+
 function saveUser(name: string, email: string) uses [Database, Logging] -> Result<int, string> {
     let userId = generateId()?
     return Ok(userId)

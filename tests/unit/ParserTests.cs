@@ -30,7 +30,8 @@ namespace Cadenza.Tests.Unit
             Assert.That(program.Statements.Count, Is.EqualTo(1));
             Assert.That(program.Statements[0], Is.InstanceOf<FunctionDeclaration>());
             
-            var func = (FunctionDeclaration)program.Statements[0];
+            var func = program.Statements[0] as FunctionDeclaration;
+            Assert.That(func, Is.Not.Null);
             Assert.That(func.Name, Is.EqualTo("add"));
             Assert.That(func.Parameters.Count, Is.EqualTo(2));
             Assert.That(func.Parameters[0].Name, Is.EqualTo("a"));
@@ -288,7 +289,8 @@ namespace Cadenza.Tests.Unit
             // Assert
             var func = (FunctionDeclaration)program.Statements[0];
             Assert.That(func.Body.Count, Is.EqualTo(2));
-            var letStmt = (LetStatement)func.Body[0];
+            var letStmt = func.Body[0] as LetStatement;
+            Assert.That(letStmt, Is.Not.Null);
             Assert.That(letStmt.Expression, Is.InstanceOf<ErrorPropagation>());
             
             var errorProp = (ErrorPropagation)letStmt.Expression;
@@ -310,7 +312,8 @@ namespace Cadenza.Tests.Unit
             var returnStmt = (ReturnStatement)func.Body[0];
             Assert.That(returnStmt.Expression, Is.InstanceOf<StringInterpolation>());
             
-            var interp = (StringInterpolation)returnStmt.Expression;
+            var interp = returnStmt.Expression as StringInterpolation;
+            Assert.That(interp, Is.Not.Null);
             Assert.That(interp.Parts.Count, Is.GreaterThan(0));
         }
 
@@ -733,7 +736,7 @@ namespace Cadenza.Tests.Unit
             var program = parser.Parse();
 
             // Assert - Currently parser doesn't validate pure functions with effects
-            var func = (FunctionDeclaration)program.Statements[0];
+            var func = program.Statements[0] as FunctionDeclaration;
             Assert.That(func, Is.Not.Null);
             Assert.That(func.IsPure, Is.True);
             Assert.That(func.Effects, Is.Not.Null);

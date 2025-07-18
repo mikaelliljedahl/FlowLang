@@ -195,6 +195,11 @@ public class CadenzaLexer
                     _column += 2; // For the ==
                     AddToken(TokenType.Equal);
                 }
+                else if (Match('>'))
+                {
+                    _column += 2; // For the =>
+                    AddToken(TokenType.FatArrow);
+                }
                 else
                 {
                     _column++;
@@ -453,13 +458,55 @@ public class CadenzaLexer
 
         // Trim the surrounding quotes and handle escape sequences
         string value = _source.Substring(_start + 1, _current - _start - 2);
-        value = value.Replace("\\n", "\n")
-                     .Replace("\\t", "\t")
-                     .Replace("\\r", "\r")
-                     .Replace("\\\\", "\\")
-                     .Replace("\\\"", "\"");
+        value = ProcessEscapeSequences(value);
         
         AddToken(TokenType.String, value);
+    }
+
+    private string ProcessEscapeSequences(string input)
+    {
+        var result = new StringBuilder();
+        for (int i = 0; i < input.Length; i++)
+        {
+            if (input[i] == '\\' && i + 1 < input.Length)
+            {
+                char nextChar = input[i + 1];
+                switch (nextChar)
+                {
+                    case 'n':
+                        result.Append('\n');
+                        i++; // Skip the next character
+                        break;
+                    case 't':
+                        result.Append('\t');
+                        i++; // Skip the next character
+                        break;
+                    case 'r':
+                        result.Append('\r');
+                        i++; // Skip the next character
+                        break;
+                    case '\\':
+                        result.Append('\\');
+                        i++; // Skip the next character
+                        break;
+                    case '"':
+                        result.Append('"');
+                        i++; // Skip the next character
+                        break;
+                    default:
+                        // Invalid escape sequence - treat as literal characters
+                        // Remove the backslash and keep the following character
+                        result.Append(nextChar);
+                        i++; // Skip the next character
+                        break;
+                }
+            }
+            else
+            {
+                result.Append(input[i]);
+            }
+        }
+        return result.ToString();
     }
 
     private void InterpolatedString()

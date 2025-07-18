@@ -72,6 +72,8 @@ public class CadenzaParser
             return ParseLetStatement();
         if (Match(TokenType.Guard))
             return ParseGuardStatement();
+        if (Match(TokenType.Match))
+            return ParseMatchExpression();
 
         // If we have a specification but no matching declaration, that's an error
         if (specification != null)
@@ -125,9 +127,7 @@ public class CadenzaParser
             
             if (Match(TokenType.Dot))
             {
-                Consume(TokenType.LeftBrace, "Expected '{' for specific imports");
-                specificImports = new List<string>();
-                
+                // Handle wildcard imports: import Utils.*
                 if (Check(TokenType.Multiply))
                 {
                     Advance();
@@ -135,13 +135,25 @@ public class CadenzaParser
                 }
                 else
                 {
-                    do
+                    // Handle specific imports: import Utils.{add, subtract}
+                    Consume(TokenType.LeftBrace, "Expected '{' for specific imports");
+                    specificImports = new List<string>();
+                    
+                    if (Check(TokenType.Multiply))
                     {
-                        specificImports.Add(Consume(TokenType.Identifier, "Expected import name").Lexeme);
-                    } while (Match(TokenType.Comma));
+                        Advance();
+                        isWildcard = true;
+                    }
+                    else
+                    {
+                        do
+                        {
+                            specificImports.Add(Consume(TokenType.Identifier, "Expected import name").Lexeme);
+                        } while (Match(TokenType.Comma));
+                    }
+                    
+                    Consume(TokenType.RightBrace, "Expected '}' after imports");
                 }
-                
-                Consume(TokenType.RightBrace, "Expected '}' after imports");
             }
         }
         
@@ -771,9 +783,49 @@ public class CadenzaParser
         List<ASTNode>? elseBody = null;
         if (Match(TokenType.Else))
         {
-            Consume(TokenType.LeftBrace, "Expected '{' after else");
-            elseBody = ParseStatements();
-            Consume(TokenType.RightBrace, "Expected '}' after else body");
+            // Handle else if
+            if (Match(TokenType.If))
+            {
+                // Parse the else if as a nested if statement
+                var elseIfCondition = ParseExpression();
+                
+                Consume(TokenType.LeftBrace, "Expected '{' after else if condition");
+                var elseIfThenBody = ParseStatements();
+                Consume(TokenType.RightBrace, "Expected '}' after else if body");
+                
+                List<ASTNode>? elseIfElseBody = null;
+                if (Match(TokenType.Else))
+                {
+                    // Handle nested else if or else
+                    if (Match(TokenType.If))
+                    {
+                        // Recursively parse more else if statements
+                        var nestedElseIfCondition = ParseExpression();
+                        
+                        Consume(TokenType.LeftBrace, "Expected '{' after nested else if condition");
+                        var nestedElseIfThenBody = ParseStatements();
+                        Consume(TokenType.RightBrace, "Expected '}' after nested else if body");
+                        
+                        var nestedElseIf = new IfStatement(nestedElseIfCondition, nestedElseIfThenBody, null);
+                        elseIfElseBody = new List<ASTNode> { nestedElseIf };
+                    }
+                    else
+                    {
+                        Consume(TokenType.LeftBrace, "Expected '{' after else");
+                        elseIfElseBody = ParseStatements();
+                        Consume(TokenType.RightBrace, "Expected '}' after else body");
+                    }
+                }
+                
+                var elseIfStatement = new IfStatement(elseIfCondition, elseIfThenBody, elseIfElseBody);
+                elseBody = new List<ASTNode> { elseIfStatement };
+            }
+            else
+            {
+                Consume(TokenType.LeftBrace, "Expected '{' after else");
+                elseBody = ParseStatements();
+                Consume(TokenType.RightBrace, "Expected '}' after else body");
+            }
         }
         
         return new IfStatement(condition, thenBody, elseBody);
@@ -825,23 +877,46 @@ public class CadenzaParser
         {
             // Parse pattern like "Ok(x)" or "Error(e)" or "Some(val)" or "None"
             string pattern;
+            string? variable = null;
+            
             if (Check(TokenType.Ok) || Check(TokenType.Error) || Check(TokenType.Some) || Check(TokenType.None))
             {
                 pattern = Advance().Lexeme;
+                
+                if (Match(TokenType.LeftParen))
+                {
+                    variable = Consume(TokenType.Identifier, "Expected variable name in pattern").Lexeme;
+                    Consume(TokenType.RightParen, "Expected ')' after pattern variable");
+                }
+            }
+            else if (Check(TokenType.Number) || Check(TokenType.String))
+            {
+                pattern = Advance().Literal?.ToString() ?? "";
+            }
+            else if (Check(TokenType.Identifier))
+            {
+                pattern = Advance().Lexeme;
+                // Handle wildcard '_' or other identifiers
+                if (pattern == "_")
+                {
+                    // Wildcard pattern
+                }
+                else
+                {
+                    // Could be a constructor pattern or variable binding
+                    if (Match(TokenType.LeftParen))
+                    {
+                        variable = Consume(TokenType.Identifier, "Expected variable name in pattern").Lexeme;
+                        Consume(TokenType.RightParen, "Expected ')' after pattern variable");
+                    }
+                }
             }
             else
             {
-                pattern = Consume(TokenType.Identifier, "Expected pattern in match case").Lexeme;
-            }
-            string? variable = null;
-            
-            if (Match(TokenType.LeftParen))
-            {
-                variable = Consume(TokenType.Identifier, "Expected variable name in pattern").Lexeme;
-                Consume(TokenType.RightParen, "Expected ')' after pattern variable");
+                throw new Exception($"Expected pattern in match case. Got '{Peek().Lexeme}' at line {Peek().Line}");
             }
             
-            Consume(TokenType.Arrow, "Expected '->' after match pattern");
+            Consume(TokenType.FatArrow, "Expected '=>' after match pattern");
             
             // Parse the case body
             var caseBody = new List<ASTNode>();

@@ -51,7 +51,8 @@ public enum TokenType
     Comma,
     Semicolon,
     Colon,
-    Arrow,
+    Arrow,        // -> (function return type)
+    FatArrow,     // => (match case)
     Assign,
     
     // Operators

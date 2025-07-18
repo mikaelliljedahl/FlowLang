@@ -5,10 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cadenza.Analysis;
 using NUnit.Framework;
+using Cadenza.Tests.Framework;
 
 namespace Cadenza.Tests.Integration.Analysis;
 
-public class StaticAnalysisIntegrationTests
+public class StaticAnalysisIntegrationTests : TestBase
 {
     [Test]
     public async Task StaticAnalyzer_ShouldAnalyzeCompleteFlowProgram()

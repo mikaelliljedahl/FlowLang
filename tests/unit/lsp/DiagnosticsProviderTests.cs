@@ -138,7 +138,7 @@ namespace Cadenza.Tests.Unit.LSP
         }
 
         [Test]
-        public void GetDiagnostics_ValidOperatorSequence_ShouldNotReturnOperatorError()
+        public void LSP_DiagnosticsProvider_ShouldNotReturnOperatorError_WhenValidOperatorSequence()
         {
             // Arrange
             var provider = new DiagnosticsProvider();

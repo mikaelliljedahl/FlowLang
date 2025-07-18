@@ -1,10 +1,10 @@
-using Cadenza.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Cadenza.Package;
 using NUnit.Framework;
+using System.Linq;
 
 namespace Cadenza.Tests.Unit.Package;
 
@@ -358,7 +358,7 @@ public class ConfigurationManagerTests
     }
 
     [Test]
-    public async Task PackageManager_DiscoverWorkspaceProjects_ShouldFindProjects()
+    public async Task PackageManager_ConfigurationManager_DiscoverWorkspaceProjects_ShouldFindProjects()
     {
         // Arrange
         var config = new EnhancedFlowcConfig(
@@ -436,20 +436,20 @@ public class MockPackageRegistry : IPackageRegistry
 
 public class MockNuGetClient : INuGetClient
 {
-    private readonly Dictionary<string, NuGetPackage> _packages = new();
+    private readonly Dictionary<string, Cadenza.Package.NuGetPackage> _packages = new();
 
-    public void AddPackage(NuGetPackage package)
+    public void AddPackage(Cadenza.Package.NuGetPackage package)
     {
         _packages[$"{package.Id}@{package.Version}"] = package;
     }
 
-    public Task<NuGetPackage?> GetPackageAsync(string packageId, string versionSpec)
+    public Task<Cadenza.Package.NuGetPackage?> GetPackageAsync(string packageId, string versionSpec)
     {
         var package = _packages.Values.FirstOrDefault(p => p.Id == packageId);
         return Task.FromResult(package);
     }
 
-    public Task<List<NuGetPackage>> SearchPackagesAsync(string query, int skip = 0, int take = 20)
+    public Task<List<Cadenza.Package.NuGetPackage>> SearchPackagesAsync(string query, int skip = 0, int take = 20)
     {
         return Task.FromResult(_packages.Values.Where(p => p.Id.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList());
     }

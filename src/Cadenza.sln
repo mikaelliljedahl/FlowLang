@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cadenza.LanguageServer", "C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cadenza.Package", "Cadenza.Package\Cadenza.Package.csproj", "{C00518A8-AA16-022A-6E37-40ACB1CA8E2C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cadenza.Tests", "..\tests\Cadenza.Tests.csproj", "{08F40494-3E75-43ED-1F9B-21A4426A2B8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{C00518A8-AA16-022A-6E37-40ACB1CA8E2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C00518A8-AA16-022A-6E37-40ACB1CA8E2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C00518A8-AA16-022A-6E37-40ACB1CA8E2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08F40494-3E75-43ED-1F9B-21A4426A2B8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08F40494-3E75-43ED-1F9B-21A4426A2B8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08F40494-3E75-43ED-1F9B-21A4426A2B8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08F40494-3E75-43ED-1F9B-21A4426A2B8D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

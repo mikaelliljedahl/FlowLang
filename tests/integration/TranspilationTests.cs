@@ -7,30 +7,20 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Cadenza.Core;
+using Cadenza.Tests.Framework;
 
 namespace Cadenza.Tests.Integration
 {
     [TestFixture]
-    public class TranspilationTests
+    public class TranspilationTests : TestBase
     {
         private CadenzaTranspiler _transpiler;
-        private string _tempDir;
 
         [SetUp]
-        public void SetUp()
+        public override void SetUp()
         {
+            base.SetUp();
             _transpiler = new CadenzaTranspiler();
-            _tempDir = Path.Combine(Path.GetTempPath(), "cadenza_tests_" + Guid.NewGuid());
-            Directory.CreateDirectory(_tempDir);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            if (Directory.Exists(_tempDir))
-            {
-                Directory.Delete(_tempDir, true);
-            }
         }
 
         /// <summary>

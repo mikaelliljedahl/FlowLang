@@ -180,7 +180,7 @@ function test() -> int {
         }
 
         [Test]
-        public void GetCompletions_FunctionCall_ShouldIncludeFunctionSnippet()
+        public void LSP_CompletionProvider_ShouldIncludeFunctionSnippet_OnFunctionCall()
         {
             // Arrange
             var provider = new CompletionProvider();

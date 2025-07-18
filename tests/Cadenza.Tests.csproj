@@ -29,7 +29,7 @@
     <ProjectReference Include="../src/Cadenza.Core/cadenzac-core.csproj" />
     <ProjectReference Include="../src/Cadenza.Analysis/Cadenza.Analysis.csproj" />
     <ProjectReference Include="../src/Cadenza.Package/Cadenza.Package.csproj" />
-    <!-- <ProjectReference Include="../src/Cadenza.LanguageServer/Cadenza.LanguageServer.csproj" /> -->
+    <ProjectReference Include="../src/Cadenza.LanguageServer/Cadenza.LanguageServer.csproj" /> 
   </ItemGroup>
 
   <ItemGroup>

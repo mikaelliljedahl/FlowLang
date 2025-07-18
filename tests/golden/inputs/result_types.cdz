@@ -1,3 +1,15 @@
+function parseNumber(input: string) -> Result<int, string> {
+    return Ok(42)
+}
+
+function doubleValue(x: int) -> Result<int, string> {
+    return Ok(x * 2)
+}
+
+function processValue(x: int) -> Result<string, string> {
+    return Ok("processed")
+}
+
 function divide(a: int, b: int) -> Result<int, string> {
     if b == 0 {
         return Error("Division by zero")

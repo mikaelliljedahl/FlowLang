@@ -169,7 +169,7 @@ namespace Cadenza.Tests.Unit.LSP
         }
 
         [Test]
-        public void OffsetToPosition_ShouldCalculateCorrectPosition()
+        public void LSP_DocumentManager_ShouldCalculateCorrectPosition_FromOffset()
         {
             // Arrange
             var document = new ManagedDocument
