@@ -108,8 +108,8 @@ namespace Cadenza.Tests.Integration
             // Assert
             Assert.That(output, Contains.Substring("public class Result<T, E>"));
             Assert.That(output, Contains.Substring("Result<int, string> divide(int a, int b)"));
-            Assert.That(output, Contains.Substring("Result.Error(\"Division by zero\")"));
-            Assert.That(output, Contains.Substring("Result.Ok(a / b)"));
+            Assert.That(output, Contains.Substring("Result.Error<int, string>(\"Division by zero\")"));
+            Assert.That(output, Contains.Substring("Result.Ok<int, string>(a / b)"));
             ValidateGeneratedCode(output);
         }
 

@@ -201,8 +201,8 @@ public class CSharpGenerator
     
     private MemberDeclarationSyntax[] GenerateResultTypes()
     {
-        // Generate Result<T,E> struct
-        var resultStruct = StructDeclaration("Result")
+        // Generate Result<T,E> class
+        var resultStruct = ClassDeclaration("Result")
             .AddModifiers(Token(SyntaxKind.PublicKeyword))
             .AddTypeParameterListParameters(
                 TypeParameter("T"),
@@ -741,23 +741,21 @@ public class CSharpGenerator
         // Parse the Result type from the current function's return type
         var (successType, errorType) = ParseResultType(_currentFunctionReturnType);
         
-        var typeArgs = result.Type == "Ok" ? 
-            GenericName("Ok").WithTypeArgumentList(TypeArgumentList(SeparatedList<TypeSyntax>(new[] { 
-                IdentifierName(successType), 
-                IdentifierName(errorType) 
-            }))) :
-            GenericName("Error").WithTypeArgumentList(TypeArgumentList(SeparatedList<TypeSyntax>(new[] { 
-                IdentifierName(successType), 
-                IdentifierName(errorType) 
-            })));
+        // Use explicit type arguments since C# cannot infer them in this context
+        var methodAccess = MemberAccessExpression(
+            SyntaxKind.SimpleMemberAccessExpression,
+            IdentifierName("Result"),
+            GenericName(methodName)
+                .WithTypeArgumentList(TypeArgumentList(
+                    SeparatedList<TypeSyntax>(new[] { 
+                        IdentifierName(successType), 
+                        IdentifierName(errorType) 
+                    })
+                ))
+        );
         
-        return InvocationExpression(
-            MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                IdentifierName("Result"),
-                typeArgs
-            )
-        ).AddArgumentListArguments(Argument(GenerateExpression(result.Value)));
+        return InvocationExpression(methodAccess)
+            .AddArgumentListArguments(Argument(GenerateExpression(result.Value)));
     }
     
     /// <summary>

@@ -42,6 +42,12 @@ public class CadenzaRegistryClient : IPackageRegistry, IDisposable
 
     public async Task<PackageMetadata?> GetPackageMetadataAsync(string packageName, string? version = null)
     {
+        // If using the default non-existent registry, return null immediately
+        if (_registryUrl.Contains("packages.cadenza.org") || _registryUrl.Contains("api.nuget.org"))
+        {
+            return null;
+        }
+        
         try
         {
             var url = version != null 
@@ -72,6 +78,12 @@ public class CadenzaRegistryClient : IPackageRegistry, IDisposable
 
     public async Task<List<PackageMetadata>> SearchPackagesAsync(string query, int skip = 0, int take = 20)
     {
+        // If using the default non-existent registry, return empty list immediately
+        if (_registryUrl.Contains("packages.cadenza.org") || _registryUrl.Contains("api.nuget.org"))
+        {
+            return new List<PackageMetadata>();
+        }
+        
         try
         {
             var url = $"{_registryUrl}/api/search?q={Uri.EscapeDataString(query)}&skip={skip}&take={take}";

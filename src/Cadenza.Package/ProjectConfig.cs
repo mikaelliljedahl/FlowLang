@@ -30,7 +30,7 @@ public record WorkspaceConfig(
 /// Publishing configuration for package publication
 /// </summary>
 public record PublishConfig(
-    string Registry = "https://packages.cadenza.org",
+    string Registry = "https://api.nuget.org/v3/index.json",
     string Access = "public"
 );
 
@@ -45,7 +45,7 @@ public record EnhancedFlowcConfig(
     Dictionary<string, string>? Dependencies = null,
     Dictionary<string, string>? DevDependencies = null,
     List<string>? NugetSources = null,
-    string CadenzaRegistry = "https://packages.cadenza.org",
+    string CadenzaRegistry = "https://api.nuget.org/v3/index.json",
     Dictionary<string, List<string>>? EffectMappings = null,
     WorkspaceConfig? Workspace = null,
     PublishConfig? PublishConfig = null,

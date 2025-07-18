@@ -916,7 +916,7 @@ public class CadenzaParser
                 throw new Exception($"Expected pattern in match case. Got '{Peek().Lexeme}' at line {Peek().Line}");
             }
             
-            Consume(TokenType.FatArrow, "Expected '=>' after match pattern");
+            Consume(TokenType.Arrow, "Expected '->' after match pattern");
             
             // Parse the case body
             var caseBody = new List<ASTNode>();

@@ -118,7 +118,7 @@ public class DependencyResolver
                 {
                     return new ResolvedPackage(
                         Version: version,
-                        Resolved: $"https://packages.cadenza.org/{packageName}/-/{packageName}-{version}.zip",
+                        Resolved: $"https://api.nuget.org/v3-flatcontainer/{packageName.ToLowerInvariant()}/{version}/{packageName.ToLowerInvariant()}.{version}.nupkg",
                         Integrity: $"sha512-{GenerateIntegrity(packageName, version)}",
                         Dependencies: metadata.Dependencies,
                         Effects: metadata.Effects,

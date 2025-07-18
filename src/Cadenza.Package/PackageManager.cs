@@ -426,7 +426,7 @@ public class PackageManager
         {
             return new ResolvedPackage(
                 Version: metadata.Version,
-                Resolved: $"https://packages.cadenza.org/{packageName}/-/{packageName}-{metadata.Version}.tgz",
+                Resolved: $"https://api.nuget.org/v3-flatcontainer/{packageName.ToLowerInvariant()}/{metadata.Version}/{packageName.ToLowerInvariant()}.{metadata.Version}.nupkg",
                 Integrity: "",
                 Dependencies: metadata.Dependencies,
                 Effects: metadata.Effects,
