@@ -386,7 +386,7 @@ namespace Cadenza.Tests.Unit
             var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
 
             // Assert
-            Assert.That(code, Contains.Substring("namespace Math"));
+            Assert.That(code, Contains.Substring("namespace Cadenza.Modules.Math"));
             Assert.That(code, Contains.Substring("public static class MathModule"));
             Assert.That(code, Contains.Substring("public static int add(int a, int b)"));
         }
@@ -566,7 +566,7 @@ namespace Cadenza.Tests.Unit
             var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
 
             // Assert
-            Assert.That(code, Contains.Substring("namespace Math"));
+            Assert.That(code, Contains.Substring("namespace Cadenza.Modules.Math"));
             Assert.That(code, Contains.Substring("public static class MathModule"));
             Assert.That(code, Contains.Substring("public static int add(int a, int b)"));
             Assert.That(code, Contains.Substring("public static int multiply(int a, int b)"));

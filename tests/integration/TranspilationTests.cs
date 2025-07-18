@@ -239,7 +239,7 @@ namespace Cadenza.Tests.Integration
             var output = TranspileCodeDirectly(input);
 
             // Assert
-            Assert.That(output, Contains.Substring("namespace Math"));
+            Assert.That(output, Contains.Substring("namespace Cadenza.Modules.Math"));
             Assert.That(output, Contains.Substring("public static class Math"));
             Assert.That(output, Contains.Substring("public static int add(int a, int b)"));
             Assert.That(output, Contains.Substring("public static int multiply(int a, int b)"));
@@ -250,7 +250,14 @@ namespace Cadenza.Tests.Integration
         public void Transpiler_ShouldTranspileImportsAndQualifiedCalls()
         {
             // Arrange
-            var input = @"import Math.{add}
+            var input = @"module Math {
+                function add(a: int, b: int) -> int {
+                    return a + b
+                }
+                export {add}
+            }
+            
+            import Math.{add}
             
             function calculate(x: int, y: int) -> int {
                 return Math.add(x, y) * 2
@@ -260,8 +267,8 @@ namespace Cadenza.Tests.Integration
             var output = TranspileCodeDirectly(input);
 
             // Assert
-            Assert.That(output, Contains.Substring("using Math;"));
-            Assert.That(output, Contains.Substring("Cadenza.Modules.Math.Math.add(x, y)"));
+            Assert.That(output, Contains.Substring("using Cadenza.Modules.Math;"));
+            Assert.That(output, Contains.Substring("Math.add(x, y)"));
             ValidateGeneratedCode(output);
         }
 

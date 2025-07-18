@@ -54,6 +54,7 @@ public class CSharpGenerator
                 
                 // Add using statement for the module namespace
                 _usingStatements.Add($"Cadenza.Modules.{module.Name}");
+                
             }
         }
         
@@ -102,7 +103,7 @@ public class CSharpGenerator
         _usingStatements.Add("System");
         _usingStatements.Add("System.Collections.Generic");
         _usingStatements.Add("System.Threading.Tasks");
-        _usingStatements.Add("Cadenza.Runtime");
+        // _usingStatements.Add("Cadenza.Runtime"); // Only add if runtime features are used
         
         foreach (var usingStmt in _usingStatements.Distinct())
         {
@@ -548,6 +549,7 @@ public class CSharpGenerator
     
     private ExpressionSyntax GenerateExpression(ASTNode expression)
     {
+        
         return expression switch
         {
             BinaryExpression binary => GenerateBinaryExpression(binary),
@@ -599,20 +601,53 @@ public class CSharpGenerator
 
     private InvocationExpressionSyntax GenerateMethodCallExpression(MethodCallExpression methodCall)
     {
-        // Generate the object expression first
-        var objectExpression = GenerateExpression(methodCall.Object);
+        ExpressionSyntax expression;
         
-        // Create member access expression: object.method
-        var memberAccess = MemberAccessExpression(
-            SyntaxKind.SimpleMemberAccessExpression,
-            objectExpression,
-            IdentifierName(methodCall.Method)
-        );
+        // Check if this is a module-qualified call (like Math.add)
+        if (methodCall.Object is Identifier identifier && _moduleNamespaces.ContainsKey(identifier.Name))
+        {
+            
+            // Generate fully qualified call: Cadenza.Modules.Math.Math.add
+            var moduleName = identifier.Name;
+            expression = IdentifierName("Cadenza");
+            expression = MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                expression,
+                IdentifierName("Modules")
+            );
+            expression = MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                expression,
+                IdentifierName(moduleName)
+            );
+            expression = MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                expression,
+                IdentifierName(moduleName) // Class name same as module name
+            );
+            expression = MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                expression,
+                IdentifierName(methodCall.Method)
+            );
+        }
+        else
+        {
+            // Generate the object expression first
+            var objectExpression = GenerateExpression(methodCall.Object);
+            
+            // Create member access expression: object.method
+            expression = MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                objectExpression,
+                IdentifierName(methodCall.Method)
+            );
+        }
         
         // Generate arguments
         var args = methodCall.Arguments.Select(arg => Argument(GenerateExpression(arg))).ToArray();
         
-        return InvocationExpression(memberAccess)
+        return InvocationExpression(expression)
             .AddArgumentListArguments(args);
     }
     
@@ -920,6 +955,16 @@ public class CSharpGenerator
                 trivia.Add(Comment($"/// Effects: {string.Join(", ", func.Effects)}"));
             }
             
+            trivia.Add(EndOfLine("\n"));
+            trivia.Add(Comment("/// </summary>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+        else if (func.IsPure)
+        {
+            // Pure functions without specifications get basic pure function documentation
+            trivia.Add(Comment("/// <summary>"));
+            trivia.Add(EndOfLine("\n"));
+            trivia.Add(Comment("/// Pure function - no side effects"));
             trivia.Add(EndOfLine("\n"));
             trivia.Add(Comment("/// </summary>"));
             trivia.Add(EndOfLine("\n"));
