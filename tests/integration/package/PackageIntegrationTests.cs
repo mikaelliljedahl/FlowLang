@@ -27,15 +27,14 @@ public class PackageIntegrationTests : TestBase
             Name: "integration-test-project",
             Version: "1.0.0",
             Description: "Integration test project",
-            NugetSources: new() { Path.Combine(TestContext.CurrentContext.TestDirectory, "local-nuget-repo") }
+            NugetSources: new() { Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "local-nuget-repo") }
         );
         await ConfigurationManager.SaveConfigAsync(config);
 
         var packageManager = new PackageManager(config);
 
         // Act & Assert - Add a package
-        var addResult = await packageManager.AddPackageAsync("TestPackage");
-        Assert.That(addResult.Success, Is.True);
+            var addResult = await packageManager.AddPackageAsync("sample-package@1.0.0");        Assert.That(addResult.Success, Is.True);
 
         var updatedConfig = await ConfigurationManager.LoadConfigAsync();
         Assert.That(updatedConfig.Dependencies.ContainsKey("TestPackage"), Is.True);
@@ -45,8 +44,7 @@ public class PackageIntegrationTests : TestBase
         Assert.That(installResult.Success, Is.True);
 
         // Act & Assert - Remove package
-        var removeResult = await packageManager.RemovePackageAsync("TestPackage");
-        Assert.That(removeResult.Success, Is.True);
+            var removeResult = await packageManager.RemovePackageAsync("sample-package");        Assert.That(removeResult.Success, Is.True);
         
         var finalConfig = await ConfigurationManager.LoadConfigAsync();
         Assert.That(finalConfig.Dependencies.ContainsKey("TestPackage"), Is.False);

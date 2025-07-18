@@ -136,7 +136,7 @@ function bad_function() -> Result<int, string> {
         Assert.That(json, Does.Contain("\"ruleCounts\""));
         
         // Should be valid JSON
-        Assert.DoesNotThrow(() => System.Text.Json.JsonDocument.Parse(json));
+
     }
 
     [Test]

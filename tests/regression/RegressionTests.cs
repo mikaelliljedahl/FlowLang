@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json;
 using Cadenza.Core;
+using System.Text.Json;
 
 namespace Cadenza.Tests.Regression
 {
