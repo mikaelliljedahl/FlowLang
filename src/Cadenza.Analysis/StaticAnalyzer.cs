@@ -210,6 +210,10 @@ public class StaticAnalyzer
             case StringInterpolation:
                 metrics.StringInterpolationCount++;
                 break;
+                
+            case ExportStatement:
+                // Export statements don't contribute to metrics but are valid
+                break;
         }
     }
 

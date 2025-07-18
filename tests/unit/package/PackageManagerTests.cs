@@ -346,7 +346,7 @@ public class ConfigurationManagerTests
     {
         // Arrange
         var config = new EnhancedFlowcConfig(
-            Workspace: new WorkspaceConfig(Projects: new List<string> { "./packages/*" })
+            Workspace: new WorkspaceConfig(new List<string> { "./packages/*" }, new List<string>())
         );
         await ConfigurationManager.SaveConfigAsync(config);
         
@@ -362,7 +362,7 @@ public class ConfigurationManagerTests
     {
         // Arrange
         var config = new EnhancedFlowcConfig(
-            Workspace: new WorkspaceConfig(Projects: new List<string> { "./libs/*" })
+            Workspace: new WorkspaceConfig(new List<string> { "./libs/*" }, new List<string>())
         );
         await ConfigurationManager.SaveConfigAsync(config);
         

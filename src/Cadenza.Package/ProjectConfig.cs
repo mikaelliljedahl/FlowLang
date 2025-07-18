@@ -17,8 +17,8 @@ public record BuildConfig(
 /// Workspace configuration for multi-project setups
 /// </summary>
 public record WorkspaceConfig(
-    List<string> Projects = null,
-    List<string> Exclude = null
+    List<string> Projects,
+    List<string> Exclude
 )
 {
     public List<string> Projects { get; init; } = Projects ?? new();
@@ -40,15 +40,15 @@ public record EnhancedFlowcConfig(
     string Name = "my-project",
     string Version = "1.0.0",
     string Description = "",
-    BuildConfig Build = null,
-    Dictionary<string, string> Dependencies = null,
-    Dictionary<string, string> DevDependencies = null,
-    List<string> NugetSources = null,
+    BuildConfig? Build = null,
+    Dictionary<string, string>? Dependencies = null,
+    Dictionary<string, string>? DevDependencies = null,
+    List<string>? NugetSources = null,
     string CadenzaRegistry = "https://packages.cadenza.org",
-    Dictionary<string, List<string>> EffectMappings = null,
-    WorkspaceConfig Workspace = null,
-    PublishConfig PublishConfig = null,
-    List<string> Scripts = null
+    Dictionary<string, List<string>>? EffectMappings = null,
+    WorkspaceConfig? Workspace = null,
+    PublishConfig? PublishConfig = null,
+    List<string>? Scripts = null
 )
 {
     public BuildConfig Build { get; init; } = Build ?? new();
@@ -65,9 +65,9 @@ public record EnhancedFlowcConfig(
 /// </summary>
 public record LockFile(
     int LockfileVersion = 2,
-    Dictionary<string, ResolvedPackage> Resolved = null,
-    Dictionary<string, string> Integrity = null,
-    string GeneratedAt = null
+    Dictionary<string, ResolvedPackage>? Resolved = null,
+    Dictionary<string, string>? Integrity = null,
+    string? GeneratedAt = null
 )
 {
     public Dictionary<string, ResolvedPackage> Resolved { get; init; } = Resolved ?? new();
@@ -79,8 +79,8 @@ public record ResolvedPackage(
     string Version,
     string Resolved,
     string Integrity,
-    Dictionary<string, string> Dependencies = null,
-    List<string> Effects = null,
+    Dictionary<string, string>? Dependencies = null,
+    List<string>? Effects = null,
     PackageType Type = PackageType.Cadenza
 )
 {
@@ -102,13 +102,13 @@ public record PackageMetadata(
     string Name,
     string Version,
     string Description,
-    List<string> Keywords = null,
-    string Homepage = null,
-    string Repository = null,
-    string License = null,
-    Author Author = null,
-    List<string> Effects = null,
-    Dictionary<string, string> Dependencies = null,
+    List<string>? Keywords = null,
+    string? Homepage = null,
+    string? Repository = null,
+    string? License = null,
+    Author? Author = null,
+    List<string>? Effects = null,
+    Dictionary<string, string>? Dependencies = null,
     DateTime PublishedAt = default,
     long DownloadCount = 0
 )
@@ -120,8 +120,8 @@ public record PackageMetadata(
 
 public record Author(
     string Name,
-    string Email = null,
-    string Url = null
+    string? Email = null,
+    string? Url = null
 );
 
 /// <summary>
@@ -199,7 +199,7 @@ public static class ConfigurationManager
         try
         {
             var config = LoadConfigAsync(configPath).Result;
-            return config.Workspace.Projects.Any();
+            return config.Workspace?.Projects.Any() ?? false;
         }
         catch
         {
@@ -212,6 +212,8 @@ public static class ConfigurationManager
         var config = await LoadConfigAsync(Path.Combine(rootPath, "cadenzac.json"));
         var projects = new List<string>();
 
+        if (config.Workspace == null) return projects;
+
         foreach (var projectPattern in config.Workspace.Projects)
         {
             var fullPattern = Path.Combine(rootPath, projectPattern);
@@ -221,7 +223,7 @@ public static class ConfigurationManager
             foreach (var match in matches)
             {
                 if (File.Exists(Path.Combine(match, "cadenzac.json")) && 
-                    !config.Workspace.Exclude.Any(exclude => match.Contains(exclude)))
+                    !(config.Workspace.Exclude?.Any(exclude => match.Contains(exclude)) ?? false))
                 {
                     projects.Add(Path.GetRelativePath(rootPath, match));
                 }

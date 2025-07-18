@@ -26,24 +26,23 @@ public class PackageIntegrationTests : TestBase
         var config = new EnhancedFlowcConfig(
             Name: "integration-test-project",
             Version: "1.0.0",
-            Description: "Integration test project"
+            Description: "Integration test project",
+            NugetSources: new() { Path.Combine(TestContext.CurrentContext.TestDirectory, "local-nuget-repo") }
         );
         await ConfigurationManager.SaveConfigAsync(config);
 
         var packageManager = new PackageManager(config);
 
         // Act & Assert - Add a package
-        var addResult = await packageManager.AddPackageAsync("TestPackage@1.0.0");
-        // Note: This would fail in real scenario without a test registry
-        // In production, we'd use a test package registry
-        
-        // Verify configuration was updated
+        var addResult = await packageManager.AddPackageAsync("TestPackage");
+        Assert.That(addResult.Success, Is.True);
+
         var updatedConfig = await ConfigurationManager.LoadConfigAsync();
-        Assert.That(updatedConfig.Dependencies.ContainsKey("TestPackage"), Is.False);
+        Assert.That(updatedConfig.Dependencies.ContainsKey("TestPackage"), Is.True);
 
         // Act & Assert - Install packages
         var installResult = await packageManager.InstallPackagesAsync();
-        // Note: Would require actual package sources in real test
+        Assert.That(installResult.Success, Is.True);
 
         // Act & Assert - Remove package
         var removeResult = await packageManager.RemovePackageAsync("TestPackage");
@@ -91,8 +90,8 @@ public class PackageIntegrationTests : TestBase
 
         // Assert
         Assert.That(projects.Count, Is.EqualTo(2));
-        Assert.That(projects.Contains("projects/project1"), Is.False);
-        Assert.That(projects.Contains("projects/project2"), Is.False);
+        Assert.That(projects.Any(p => p.Contains("project1")), Is.True);
+        Assert.That(projects.Any(p => p.Contains("project2")), Is.True);
         Assert.That(projects.Any(p => p.Contains("excluded")), Is.False);
     }
 
@@ -142,7 +141,7 @@ function main() -> int {
 
         // Assert
         Assert.That(File.Exists(packagePath), Is.True);
-        Assert.That(packagePath.EndsWith("sample-package-1.0.0.zip"), Is.False);
+        Assert.That(packagePath.EndsWith("sample-package-1.0.0.nupkg"), Is.True);
         
         var fileInfo = new FileInfo(packagePath);
         Assert.That(fileInfo.Length, Is.GreaterThan(0));
@@ -183,14 +182,19 @@ function main() -> int {
 
         var packageManager = new PackageManager(config);
 
-        // Act - First install
-        // Note: Would require actual package resolution in real test
+        // Act - Create and save a lock file first
+        var originalLockFile = new LockFile(
+            Resolved: new() { { "TestPackage", new ResolvedPackage("1.0.0", "test-url", "test-integrity") } }
+        );
+        await ConfigurationManager.SaveLockFileAsync(originalLockFile);
+
+        // Load the lock file multiple times to ensure consistency
         var lockFile1 = await ConfigurationManager.LoadLockFileAsync();
 
         // Simulate time passing and potential version updates
         await Task.Delay(100);
 
-        // Act - Second install should use lock file
+        // Act - Second load should return the same lock file
         var lockFile2 = await ConfigurationManager.LoadLockFileAsync();
 
         // Assert - Lock files should be identical for reproducible builds
@@ -227,10 +231,10 @@ function main() -> int {
         var bindings = await bindingGenerator.GenerateBindingsAsync(httpPackage, emptyStream);
 
         // Assert
-        Assert.That(bindings.Contains("module System_Net_Http"), Is.False);
-        Assert.That(bindings.Contains("uses [Network]"), Is.False);
-        Assert.That(bindings.Contains("function get"), Is.False);
-        Assert.That(bindings.Contains("Result<string, HttpError>"), Is.False);
+        Assert.That(bindings.Contains("module System_Net_Http"), Is.True);
+        Assert.That(bindings.Contains("uses [Network]"), Is.True);
+        Assert.That(bindings.Contains("function get"), Is.True);
+        Assert.That(bindings.Contains("Result<string, HttpError>"), Is.True);
     }
 }
 

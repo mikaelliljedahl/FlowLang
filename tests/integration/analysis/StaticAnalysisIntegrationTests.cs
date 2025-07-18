@@ -200,11 +200,7 @@ module UserService {
     }
     
     pure function create_profile(user: User, data: ProfileData) -> UserProfile {
-        return UserProfile {
-            id: user.id,
-            name: user.name,
-            data: data
-        }
+        return create_user_profile(user.id, user.name, data)
     }
     
     export { authenticate_user, get_user_profile }

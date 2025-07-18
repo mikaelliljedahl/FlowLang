@@ -114,22 +114,7 @@ namespace Cadenza.Tests.Golden
 
         private string NormalizeCode(string code)
         {
-            // Parse and normalize the C# code for comparison
-            try
-            {
-                var syntaxTree = CSharpSyntaxTree.ParseText(code);
-                return syntaxTree.GetRoot().ToFullString().Trim();
-            }
-            catch (Exception)
-            {
-                // If parsing fails, just normalize whitespace manually
-                return code.Trim()
-                    .Replace("\r\n", "\n")
-                    .Replace("\r", "\n")
-                    .Replace("  ", " ")
-                    .Replace("\n ", "\n")
-                    .Replace(" \n", "\n");
-            }
+            return code.Replace("\r\n", "\n").Trim();
         }
 
         private void ValidateGeneratedCode(string generatedCode, string testName)

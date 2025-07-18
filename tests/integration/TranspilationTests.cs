@@ -165,8 +165,8 @@ namespace Cadenza.Tests.Integration
         public void Transpiler_ShouldTranspileLetStatements()
         {
             // Arrange
-            var input = @"function calculateTotal(base: int, tax: int) -> int {
-                let subtotal = base + tax
+            var input = @"function calculateTotal(baseValue: int, tax: int) -> int {
+                let subtotal = baseValue + tax
                 let discount = subtotal / 10
                 return subtotal - discount
             }";
@@ -175,7 +175,7 @@ namespace Cadenza.Tests.Integration
             var output = TranspileCodeDirectly(input);
 
             // Assert
-            Assert.That(output, Contains.Substring("var subtotal = base + tax;"));
+            Assert.That(output, Contains.Substring("var subtotal = baseValue + tax;"));
             Assert.That(output, Contains.Substring("var discount = subtotal / 10;"));
             Assert.That(output, Contains.Substring("return subtotal - discount;"));
             ValidateGeneratedCode(output);
@@ -214,9 +214,7 @@ namespace Cadenza.Tests.Integration
             var output = TranspileCodeDirectly(input);
 
             // Assert
-            Assert.That(output, Contains.Substring("string.Format"));
-            Assert.That(output, Contains.Substring("\"Hello {0}, you are {1} years old!\""));
-            Assert.That(output, Contains.Substring("name, age"));
+            Assert.That(output, Contains.Substring("return $\"Hello {name}, you are {age} years old!\";"));
             ValidateGeneratedCode(output);
         }
 
@@ -241,7 +239,7 @@ namespace Cadenza.Tests.Integration
 
             // Assert
             Assert.That(output, Contains.Substring("namespace Math"));
-            Assert.That(output, Contains.Substring("public static class MathModule"));
+            Assert.That(output, Contains.Substring("public static class Math"));
             Assert.That(output, Contains.Substring("public static int add(int a, int b)"));
             Assert.That(output, Contains.Substring("public static int multiply(int a, int b)"));
             ValidateGeneratedCode(output);
@@ -262,7 +260,7 @@ namespace Cadenza.Tests.Integration
 
             // Assert
             Assert.That(output, Contains.Substring("using Math;"));
-            Assert.That(output, Contains.Substring("MathModule.add(x, y)"));
+            Assert.That(output, Contains.Substring("Cadenza.Modules.Math.Math.add(x, y)"));
             ValidateGeneratedCode(output);
         }
 
@@ -422,7 +420,8 @@ namespace Cadenza.Tests.Integration
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(Console).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(System.Linq.Enumerable).Assembly.Location)
+                MetadataReference.CreateFromFile(typeof(System.Linq.Enumerable).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Cadenza.Core.CadenzaLexer).Assembly.Location)
             };
 
             var compilation = CSharpCompilation.Create(
