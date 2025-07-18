@@ -81,3 +81,35 @@ find tests -type f -name "*.cs" -print0 | xargs -0 sed -i 's/Assert\.Contains(\(
 *   `Assert.That(\2, Does.Contain(\1));`: The replacement string. `\2` is the second capture group (the text) and `\1` is the first (the substring).
 
 **Important:** Always make sure you have a clean git status before running these commands, so you can easily review the changes and revert them if something goes wrong.
+
+### How to Run Specific Tests
+
+A helper script `test_specific.sh` has been created to simplify running and debugging specific tests. This script formats the output to show key information like test results, assertions, and error messages.
+
+**Usage:**
+```bash
+# Run a specific test by name
+bash test_specific.sh "TestName"
+
+# Run the default test (Transpiler_ShouldTranspileResultTypes)
+bash test_specific.sh
+
+# Examples:
+bash test_specific.sh "MatchExpression"
+bash test_specific.sh "Transpiler_ShouldTranspileResultTypes"
+bash test_specific.sh "Parser_MatchExpression_ShouldParseCorrectly"
+```
+
+**What the script does:**
+- Runs `dotnet test` with the specified filter
+- Extracts and displays key information: test results, assertions, expected vs actual values
+- Shows up to 25 lines of context after key matches
+- Helps avoid repeating long command lines when debugging specific test failures
+
+**Note:** The script may show line ending warnings (`$'\r': command not found`) but these don't affect the test results.
+
+**Alternative - Run all tests:**
+```bash
+# Run all tests and see summary
+dotnet test --logger "console;verbosity=minimal" 2>&1 | grep -E "Failed:.*Passed:" | tail -1
+```

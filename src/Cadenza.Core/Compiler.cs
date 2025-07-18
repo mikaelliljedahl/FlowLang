@@ -593,6 +593,8 @@ public class CSharpGenerator
             ">" => SyntaxKind.GreaterThanExpression,
             "<=" => SyntaxKind.LessThanOrEqualExpression,
             ">=" => SyntaxKind.GreaterThanOrEqualExpression,
+            "&&" => SyntaxKind.LogicalAndExpression,
+            "||" => SyntaxKind.LogicalOrExpression,
             _ => SyntaxKind.AddExpression
         };
         

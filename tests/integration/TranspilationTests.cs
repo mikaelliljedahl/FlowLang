@@ -284,6 +284,7 @@ namespace Cadenza.Tests.Integration
             var output = TranspileCodeDirectly(input);
 
             // Assert
+            TestContext.WriteLine($"Generated code for ComplexExpressions: {output}");
             Assert.That(output, Contains.Substring("return (a + b * c) > 10 && (a - b) < c || c == 0;"));
             ValidateGeneratedCode(output);
         }

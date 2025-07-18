@@ -6,6 +6,8 @@ using System.Linq;
 using System.Reflection;
 using Cadenza.Core;
 using System.Text.Json;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Cadenza.Tests.Regression
 {
@@ -43,7 +45,7 @@ namespace Cadenza.Tests.Regression
             var generator = new CSharpGenerator();
             var syntaxTree = generator.GenerateFromAST(ast);
             
-            return syntaxTree.GetRoot().ToFullString();
+            return syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
         }
 
         [Test]
