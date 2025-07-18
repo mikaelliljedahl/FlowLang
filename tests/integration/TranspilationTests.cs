@@ -175,6 +175,7 @@ namespace Cadenza.Tests.Integration
             var output = TranspileCodeDirectly(input);
 
             // Assert
+            TestContext.WriteLine($"Generated code for LetStatements:{output}");
             Assert.That(output, Contains.Substring("var subtotal = baseValue + tax;"));
             Assert.That(output, Contains.Substring("var discount = subtotal / 10;"));
             Assert.That(output, Contains.Substring("return subtotal - discount;"));
