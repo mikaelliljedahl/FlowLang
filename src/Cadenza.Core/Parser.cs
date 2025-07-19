@@ -52,6 +52,8 @@ public class CadenzaParser
         
         if (Match(TokenType.Module))
             return ParseModuleDeclaration(specification);
+        if (Match(TokenType.Type))
+            return ParseTypeDeclaration();
         if (Match(TokenType.Import))
             return ParseImportStatement();
         if (Match(TokenType.Export))
@@ -113,6 +115,60 @@ public class CadenzaParser
         Consume(TokenType.RightBrace, "Expected '}' after module body");
         
         return new ModuleDeclaration(name, body, exports.Any() ? exports : null, specification);
+    }
+
+    private TypeDeclaration ParseTypeDeclaration()
+    {
+        var name = Consume(TokenType.Identifier, "Expected type name").Lexeme;
+        Consume(TokenType.LeftBrace, "Expected '{' after type name");
+        
+        var fields = new List<TypeField>();
+        
+        while (!Check(TokenType.RightBrace) && !IsAtEnd())
+        {
+            var fieldName = Consume(TokenType.Identifier, "Expected field name").Lexeme;
+            Consume(TokenType.Colon, "Expected ':' after field name");
+            var fieldType = ParseTypeName();
+            
+            fields.Add(new TypeField(fieldName, fieldType));
+            
+            // Optional comma
+            if (Check(TokenType.Comma))
+            {
+                Advance();
+            }
+        }
+        
+        Consume(TokenType.RightBrace, "Expected '}' after type body");
+        
+        return new TypeDeclaration(name, fields);
+    }
+
+    private string ParseTypeName()
+    {
+        if (Check(TokenType.Identifier))
+        {
+            return Advance().Lexeme;
+        }
+        else if (Check(TokenType.String_Type))
+        {
+            Advance();
+            return "string";
+        }
+        else if (Check(TokenType.Int))
+        {
+            Advance();
+            return "int";
+        }
+        else if (Check(TokenType.Bool))
+        {
+            Advance();
+            return "bool";
+        }
+        else
+        {
+            throw new Exception($"Expected type name. Got '{Peek().Lexeme}' at line {Peek().Line}");
+        }
     }
 
     private ImportStatement ParseImportStatement()

@@ -6,7 +6,7 @@
     "source": "src/",
     "output": "bin/",
     "outputType": "exe",
-    "entryPoint": "src/main.cdz",
+    "entryPoint": "main.cdz",
     "target": "csharp",
     "framework": "net8.0"
   },

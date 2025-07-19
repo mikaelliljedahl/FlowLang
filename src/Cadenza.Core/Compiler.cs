@@ -353,6 +353,7 @@ public class CSharpGenerator
         {
             FunctionDeclaration func => GenerateFunctionDeclaration(func),
             ModuleDeclaration module => GenerateModuleDeclaration(module),
+            TypeDeclaration type => GenerateTypeDeclaration(type),
             ComponentDeclaration component => GenerateComponentDeclaration(component),
             _ => null
         };
@@ -486,6 +487,31 @@ public class CSharpGenerator
         _currentFunctionReturnType = null;
         
         return method;
+    }
+    
+    private ClassDeclarationSyntax GenerateTypeDeclaration(TypeDeclaration type)
+    {
+        var classDeclaration = ClassDeclaration(type.Name)
+            .AddModifiers(Token(SyntaxKind.PublicKeyword));
+        
+        // Generate properties for each field
+        foreach (var field in type.Fields)
+        {
+            var property = PropertyDeclaration(
+                ParseTypeName(MapCadenzaTypeToCSharp(field.Type)),
+                field.Name)
+                .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                .AddAccessorListAccessors(
+                    AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
+                    AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
+                );
+            
+            classDeclaration = classDeclaration.AddMembers(property);
+        }
+        
+        return classDeclaration;
     }
     
     private string MapCadenzaTypeToCSharp(string flowLangType)
