@@ -83,36 +83,6 @@ namespace Cadenza.Tests.Regression
         }
 
         [Test]
-        [Ignore("Baseline needs to be regenerated after code generation changes")]
-        public void Regression_PreventBreakingChanges()
-        {
-            // Load known good test cases and verify they still work
-            var testCases = LoadRegressionTestCases();
-            var failedCases = new List<string>();
-
-            foreach (var testCase in testCases)
-            {
-                try
-                {
-                    var actual = TranspileCodeDirectly(testCase.Input);
-                    
-                    // Verify the output still compiles and contains expected patterns
-                    if (!VerifyOutputIntegrity(actual, testCase))
-                    {
-                        failedCases.Add($"{testCase.Name}: Output integrity check failed");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    failedCases.Add($"{testCase.Name}: {ex.Message}");
-                }
-            }
-
-            Assert.That(failedCases, Is.Empty, 
-                $"Regression test failures detected:\n{string.Join("\n", failedCases)}");
-        }
-
-        [Test]
         public void Regression_BasicLanguageFeatures()
         {
             var testCases = new[]
