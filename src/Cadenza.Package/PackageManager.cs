@@ -421,31 +421,45 @@ public class PackageManager
     private async Task<ResolvedPackage?> ResolvePackageSpec(string packageName, string versionSpec)
     {
         // Try Cadenza registry first
-        var metadata = await _registry.GetPackageMetadataAsync(packageName);
-        if (metadata != null)
+        try
         {
-            return new ResolvedPackage(
-                Version: metadata.Version,
-                Resolved: $"https://api.nuget.org/v3-flatcontainer/{packageName.ToLowerInvariant()}/{metadata.Version}/{packageName.ToLowerInvariant()}.{metadata.Version}.nupkg",
-                Integrity: "",
-                Dependencies: metadata.Dependencies,
-                Effects: metadata.Effects,
-                Type: PackageType.Cadenza
-            );
+            var metadata = await _registry.GetPackageMetadataAsync(packageName);
+            if (metadata != null)
+            {
+                return new ResolvedPackage(
+                    Version: metadata.Version,
+                    Resolved: $"https://api.nuget.org/v3-flatcontainer/{packageName.ToLowerInvariant()}/{metadata.Version}/{packageName.ToLowerInvariant()}.{metadata.Version}.nupkg",
+                    Integrity: "",
+                    Dependencies: metadata.Dependencies,
+                    Effects: metadata.Effects,
+                    Type: PackageType.Cadenza
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Cadenza registry lookup failed: {ex.Message}");
         }
 
         // Try NuGet registry
-        var nugetPackage = await _nugetClient.GetPackageAsync(packageName, versionSpec);
-        if (nugetPackage != null)
+        try
         {
-            return new ResolvedPackage(
-                Version: nugetPackage.Version,
-                Resolved: nugetPackage.DownloadUrl,
-                Integrity: nugetPackage.Hash,
-                Dependencies: nugetPackage.Dependencies,
-                Effects: new List<string> { "IO" },
-                Type: PackageType.NuGet
-            );
+            var nugetPackage = await _nugetClient.GetPackageAsync(packageName, versionSpec);
+            if (nugetPackage != null)
+            {
+                return new ResolvedPackage(
+                    Version: nugetPackage.Version,
+                    Resolved: nugetPackage.DownloadUrl,
+                    Integrity: nugetPackage.Hash,
+                    Dependencies: nugetPackage.Dependencies,
+                    Effects: new List<string> { "IO" },
+                    Type: PackageType.NuGet
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: NuGet lookup failed: {ex.Message}");
         }
 
         return null;

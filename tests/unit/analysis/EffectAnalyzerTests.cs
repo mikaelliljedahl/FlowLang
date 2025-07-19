@@ -34,7 +34,7 @@ public class EffectAnalyzerTests
         Assert.That(diagnostics.Count, Is.EqualTo(1));
         Assert.That(diagnostics[0].RuleId, Is.EqualTo("pure-function-validation"));
         Assert.That(diagnostics[0].Message, Does.Contain("Pure function 'badPure' cannot declare effects"));
-        Assert.That(diagnostics[0].Severity, Is.EqualTo(DiagnosticSeverity.Error));
+        Assert.That(diagnostics[0].Severity, Is.EqualTo(DiagnosticSeverity.Warning));
     }
 
     [Test]

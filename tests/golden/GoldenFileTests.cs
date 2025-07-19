@@ -91,30 +91,130 @@ namespace Cadenza.Tests.Golden
             var expectedFile = Path.Combine(_goldenExpectedPath, $"{testName}.cs");
 
             Assert.That(File.Exists(inputFile), $"Input file not found: {inputFile}");
-            Assert.That(File.Exists(expectedFile), $"Expected file not found: {expectedFile}");
 
             var input = File.ReadAllText(inputFile);
-            var expected = File.ReadAllText(expectedFile);
+            var regenerateGoldenFiles = Environment.GetEnvironmentVariable("REGENERATE_GOLDEN_FILES")?.ToLowerInvariant() == "true";
 
             // Act
             var actual = TranspileCodeDirectly(input);
-
-            // Assert
-            var normalizedExpected = NormalizeCode(expected);
             var normalizedActual = NormalizeCode(actual);
-
-            Assert.That(normalizedActual, Is.EqualTo(normalizedExpected), 
-                $"Generated code doesn't match expected output for {testName}.\n\n" +
-                $"Expected:\n{normalizedExpected}\n\n" +
-                $"Actual:\n{normalizedActual}");
 
             // Additional validation - ensure generated code compiles
             ValidateGeneratedCode(actual, testName);
+
+            // Handle golden file regeneration or comparison
+            if (regenerateGoldenFiles)
+            {
+                // Regenerate golden file
+                Directory.CreateDirectory(_goldenExpectedPath);
+                File.WriteAllText(expectedFile, normalizedActual);
+                TestContext.WriteLine($"✅ Updated golden file: {testName}.cs");
+                Assert.Pass($"Golden file regenerated for {testName}");
+            }
+            else
+            {
+                // Compare with existing golden file
+                if (!File.Exists(expectedFile))
+                {
+                    Assert.Fail($"Expected file not found: {expectedFile}\n\n" +
+                               $"To create the golden file, run: REGENERATE_GOLDEN_FILES=true dotnet test\n\n" +
+                               $"Generated output that would be saved:\n{normalizedActual}");
+                }
+
+                var expected = File.ReadAllText(expectedFile);
+                var normalizedExpected = NormalizeCode(expected);
+
+                if (normalizedActual != normalizedExpected)
+                {
+                    var diff = GenerateDetailedDiff(normalizedExpected, normalizedActual, testName);
+                    Assert.Fail($"Golden file mismatch for {testName}.\n\n" +
+                               $"To update the golden file, run: REGENERATE_GOLDEN_FILES=true dotnet test\n\n" +
+                               $"{diff}");
+                }
+
+                TestContext.WriteLine($"✅ Golden file test passed: {testName}");
+            }
         }
 
         private string NormalizeCode(string code)
         {
             return code.Replace("\r\n", "\n").Trim();
+        }
+
+        private string GenerateDetailedDiff(string expected, string actual, string testName)
+        {
+            var expectedLines = expected.Split('\n');
+            var actualLines = actual.Split('\n');
+            
+            var diff = new System.Text.StringBuilder();
+            diff.AppendLine($"Diff for {testName}:");
+            diff.AppendLine("==========================================");
+            
+            var maxLines = Math.Max(expectedLines.Length, actualLines.Length);
+            var contextLines = 3; // Show 3 lines of context around differences
+            var differenceFound = false;
+            
+            for (int i = 0; i < maxLines; i++)
+            {
+                var expectedLine = i < expectedLines.Length ? expectedLines[i] : "";
+                var actualLine = i < actualLines.Length ? actualLines[i] : "";
+                
+                if (expectedLine != actualLine)
+                {
+                    if (!differenceFound)
+                    {
+                        // Show context before first difference
+                        var contextStart = Math.Max(0, i - contextLines);
+                        for (int j = contextStart; j < i; j++)
+                        {
+                            var line = j < expectedLines.Length ? expectedLines[j] : "";
+                            diff.AppendLine($"  {j + 1:D4}: {line}");
+                        }
+                        differenceFound = true;
+                    }
+                    
+                    // Show the difference
+                    diff.AppendLine($"- {i + 1:D4}: {expectedLine}");
+                    diff.AppendLine($"+ {i + 1:D4}: {actualLine}");
+                    
+                    // Show some context after the difference
+                    var contextEnd = Math.Min(maxLines, i + contextLines + 1);
+                    for (int j = i + 1; j < contextEnd && j < maxLines; j++)
+                    {
+                        var expectedContextLine = j < expectedLines.Length ? expectedLines[j] : "";
+                        var actualContextLine = j < actualLines.Length ? actualLines[j] : "";
+                        
+                        if (expectedContextLine == actualContextLine)
+                        {
+                            diff.AppendLine($"  {j + 1:D4}: {expectedContextLine}");
+                        }
+                        else
+                        {
+                            // Continue showing differences
+                            i = j - 1; // Will be incremented by outer loop
+                            break;
+                        }
+                    }
+                    
+                    if (i + contextLines + 1 < maxLines)
+                    {
+                        diff.AppendLine("...");
+                    }
+                    break; // Show only the first difference area for clarity
+                }
+            }
+            
+            if (!differenceFound)
+            {
+                diff.AppendLine("No line-by-line differences found (possibly whitespace/encoding)");
+                diff.AppendLine($"Expected length: {expected.Length} chars");
+                diff.AppendLine($"Actual length: {actual.Length} chars");
+            }
+            
+            diff.AppendLine("==========================================");
+            diff.AppendLine("Legend: - = expected, + = actual, (line numbers) = context");
+            
+            return diff.ToString();
         }
 
         private void ValidateGeneratedCode(string generatedCode, string testName)
@@ -231,34 +331,16 @@ namespace Cadenza.Tests.Golden
         }
 
         [Test]
+        [Ignore("Deprecated: Use REGENERATE_GOLDEN_FILES=true dotnet test instead")]
         public void GoldenFile_ExpectedOutputs_ShouldRegenerate()
         {
-            // Helper test to regenerate all expected outputs from current transpiler
-            // This should only be run when we want to update the golden files
-            var inputFiles = Directory.GetFiles(_goldenInputsPath, "*.cdz");
+            // DEPRECATED: This test is deprecated in favor of the environment variable approach.
+            // Use: REGENERATE_GOLDEN_FILES=true dotnet test
+            // 
+            // This method is kept for backward compatibility but should not be used.
+            // The new approach integrates regeneration into the normal test flow.
             
-            foreach (var inputFile in inputFiles)
-            {
-                var testName = Path.GetFileNameWithoutExtension(inputFile);
-                var input = File.ReadAllText(inputFile);
-                
-                try
-                {
-                    var actual = TranspileCodeDirectly(input);
-                    var normalizedActual = NormalizeCode(actual);
-                    
-                    var expectedFile = Path.Combine(_goldenExpectedPath, $"{testName}.cs");
-                    File.WriteAllText(expectedFile, normalizedActual);
-                    TestContext.WriteLine($"Updated golden file: {testName}.cs");
-                }
-                catch (Exception ex)
-                {
-                    TestContext.WriteLine($"Failed to transpile {testName}: {ex.Message}");
-                }
-            }
-            
-            // This test always passes - it's just a utility
-            Assert.Pass("Golden files regenerated");
+            Assert.Fail("This test is deprecated. Use 'REGENERATE_GOLDEN_FILES=true dotnet test' to regenerate golden files.");
         }
 
         [Test]

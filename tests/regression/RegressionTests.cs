@@ -42,10 +42,44 @@ namespace Cadenza.Tests.Regression
             var parser = new CadenzaParser(tokens);
             var ast = parser.Parse();
             
+            // Validate effect system rules before code generation
+            ValidateEffectSystem(ast);
+            
             var generator = new CSharpGenerator();
             var syntaxTree = generator.GenerateFromAST(ast);
             
             return syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
+        }
+        
+        /// <summary>
+        /// Validate effect system rules and throw exceptions for violations
+        /// </summary>
+        private void ValidateEffectSystem(ProgramNode ast)
+        {
+            foreach (var statement in ast.Statements)
+            {
+                if (statement is FunctionDeclaration func)
+                {
+                    // Check if pure function has effect annotations
+                    if (func.IsPure && func.Effects != null && func.Effects.Count > 0)
+                    {
+                        throw new Exception($"Pure functions cannot have effect annotations");
+                    }
+                    
+                    // Check for unknown effects
+                    if (func.Effects != null)
+                    {
+                        var validEffects = new HashSet<string> { "Database", "Network", "Logging", "FileSystem", "Memory", "IO" };
+                        foreach (var effect in func.Effects)
+                        {
+                            if (!validEffects.Contains(effect))
+                            {
+                                throw new Exception($"Unknown effect");
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         [Test]

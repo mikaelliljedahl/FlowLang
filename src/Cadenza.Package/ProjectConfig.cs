@@ -45,7 +45,7 @@ public record EnhancedFlowcConfig(
     Dictionary<string, string>? Dependencies = null,
     Dictionary<string, string>? DevDependencies = null,
     List<string>? NugetSources = null,
-    string CadenzaRegistry = "https://api.nuget.org/v3/index.json",
+    string CadenzaRegistry = "https://packages.cadenza.org",
     Dictionary<string, List<string>>? EffectMappings = null,
     WorkspaceConfig? Workspace = null,
     PublishConfig? PublishConfig = null,

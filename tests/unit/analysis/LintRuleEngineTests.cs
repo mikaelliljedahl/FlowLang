@@ -163,8 +163,8 @@ public class LintRuleEngineTests
             "rule", "Warning", DiagnosticSeverity.Warning,
             new SourceLocation("test.cdz", 1, 1), "test"));
 
-        Assert.That(report.HasPassingResult(DiagnosticSeverity.Error), Is.False);
-        Assert.That(report.HasPassingResult(DiagnosticSeverity.Warning), Is.True);
+        Assert.That(report.HasPassingResult(DiagnosticSeverity.Error), Is.True);
+        Assert.That(report.HasPassingResult(DiagnosticSeverity.Warning), Is.False);
 
         // Add error
         report.AddDiagnostic(new AnalysisDiagnostic(
@@ -172,7 +172,7 @@ public class LintRuleEngineTests
             new SourceLocation("test.cdz", 2, 1), "test"));
 
         Assert.That(report.HasPassingResult(DiagnosticSeverity.Error), Is.False);
-        Assert.That(report.HasPassingResult(DiagnosticSeverity.Warning), Is.True);
+        Assert.That(report.HasPassingResult(DiagnosticSeverity.Warning), Is.False);
     }
 
     [Test]

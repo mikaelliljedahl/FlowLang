@@ -220,6 +220,16 @@ public class CSharpGenerator
                     VariableDeclaration(ParseTypeName("E"))
                         .AddVariables(VariableDeclarator("Error")))
                     .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.ReadOnlyKeyword)),
+                PropertyDeclaration(ParseTypeName("bool"), "IsError")
+                    .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                    .AddAccessorListAccessors(
+                        AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                            .WithBody(Block(
+                                ReturnStatement(
+                                    PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, IdentifierName("IsSuccess"))
+                                )
+                            ))
+                    ),
                 ConstructorDeclaration("Result")
                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
                     .AddParameterListParameters(
@@ -376,10 +386,85 @@ public class CSharpGenerator
         
         // Generate method body
         var statements = new List<StatementSyntax>();
+        _errorPropagationContext = null; // Reset context for this function
+        
         for (int i = 0; i < func.Body.Count; i++)
         {
             var stmt = func.Body[i];
             var isLastStatement = i == func.Body.Count - 1;
+            
+            // Generate the statement
+            var generated = GenerateStatementSyntax(stmt);
+            
+            // Handle error propagation if it was encountered
+            if (_errorPropagationContext != null)
+            {
+                var context = _errorPropagationContext;
+                _errorPropagationContext = null; // Clear after use
+                
+                var tempVarName = $"{context.VariableName}_result";
+                var resultExpr = GenerateExpression(context.Expression.Expression);
+                
+                // Add the error propagation statements
+                statements.Add(LocalDeclarationStatement(
+                    VariableDeclaration(IdentifierName("var"))
+                        .AddVariables(
+                            VariableDeclarator(tempVarName)
+                                .WithInitializer(EqualsValueClause(resultExpr))
+                        )
+                ));
+                
+                statements.Add(IfStatement(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        IdentifierName(tempVarName),
+                        IdentifierName("IsError")
+                    ),
+                    ReturnStatement(
+                        // Convert error to match current function's return type
+                        InvocationExpression(
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                IdentifierName("Result"),
+                                GenericName("Error")
+                                    .WithTypeArgumentList(
+                                        TypeArgumentList(
+                                            SeparatedList<TypeSyntax>(new[]
+                                            {
+                                                ParseTypeName(MapCadenzaTypeToCSharp(ParseResultType(_currentFunctionReturnType).successType)),
+                                                ParseTypeName(MapCadenzaTypeToCSharp(ParseResultType(_currentFunctionReturnType).errorType))
+                                            })
+                                        )
+                                    )
+                            )
+                        ).AddArgumentListArguments(
+                            Argument(
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName(tempVarName),
+                                    IdentifierName("Error")
+                                )
+                            )
+                        )
+                    )
+                ));
+                
+                statements.Add(LocalDeclarationStatement(
+                    VariableDeclaration(context.VariableType)
+                        .AddVariables(
+                            VariableDeclarator(context.VariableName)
+                                .WithInitializer(EqualsValueClause(
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        IdentifierName(tempVarName),
+                                        IdentifierName("Value")
+                                    )
+                                ))
+                        )
+                ));
+                
+                continue; // Skip adding the null statement
+            }
             
             // If this is the last statement and it's an expression (not a return statement or control flow statement),
             // wrap it in a return statement
@@ -388,13 +473,9 @@ public class CSharpGenerator
                 var returnStmt = ReturnStatement(GenerateExpression(stmt));
                 statements.Add(returnStmt);
             }
-            else
+            else if (generated != null)
             {
-                var generated = GenerateStatementSyntax(stmt);
-                if (generated != null)
-                {
-                    statements.Add(generated);
-                }
+                statements.Add(generated);
             }
         }
         
@@ -500,9 +581,24 @@ public class CSharpGenerator
         return ReturnStatement();
     }
     
-    private LocalDeclarationStatementSyntax GenerateLetStatement(LetStatement let)
+    private StatementSyntax GenerateLetStatement(LetStatement let)
     {
         var variableType = let.Type != null ? ParseTypeName(MapCadenzaTypeToCSharp(let.Type)) : IdentifierName("var");
+        
+        // Handle error propagation specially - store context for later expansion
+        if (let.Expression is ErrorPropagation errorProp)
+        {
+            // Store the error propagation context for function-level processing
+            _errorPropagationContext = new ErrorPropagationContext 
+            { 
+                VariableName = let.Name, 
+                Expression = errorProp, 
+                VariableType = variableType 
+            };
+            
+            // Return null to signal that this should be handled at function level
+            return null;
+        }
         
         return LocalDeclarationStatement(
             VariableDeclaration(variableType)
@@ -511,6 +607,15 @@ public class CSharpGenerator
                         .WithInitializer(EqualsValueClause(GenerateExpression(let.Expression)))
                 )
         );
+    }
+    
+    private ErrorPropagationContext _errorPropagationContext;
+    
+    private class ErrorPropagationContext
+    {
+        public string VariableName { get; set; }
+        public ErrorPropagation Expression { get; set; }
+        public TypeSyntax VariableType { get; set; }
     }
     
     private IfStatementSyntax GenerateIfStatement(IfStatement ifStmt)
@@ -581,6 +686,19 @@ public class CSharpGenerator
         var left = GenerateExpression(binary.Left);
         var right = GenerateExpression(binary.Right);
         
+        // Add parentheses around arithmetic expressions when used in comparison or logical operations
+        if (IsComparisonOrLogicalOperator(binary.Operator))
+        {
+            if (binary.Left is BinaryExpression leftBinary && (IsArithmeticOperator(leftBinary.Operator) || ContainsArithmetic(leftBinary)))
+            {
+                left = ParenthesizedExpression(left);
+            }
+            if (binary.Right is BinaryExpression rightBinary && (IsArithmeticOperator(rightBinary.Operator) || ContainsArithmetic(rightBinary)))
+            {
+                right = ParenthesizedExpression(right);
+            }
+        }
+        
         var kind = binary.Operator switch
         {
             "+" => SyntaxKind.AddExpression,
@@ -599,6 +717,40 @@ public class CSharpGenerator
         };
         
         return BinaryExpression(kind, left, right);
+    }
+    
+    private static bool IsArithmeticOperator(string op)
+    {
+        return op is "+" or "-" or "*" or "/";
+    }
+    
+    private static bool IsComparisonOrLogicalOperator(string op)
+    {
+        return op is ">" or "<" or ">=" or "<=" or "==" or "!=" or "&&" or "||";
+    }
+    
+    private static bool ContainsArithmetic(BinaryExpression expr)
+    {
+        if (IsArithmeticOperator(expr.Operator))
+            return true;
+            
+        if (expr.Left is BinaryExpression leftBinary && ContainsArithmetic(leftBinary))
+            return true;
+            
+        if (expr.Right is BinaryExpression rightBinary && ContainsArithmetic(rightBinary))
+            return true;
+            
+        return false;
+    }
+    
+    private static bool IsArithmeticExpression(ASTNode expr)
+    {
+        return expr switch
+        {
+            ArithmeticExpression => true,
+            BinaryExpression binary => IsArithmeticOperator(binary.Operator) || ContainsArithmetic(binary),
+            _ => false
+        };
     }
 
     private InvocationExpressionSyntax GenerateMethodCallExpression(MethodCallExpression methodCall)
@@ -740,20 +892,23 @@ public class CSharpGenerator
     {
         var methodName = result.Type == "Ok" ? "Ok" : "Error";
         
-        // Parse the Result type from the current function's return type
+        // Parse the function's return type to get explicit type arguments
         var (successType, errorType) = ParseResultType(_currentFunctionReturnType);
         
-        // Use explicit type arguments since C# cannot infer them in this context
+        // Generate Result.Ok<T, E>() or Result.Error<T, E>() with explicit type arguments
         var methodAccess = MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
             IdentifierName("Result"),
             GenericName(methodName)
-                .WithTypeArgumentList(TypeArgumentList(
-                    SeparatedList<TypeSyntax>(new[] { 
-                        IdentifierName(successType), 
-                        IdentifierName(errorType) 
-                    })
-                ))
+                .WithTypeArgumentList(
+                    TypeArgumentList(
+                        SeparatedList<TypeSyntax>(new[]
+                        {
+                            ParseTypeName(MapCadenzaTypeToCSharp(successType)),
+                            ParseTypeName(MapCadenzaTypeToCSharp(errorType))
+                        })
+                    )
+                )
         );
         
         return InvocationExpression(methodAccess)
@@ -998,6 +1153,19 @@ public class CSharpGenerator
     
     private BinaryExpressionSyntax GenerateLogicalExpression(LogicalExpression logical)
     {
+        var left = GenerateExpression(logical.Left);
+        var right = GenerateExpression(logical.Right);
+        
+        // Add parentheses around arithmetic expressions when used in logical operations
+        if (IsArithmeticExpression(logical.Left))
+        {
+            left = ParenthesizedExpression(left);
+        }
+        if (IsArithmeticExpression(logical.Right))
+        {
+            right = ParenthesizedExpression(right);
+        }
+        
         var kind = logical.Operator switch
         {
             "&&" => SyntaxKind.LogicalAndExpression,
@@ -1005,15 +1173,24 @@ public class CSharpGenerator
             _ => SyntaxKind.LogicalAndExpression
         };
         
-        return BinaryExpression(
-            kind,
-            GenerateExpression(logical.Left),
-            GenerateExpression(logical.Right)
-        );
+        return BinaryExpression(kind, left, right);
     }
     
     private BinaryExpressionSyntax GenerateComparisonExpression(ComparisonExpression comparison)
     {
+        var left = GenerateExpression(comparison.Left);
+        var right = GenerateExpression(comparison.Right);
+        
+        // Add parentheses around arithmetic expressions when used in comparison operations
+        if (IsArithmeticExpression(comparison.Left))
+        {
+            left = ParenthesizedExpression(left);
+        }
+        if (IsArithmeticExpression(comparison.Right))
+        {
+            right = ParenthesizedExpression(right);
+        }
+        
         var kind = comparison.Operator switch
         {
             "==" => SyntaxKind.EqualsExpression,
@@ -1025,11 +1202,7 @@ public class CSharpGenerator
             _ => SyntaxKind.EqualsExpression
         };
         
-        return BinaryExpression(
-            kind,
-            GenerateExpression(comparison.Left),
-            GenerateExpression(comparison.Right)
-        );
+        return BinaryExpression(kind, left, right);
     }
     
     private BinaryExpressionSyntax GenerateArithmeticExpression(ArithmeticExpression arithmetic)
