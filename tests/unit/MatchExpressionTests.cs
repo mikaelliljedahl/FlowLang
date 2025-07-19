@@ -2,6 +2,8 @@ using Cadenza.Core;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Cadenza.Tests.Unit;
 
@@ -62,7 +64,7 @@ function test_match() -> int {
         // Test that match expressions generate correct C# code
         var source = @"
 function test_match() -> int {
-    let result = Ok(42);
+    let result: Result<int, string> = Ok(42);
     return match result {
         Ok(value) -> value
         Error(err) -> 0
@@ -76,7 +78,7 @@ function test_match() -> int {
         
         var generator = new CSharpGenerator();
         var syntaxTree = generator.GenerateFromAST(program);
-        var csharpCode = syntaxTree.ToString();
+        var csharpCode = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
         
         Assert.That(csharpCode, Is.Not.Null);
         Assert.That(csharpCode.Contains("int test_match()"), Is.True);

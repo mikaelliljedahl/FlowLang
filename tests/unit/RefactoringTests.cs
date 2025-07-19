@@ -1,6 +1,8 @@
 using Cadenza.Core;
 using NUnit.Framework;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Cadenza.Tests.Unit;
 
@@ -93,10 +95,10 @@ function test() -> int {
         var syntaxTree = generator.GenerateFromAST(program);
         
         Assert.That(syntaxTree, Is.Not.Null);
-        var csharpCode = syntaxTree.ToString();
+        var csharpCode = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
         
         // Should contain the generated function
-        Assert.That(csharpCode.Contains("int test()"), Is.True);
+        Assert.That(csharpCode.Contains("public static int test()"), Is.True);
         Assert.That(csharpCode.Contains("return 42;"), Is.True);
     }
 }

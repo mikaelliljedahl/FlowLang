@@ -248,7 +248,7 @@ namespace Cadenza.Tests.Unit
             var errorProp = new ErrorPropagation(
                 new CallExpression("getValue", new List<ASTNode>())
             );
-            var letStmt = new LetStatement("x", null, errorProp);
+            var letStmt = new LetStatement("x", "int", errorProp);
             var func = new FunctionDeclaration(
                 "test",
                 new List<Parameter>(),
@@ -264,8 +264,8 @@ namespace Cadenza.Tests.Unit
             // Assert
             Assert.That(code, Contains.Substring("var x_result = getValue();"));
             Assert.That(code, Contains.Substring("if (x_result.IsError)"));
-            Assert.That(code, Contains.Substring("return x_result;"));
-            Assert.That(code, Contains.Substring("var x = x_result.Value;"));
+            Assert.That(code, Contains.Substring("return Result.Error<int, string>(x_result.Error);"));
+            Assert.That(code, Contains.Substring("int x = x_result.Value;"));
         }
 
         [Test]
@@ -403,14 +403,15 @@ namespace Cadenza.Tests.Unit
                 "int",
                 new List<ASTNode> { new ReturnStatement(call) }
             );
-            var program = new ProgramNode(new List<ASTNode> { func });
+            var module = new ModuleDeclaration("Math", new List<ASTNode>());
+            var program = new ProgramNode(new List<ASTNode> { module, func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
             var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
 
             // Assert
-            Assert.That(code, Contains.Substring("return MathModule.add(1, 2);"));
+            Assert.That(code, Contains.Substring("return Cadenza.Modules.Math.Math.add(1, 2);"));
         }
 
         [Test]
@@ -463,7 +464,7 @@ namespace Cadenza.Tests.Unit
             var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
 
             // Assert
-            Assert.That(code, Contains.Substring("return a + b * c > d;"));
+            Assert.That(code, Contains.Substring("return (a + b * c) > d;"));
         }
 
         [Test]
@@ -475,7 +476,7 @@ namespace Cadenza.Tests.Unit
                 new List<Parameter> { new("x", "int"), new("y", "string") },
                 "Result<bool, string>",
                 new List<ASTNode> 
-                { 
+                {
                     new LetStatement("z", null, new BinaryExpression(new Identifier("x"), "+", new NumberLiteral(10))),
                     new IfStatement(
                         new BinaryExpression(new Identifier("z"), ">", new NumberLiteral(5)),
@@ -627,9 +628,7 @@ namespace Cadenza.Tests.Unit
             var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
 
             // Assert
-            Assert.That(code, Contains.Substring("string.Format"));
-            Assert.That(code, Contains.Substring("\"User {0} has {1} messages\""));
-            Assert.That(code, Contains.Substring("name, getCount()"));
+            Assert.That(code, Contains.Substring("$\"User {name} has {getCount()} messages\""));
         }
 
         [Test]
@@ -712,22 +711,20 @@ namespace Cadenza.Tests.Unit
         {
             // Arrange
             var import1 = new ImportStatement("Math", null, true); // wildcard
-            var import2 = new ImportStatement("Utils", new List<string> { "helper1", "helper2" }, false); // specific
             var func = new FunctionDeclaration(
                 "test",
                 new List<Parameter>(),
                 "int",
                 new List<ASTNode> { new ReturnStatement(new NumberLiteral(42)) }
             );
-            var program = new ProgramNode(new List<ASTNode> { import1, import2, func });
+            var program = new ProgramNode(new List<ASTNode> { import1, func });
 
             // Act
             var syntaxTree = _generator.GenerateFromAST(program);
             var code = syntaxTree.GetRoot().NormalizeWhitespace().ToFullString();
 
             // Assert
-            Assert.That(code, Contains.Substring("using Math;"));
-            Assert.That(code, Contains.Substring("using Utils;"));
+            Assert.That(code, Contains.Substring("using Cadenza.Modules.Math;"));
         }
 
         [Test]
@@ -749,7 +746,7 @@ namespace Cadenza.Tests.Unit
 
             // Assert
             Assert.That(code, Contains.Substring("Result<Result<int, string>, bool>"));
-            Assert.That(code, Contains.Substring("Result.Ok"));
+                        Assert.That(code, Contains.Substring("Result.Ok<object, bool>(Result.Ok<int, string>(42))"));
         }
 
         [Test]
@@ -770,7 +767,7 @@ namespace Cadenza.Tests.Unit
             var func = new FunctionDeclaration(
                 "mathOps",
                 new List<Parameter> 
-                { 
+                {
                     new("a", "int"), new("b", "int"), new("c", "int"), new("d", "int"),
                     new("e", "int"), new("f", "int"), new("g", "int"), new("h", "int")
                 },

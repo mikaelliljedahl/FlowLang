@@ -414,39 +414,40 @@ public class CSharpGenerator
                         )
                 ));
                 
+                // Create a new Result object with the correct return type for the current function
+                var (successType, errorType) = ParseResultType(_currentFunctionReturnType);
+                var returnError = ReturnStatement(
+                    InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName("Result"),
+                            GenericName("Error")
+                                .WithTypeArgumentList(
+                                    TypeArgumentList(SeparatedList<TypeSyntax>(new[]
+                                    {
+                                        ParseTypeName(successType),
+                                        ParseTypeName(errorType)
+                                    }))
+                                )
+                        )
+                    ).AddArgumentListArguments(
+                        Argument(
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                IdentifierName(tempVarName),
+                                IdentifierName("Error")
+                            )
+                        )
+                    )
+                );
+
                 statements.Add(IfStatement(
                     MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
                         IdentifierName(tempVarName),
                         IdentifierName("IsError")
                     ),
-                    ReturnStatement(
-                        // Convert error to match current function's return type
-                        InvocationExpression(
-                            MemberAccessExpression(
-                                SyntaxKind.SimpleMemberAccessExpression,
-                                IdentifierName("Result"),
-                                GenericName("Error")
-                                    .WithTypeArgumentList(
-                                        TypeArgumentList(
-                                            SeparatedList<TypeSyntax>(new[]
-                                            {
-                                                ParseTypeName(MapCadenzaTypeToCSharp(ParseResultType(_currentFunctionReturnType).successType)),
-                                                ParseTypeName(MapCadenzaTypeToCSharp(ParseResultType(_currentFunctionReturnType).errorType))
-                                            })
-                                        )
-                                    )
-                            )
-                        ).AddArgumentListArguments(
-                            Argument(
-                                MemberAccessExpression(
-                                    SyntaxKind.SimpleMemberAccessExpression,
-                                    IdentifierName(tempVarName),
-                                    IdentifierName("Error")
-                                )
-                            )
-                        )
-                    )
+                    returnError
                 ));
                 
                 statements.Add(LocalDeclarationStatement(
@@ -590,7 +591,7 @@ public class CSharpGenerator
         {
             // Store the error propagation context for function-level processing
             _errorPropagationContext = new ErrorPropagationContext 
-            { 
+            {
                 VariableName = let.Name, 
                 Expression = errorProp, 
                 VariableType = variableType 
@@ -891,11 +892,8 @@ public class CSharpGenerator
     private InvocationExpressionSyntax GenerateResultExpression(ResultExpression result)
     {
         var methodName = result.Type == "Ok" ? "Ok" : "Error";
-        
-        // Parse the function's return type to get explicit type arguments
         var (successType, errorType) = ParseResultType(_currentFunctionReturnType);
-        
-        // Generate Result.Ok<T, E>() or Result.Error<T, E>() with explicit type arguments
+
         var methodAccess = MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
             IdentifierName("Result"),
@@ -904,17 +902,17 @@ public class CSharpGenerator
                     TypeArgumentList(
                         SeparatedList<TypeSyntax>(new[]
                         {
-                            ParseTypeName(MapCadenzaTypeToCSharp(successType)),
-                            ParseTypeName(MapCadenzaTypeToCSharp(errorType))
+                            ParseTypeName(successType),
+                            ParseTypeName(errorType)
                         })
                     )
                 )
         );
-        
+
         return InvocationExpression(methodAccess)
             .AddArgumentListArguments(Argument(GenerateExpression(result.Value)));
     }
-    
+
     /// <summary>
     /// Parse Result<T, E> type to extract T and E types
     /// </summary>
@@ -924,17 +922,29 @@ public class CSharpGenerator
         {
             return ("object", "string"); // Default fallback
         }
-        
+
         // Handle Result<T, E> pattern
         if (returnType.StartsWith("Result<") && returnType.EndsWith(">"))
         {
             var genericPart = returnType.Substring(7, returnType.Length - 8); // Remove "Result<" and ">"
-            var parts = genericPart.Split(',', StringSplitOptions.RemoveEmptyEntries);
             
-            if (parts.Length == 2)
+            int bracketCount = 0;
+            int commaIndex = -1;
+            for(int i = 0; i < genericPart.Length; i++)
             {
-                var successType = parts[0].Trim();
-                var errorType = parts[1].Trim();
+                if(genericPart[i] == '<') bracketCount++;
+                if(genericPart[i] == '>') bracketCount--;
+                if(genericPart[i] == ',' && bracketCount == 0)
+                {
+                    commaIndex = i;
+                    break;
+                }
+            }
+
+            if (commaIndex != -1)
+            {
+                var successType = genericPart.Substring(0, commaIndex).Trim();
+                var errorType = genericPart.Substring(commaIndex + 1).Trim();
                 
                 // Map Cadenza types to C# types
                 successType = MapCadenzaTypeToCSharp(successType);
@@ -962,7 +972,7 @@ public class CSharpGenerator
         // But we need to handle the early return case properly
         
         // For now, create a conditional expression that extracts the value
-        // In a full implementation, this would generate proper early return logic
+        // In a full implementation, this would generate proper statement-level handling
         return ConditionalExpression(
             PrefixUnaryExpression(
                 SyntaxKind.LogicalNotExpression,
@@ -1044,9 +1054,11 @@ public class CSharpGenerator
     private List<SyntaxTrivia> GenerateXmlDocumentation(FunctionDeclaration func)
     {
         var trivia = new List<SyntaxTrivia>();
-        
+        bool summaryGenerated = false;
+
         if (func.Specification != null)
         {
+            summaryGenerated = true;
             // Generate rich XML documentation from specification block
             trivia.Add(Comment("/// <summary>"));
             trivia.Add(EndOfLine("\n"));
@@ -1097,6 +1109,7 @@ public class CSharpGenerator
         }
         else if (func.Effects?.Any() == true)
         {
+            summaryGenerated = true;
             // Fallback to basic effects documentation
             trivia.Add(Comment("/// <summary>"));
             trivia.Add(EndOfLine("\n"));
@@ -1116,10 +1129,21 @@ public class CSharpGenerator
         }
         else if (func.IsPure)
         {
+            summaryGenerated = true;
             // Pure functions without specifications get basic pure function documentation
             trivia.Add(Comment("/// <summary>"));
             trivia.Add(EndOfLine("\n"));
             trivia.Add(Comment("/// Pure function - no side effects"));
+            trivia.Add(EndOfLine("\n"));
+            trivia.Add(Comment("/// </summary>"));
+            trivia.Add(EndOfLine("\n"));
+        }
+
+        if (!summaryGenerated)
+        {
+            trivia.Add(Comment("/// <summary>"));
+            trivia.Add(EndOfLine("\n"));
+            trivia.Add(Comment("/// "));
             trivia.Add(EndOfLine("\n"));
             trivia.Add(Comment("/// </summary>"));
             trivia.Add(EndOfLine("\n"));
