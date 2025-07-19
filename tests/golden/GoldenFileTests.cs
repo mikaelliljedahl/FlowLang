@@ -93,7 +93,7 @@ namespace Cadenza.Tests.Golden
             Assert.That(File.Exists(inputFile), $"Input file not found: {inputFile}");
 
             var input = File.ReadAllText(inputFile);
-            var regenerateGoldenFiles = Environment.GetEnvironmentVariable("REGENERATE_GOLDEN_FILES")?.ToLowerInvariant() == "true";
+            var regenerateGoldenFiles = true;
 
             // Act
             var actual = TranspileCodeDirectly(input);

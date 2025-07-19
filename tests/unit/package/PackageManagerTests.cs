@@ -37,7 +37,14 @@ public class PackageManagerTests
     {
         if (Directory.Exists(_tempDir))
         {
-            Directory.Delete(_tempDir, true);
+            try
+            {
+                Directory.Delete(_tempDir, true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to delete temp directory: {ex.Message}");
+            }
         }
     }
 
@@ -257,7 +264,11 @@ public class SecurityScannerTests
     {
         if (Directory.Exists(_tempDir))
         {
-            Directory.Delete(_tempDir, true);
+            try
+            {
+                Directory.Delete(_tempDir, true);
+            }
+            catch { }
         }
         _scanner?.Dispose();
     }
@@ -307,7 +318,14 @@ public class ConfigurationManagerTests
     {
         if (Directory.Exists(_tempDir))
         {
-            Directory.Delete(_tempDir, true);
+            try
+            {
+                Directory.Delete(_tempDir, true);
+            }
+            catch
+            {
+                
+            }
         }
     }
 
@@ -383,7 +401,7 @@ public class ConfigurationManagerTests
         
         // Assert
         Assert.That(projects.Count, Is.EqualTo(1));
-        Assert.That(projects.Contains("libs/project1"), Is.True);
+        Assert.That(projects.Contains("libs/project1") || projects.Contains("libs\\project1"), Is.True);
     }
 }
 
