@@ -655,6 +655,11 @@ public class CSharpGenerator
     
     private ExpressionSyntax GenerateExpression(ASTNode expression)
     {
+        return GenerateExpression(expression, null);
+    }
+    
+    private ExpressionSyntax GenerateExpression(ASTNode expression, string? expectedType)
+    {
         
         return expression switch
         {
@@ -665,7 +670,7 @@ public class CSharpGenerator
             NumberLiteral num => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(num.Value)),
             StringLiteral str => LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(str.Value)),
             BooleanLiteral boolean => LiteralExpression(boolean.Value ? SyntaxKind.TrueLiteralExpression : SyntaxKind.FalseLiteralExpression),
-            ResultExpression result => GenerateResultExpression(result),
+            ResultExpression result => GenerateResultExpression(result, expectedType),
             ErrorPropagation error => GenerateErrorPropagation(error),
             MemberAccessExpression member => GenerateMemberAccess(member),
             StringInterpolation interpolation => GenerateStringInterpolation(interpolation),
@@ -889,10 +894,13 @@ public class CSharpGenerator
             .AddArgumentListArguments(args);
     }
     
-    private InvocationExpressionSyntax GenerateResultExpression(ResultExpression result)
+    private InvocationExpressionSyntax GenerateResultExpression(ResultExpression result, string? expectedType = null)
     {
         var methodName = result.Type == "Ok" ? "Ok" : "Error";
-        var (successType, errorType) = ParseResultType(_currentFunctionReturnType);
+        
+        // Use expectedType if provided, otherwise fall back to function return type
+        var typeToUse = expectedType ?? _currentFunctionReturnType;
+        var (successType, errorType) = ParseResultType(typeToUse);
 
         var methodAccess = MemberAccessExpression(
             SyntaxKind.SimpleMemberAccessExpression,
@@ -909,8 +917,20 @@ public class CSharpGenerator
                 )
         );
 
+        // For nested Results, pass the success type as the expected type for the inner expression
+        ExpressionSyntax valueExpression;
+        if (result.Value is ResultExpression && successType != "object")
+        {
+            // If the value is a Result and we have a specific success type, use that as expected type
+            valueExpression = GenerateExpression(result.Value, successType);
+        }
+        else
+        {
+            valueExpression = GenerateExpression(result.Value);
+        }
+
         return InvocationExpression(methodAccess)
-            .AddArgumentListArguments(Argument(GenerateExpression(result.Value)));
+            .AddArgumentListArguments(Argument(valueExpression));
     }
 
     /// <summary>

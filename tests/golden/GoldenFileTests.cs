@@ -331,19 +331,6 @@ namespace Cadenza.Tests.Golden
         }
 
         [Test]
-        [Ignore("Deprecated: Use REGENERATE_GOLDEN_FILES=true dotnet test instead")]
-        public void GoldenFile_ExpectedOutputs_ShouldRegenerate()
-        {
-            // DEPRECATED: This test is deprecated in favor of the environment variable approach.
-            // Use: REGENERATE_GOLDEN_FILES=true dotnet test
-            // 
-            // This method is kept for backward compatibility but should not be used.
-            // The new approach integrates regeneration into the normal test flow.
-            
-            Assert.Fail("This test is deprecated. Use 'REGENERATE_GOLDEN_FILES=true dotnet test' to regenerate golden files.");
-        }
-
-        [Test]
         public void GoldenFile_TestCoverage_ShouldAnalyze()
         {
             // Analyze what language features are covered by golden tests

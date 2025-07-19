@@ -746,7 +746,7 @@ namespace Cadenza.Tests.Unit
 
             // Assert
             Assert.That(code, Contains.Substring("Result<Result<int, string>, bool>"));
-                        Assert.That(code, Contains.Substring("Result.Ok<object, bool>(Result.Ok<int, string>(42))"));
+            Assert.That(code, Contains.Substring("Result.Ok<Result<int, string>, bool>(Result.Ok<int, string>(42))"));
         }
 
         [Test]
