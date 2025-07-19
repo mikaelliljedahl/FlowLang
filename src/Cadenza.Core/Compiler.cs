@@ -1808,6 +1808,12 @@ public class DirectCompilerCLI
 
     private async Task<int> HandleCompileMode(CLIOptions options)
     {
+        // Handle project compilation mode
+        if (options.ProjectMode)
+        {
+            return await HandleProjectMode(options);
+        }
+
         var compilationOptions = new CompilationOptions(
             SourceFile: options.InputFile!,
             OutputPath: options.OutputFile ?? GetDefaultOutputPath(options.InputFile!, options.Library),
@@ -1903,6 +1909,61 @@ public class DirectCompilerCLI
         }
     }
 
+    private async Task<int> HandleProjectMode(CLIOptions options)
+    {
+        var projectCompiler = new ProjectCompiler();
+        
+        try
+        {
+            if (options.Verbose)
+            {
+                Console.WriteLine("Starting project compilation...");
+            }
+            
+            var result = await projectCompiler.CompileProjectAsync(options);
+            
+            if (result.Success)
+            {
+                Console.WriteLine($"✅ Project compiled successfully");
+                Console.WriteLine($"   Output: {result.OutputPath}");
+                Console.WriteLine($"   Files: {result.FilesCompiled}");
+                Console.WriteLine($"   Time: {result.CompilationTime.TotalMilliseconds:F0}ms");
+                
+                if (result.Warnings.Count > 0)
+                {
+                    Console.WriteLine($"   Warnings: {result.Warnings.Count}");
+                    if (options.Verbose)
+                    {
+                        foreach (var warning in result.Warnings)
+                        {
+                            Console.WriteLine($"     Warning: {warning}");
+                        }
+                    }
+                }
+                
+                return 0;
+            }
+            else
+            {
+                Console.Error.WriteLine("❌ Project compilation failed");
+                foreach (var error in result.Errors)
+                {
+                    Console.Error.WriteLine($"   Error: {error}");
+                }
+                return 1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"❌ Project compilation failed: {ex.Message}");
+            if (options.Verbose)
+            {
+                Console.Error.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+            return 1;
+        }
+    }
+
     private string GetDefaultOutputPath(string inputFile, bool isLibrary)
     {
         var nameWithoutExtension = Path.GetFileNameWithoutExtension(inputFile);
@@ -1952,6 +2013,38 @@ public class DirectCompilerCLI
                     options.Debug = true;
                     break;
                 
+                case "--project":
+                case "-p":
+                    options.ProjectMode = true;
+                    options.CompileMode = true; // --project implies --compile
+                    break;
+                
+                case "--config":
+                    if (i + 1 < args.Length)
+                    {
+                        options.ConfigFile = args[++i];
+                    }
+                    break;
+                
+                case "--incremental":
+                    options.Incremental = true;
+                    break;
+                
+                case "--clean":
+                    options.Clean = true;
+                    break;
+                
+                case "--verbose":
+                    options.Verbose = true;
+                    break;
+                
+                case "--framework":
+                    if (i + 1 < args.Length)
+                    {
+                        options.Framework = args[++i];
+                    }
+                    break;
+                
                 case "--output":
                 case "-o":
                     if (i + 1 < args.Length)
@@ -1985,7 +2078,7 @@ public class DirectCompilerCLI
         }
 
         // Validation
-        if (options.InputFile == null && !options.ShowHelp && !options.ShowVersion)
+        if (options.InputFile == null && !options.ShowHelp && !options.ShowVersion && !options.ProjectMode)
         {
             Console.Error.WriteLine("Error: Input file required");
             return null;
@@ -2019,15 +2112,21 @@ public class DirectCompilerCLI
         Console.WriteLine("    cadenzac-core --run <input.cdz>");
         Console.WriteLine("    cadenzac-core --library <input.cdz> [--output <output.dll>]");
         Console.WriteLine();
+        Console.WriteLine("  Project compilation:");
+        Console.WriteLine("    cadenzac-core --project [--config <cadenzac.json>] [--output <output.exe>]");
+        Console.WriteLine();
         Console.WriteLine("Options:");
-        Console.WriteLine("  --compile, -c   Compile directly to assembly (default: transpile)");
-        Console.WriteLine("  --run, -r       Compile and run immediately");
-        Console.WriteLine("  --library, -l   Generate library (.dll) instead of executable");
-        Console.WriteLine("  --debug, -d     Include debug symbols and disable optimizations");
-        Console.WriteLine("  --output, -o    Specify output file path");
-        Console.WriteLine("  --target, -t    Target language for transpilation (csharp, javascript, blazor)");
-        Console.WriteLine("  --help, -h      Show this help message");
-        Console.WriteLine("  --version, -v   Show version information");
+        Console.WriteLine("  --compile, -c    Compile directly to assembly (default: transpile)");
+        Console.WriteLine("  --run, -r        Compile and run immediately");
+        Console.WriteLine("  --library, -l    Generate library (.dll) instead of executable");
+        Console.WriteLine("  --debug, -d      Include debug symbols and disable optimizations");
+        Console.WriteLine("  --output, -o     Specify output file path");
+        Console.WriteLine("  --target, -t     Target language for transpilation (csharp, javascript, blazor)");
+        Console.WriteLine("  --project, -p    Compile multi-file project");
+        Console.WriteLine("  --config         Path to cadenzac.json configuration file");
+        Console.WriteLine("  --verbose        Show detailed compilation output");
+        Console.WriteLine("  --help, -h       Show this help message");
+        Console.WriteLine("  --version, -v    Show version information");
         Console.WriteLine();
         Console.WriteLine("Examples:");
         Console.WriteLine("  # Transpile to C#");
@@ -2042,6 +2141,10 @@ public class DirectCompilerCLI
         Console.WriteLine();
         Console.WriteLine("  # Generate library");
         Console.WriteLine("  cadenzac-core --library math.cdz --output math.dll");
+        Console.WriteLine();
+        Console.WriteLine("  # Project compilation");
+        Console.WriteLine("  cadenzac-core --project");
+        Console.WriteLine("  cadenzac-core --project --verbose --output MyApp.exe");
     }
 }
 
@@ -2063,6 +2166,14 @@ public class CLIOptions
     public string? Target { get; set; }
     public bool ShowHelp { get; set; }
     public bool ShowVersion { get; set; }
+    
+    // Project compilation options
+    public bool ProjectMode { get; set; }
+    public string? ConfigFile { get; set; }
+    public bool Incremental { get; set; }
+    public bool Clean { get; set; }
+    public bool Verbose { get; set; }
+    public string? Framework { get; set; }
 }
 
 // =============================================================================

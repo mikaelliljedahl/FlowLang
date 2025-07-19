@@ -95,6 +95,7 @@ cadenzac help new
 |---------|--------|-------------|---------|
 | [`compile`](#compile-command) | ✅ **WORKING** | Compile Cadenza to target language | Multi-target compilation |
 | [`run`](#run-command) | ✅ **WORKING** | Transpile and display a single file | Development and testing |
+| [`project`](#project-command) | 🔄 **NEW** | Compile multi-file projects | Project-level compilation |
 | [`new`](#new-command) | ❌ **Phase 5** | Create a new Cadenza project | Project initialization |
 | [`targets`](#targets-command) | ❌ **Phase 5** | List available compilation targets | Target information |
 | [`build`](#build-command) | ❌ **Phase 5** | Build the current project | Transpile all source files |
@@ -218,6 +219,143 @@ component UserProfile() uses [DOM] -> UIComponent { ... }
 // Auto-detects C# target (backend services)
 service UserService uses [Database] { ... }
 ```
+
+### `project` Command 🔄 **NEW**
+
+Compiles multi-file Cadenza projects into executables or libraries.
+
+#### Syntax
+
+```bash
+# Compile all .cdz files in current directory (auto-discovery)
+cadenzac-core --project [options]
+
+# Use project configuration file
+cadenzac-core --project [--config <path>] [options]
+```
+
+#### Options
+
+- `--config <path>`: Path to cadenzac.json configuration file (default: ./cadenzac.json)
+- `--output <path>`: Output file path (default: project name or directory name)
+- `--library`: Generate library (.dll) instead of executable
+- `--target <target>`: Target platform (csharp, javascript)
+- `--framework <framework>`: Target framework (net8.0, netstandard2.1)
+- `--debug`: Include debug symbols
+- `--incremental`: Only recompile changed files
+- `--clean`: Force full rebuild
+- `--verbose`: Show detailed compilation progress
+
+#### Description
+
+The `project` command provides multi-file compilation similar to C#'s .csproj system:
+
+**Auto-Discovery Mode (No cadenzac.json):**
+- Recursively finds all `.cdz` files in current directory
+- Automatically resolves imports between files
+- Compiles in dependency order
+- Generates executable by default
+
+**Configuration Mode (With cadenzac.json):**
+- Uses project settings for source directories, output paths, and dependencies
+- Supports include/exclude patterns
+- Enables advanced features like multi-target builds and conditional compilation
+
+#### Examples
+
+```bash
+# Simple multi-file compilation (auto-discovery)
+cadenzac-core --project
+
+# Generate library instead of executable
+cadenzac-core --project --library --output MyLibrary.dll
+
+# Use specific configuration file
+cadenzac-core --project --config ./my-project.json
+
+# Debug build with verbose output
+cadenzac-core --project --debug --verbose
+
+# Incremental compilation (only changed files)
+cadenzac-core --project --incremental
+
+# Target specific framework
+cadenzac-core --project --framework net8.0 --output MyApp.exe
+```
+
+#### Project Structure Examples
+
+**Simple Project (No Configuration):**
+```
+my-app/
+├── main.cdz              # Entry point with main() function
+├── utils.cdz             # Utility functions
+└── services/
+    └── data.cdz          # Data service module
+```
+
+**Configured Project:**
+```
+my-web-api/
+├── cadenzac.json         # Project configuration
+├── src/
+│   ├── main.cdz         # Entry point
+│   ├── controllers/      # MVC controllers
+│   ├── services/         # Business logic
+│   └── models/          # Data models
+└── tests/
+    └── unit_tests.cdz   # Test files (excluded from build)
+```
+
+#### Configuration File (cadenzac.json)
+
+```json
+{
+  "name": "MyWebApp",
+  "version": "1.0.0",
+  "build": {
+    "source": "src/",
+    "output": "bin/",
+    "outputType": "exe",
+    "entryPoint": "src/main.cdz",
+    "framework": "net8.0"
+  },
+  "include": ["src/**/*.cdz"],
+  "exclude": ["tests/**/*.cdz"],
+  "dependencies": {
+    "Microsoft.AspNetCore": "8.0.0"
+  }
+}
+```
+
+#### Module Resolution
+
+The compiler automatically resolves imports between files:
+
+```cadenza
+// In src/main.cdz
+import "./services/user_service" as UserService
+import "./models/user" as User
+
+function main() -> int {
+    let user = UserService.createUser("John", "john@example.com")
+    return 0
+}
+```
+
+#### Error Conditions
+
+- **No .cdz files found**: Returns error code 1
+- **Unresolved imports**: Returns error code 1
+- **Circular dependencies**: Returns error code 1
+- **Missing entry point**: Returns error code 1 (for executables)
+- **Compilation errors**: Returns error code 1
+
+#### See Also
+
+- [Multi-File Compilation Guide](multi-file-compilation.md) - Complete documentation
+- [`compile` command](#compile-command) - Single file compilation
+- [`build` command](#build-command) - Legacy project building
 
 ### `targets` Command
 
