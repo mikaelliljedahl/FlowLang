@@ -224,7 +224,7 @@ public static class ConfigurationManager
             foreach (var match in matches)
             {
                 if (File.Exists(Path.Combine(match, "cadenzac.json")) && 
-                    !(config.Workspace.Exclude?.Any(exclude => match.Contains(exclude)) ?? false))
+                    !IsExcludedPath(match, config.Workspace.Exclude, rootPath))
                 {
                     projects.Add(Path.GetRelativePath(rootPath, match));
                 }
@@ -232,5 +232,44 @@ public static class ConfigurationManager
         }
 
         return projects;
+    }
+
+    /// <summary>
+    /// Check if a path should be excluded from workspace discovery.
+    /// Handles cross-platform path comparison properly.
+    /// </summary>
+    private static bool IsExcludedPath(string matchPath, List<string>? excludePatterns, string rootPath)
+    {
+        if (excludePatterns == null || excludePatterns.Count == 0)
+            return false;
+
+        try
+        {
+            // Normalize the match path to be relative to root and use consistent separators
+            var normalizedMatch = Path.GetRelativePath(rootPath, matchPath);
+            normalizedMatch = normalizedMatch.Replace('\\', '/');
+
+            foreach (var exclude in excludePatterns)
+            {
+                // Normalize exclude pattern to use forward slashes and remove leading "./"
+                var normalizedExclude = exclude.Replace('\\', '/');
+                if (normalizedExclude.StartsWith("./"))
+                    normalizedExclude = normalizedExclude.Substring(2);
+
+                // Check for exact match or if the match path starts with the exclude pattern
+                if (normalizedMatch.Equals(normalizedExclude, StringComparison.OrdinalIgnoreCase) ||
+                    normalizedMatch.StartsWith(normalizedExclude + "/", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+        catch
+        {
+            // If path normalization fails, fall back to simple contains check
+            return excludePatterns.Any(exclude => matchPath.Contains(exclude));
+        }
+
+        return false;
     }
 }
