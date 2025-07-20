@@ -37,6 +37,7 @@ public class CadenzaLexer
         {"import", TokenType.Import},
         {"export", TokenType.Export},
         {"from", TokenType.From},
+        {"type", TokenType.Type},
         {"component", TokenType.Component},
         {"state", TokenType.State},
         {"events", TokenType.Events},

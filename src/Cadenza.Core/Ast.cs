@@ -20,6 +20,10 @@ public record SpecificationBlock(
     string? SourceDoc = null
 ) : ASTNode;
 
+// Type definition AST nodes
+public record TypeDeclaration(string Name, List<TypeField> Fields, bool IsExported = false) : ASTNode;
+public record TypeField(string Name, string Type);
+
 // Function AST nodes
 public record FunctionDeclaration(
     string Name, 

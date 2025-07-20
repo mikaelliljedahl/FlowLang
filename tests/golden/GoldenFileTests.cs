@@ -84,6 +84,12 @@ namespace Cadenza.Tests.Golden
             ExecuteGoldenFileTest("pure_functions");
         }
 
+        [Test]
+        public void GoldenFile_TypeDefinitions_ShouldMatch()
+        {
+            ExecuteGoldenFileTest("type_definitions");
+        }
+
         private void ExecuteGoldenFileTest(string testName)
         {
             // Arrange
@@ -229,11 +235,16 @@ namespace Cadenza.Tests.Golden
                 MetadataReference.CreateFromFile(typeof(System.Linq.Enumerable).Assembly.Location)
             };
 
+            // Use ConsoleApplication if the code contains a main call (top-level statement)
+            var outputKind = generatedCode.Contains("CadenzaProgram.main();") 
+                ? OutputKind.ConsoleApplication 
+                : OutputKind.DynamicallyLinkedLibrary;
+            
             var compilation = CSharpCompilation.Create(
                 $"TestAssembly_{testName}",
                 new[] { syntaxTree },
                 references,
-                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                new CSharpCompilationOptions(outputKind)
             );
 
             var diagnostics = compilation.GetDiagnostics();
