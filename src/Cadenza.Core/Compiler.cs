@@ -1859,36 +1859,14 @@ public class DirectCompilerCLI
         }
     }
 
+
     private async Task<int> HandleTranspileMode(CLIOptions options)
     {
-        // Use existing transpiler for backward compatibility
+        // Use transpiler with automatic UI component detection
         var transpiler = new CadenzaTranspiler();
         
-        switch (options.Target?.ToLowerInvariant())
-        {
-            case "csharp":
-            case "cs":
-            case null:
-                await transpiler.TranspileAsync(options.InputFile!, options.OutputFile);
-                Console.WriteLine($"Successfully transpiled {options.InputFile} -> {options.OutputFile}");
-                break;
-            
-            case "javascript":
-            case "js":
-                await transpiler.TranspileToJavaScriptAsync(options.InputFile!, options.OutputFile);
-                Console.WriteLine($"Successfully transpiled {options.InputFile} -> {options.OutputFile} (JavaScript)");
-                break;
-            
-            case "blazor":
-            case "razor":
-                await transpiler.TranspileToBlazorAsync(options.InputFile!, options.OutputFile);
-                Console.WriteLine($"Successfully transpiled {options.InputFile} -> {options.OutputFile} (Blazor)");
-                break;
-            
-            default:
-                Console.Error.WriteLine($"Error: Unsupported target '{options.Target}'. Supported targets: csharp, javascript, blazor");
-                return 1;
-        }
+        await transpiler.TranspileAsync(options.InputFile!, options.OutputFile);
+        Console.WriteLine($"Successfully transpiled {options.InputFile} -> {options.OutputFile}");
         
         return 0;
     }
@@ -2053,13 +2031,6 @@ public class DirectCompilerCLI
                     }
                     break;
                 
-                case "--target":
-                case "-t":
-                    if (i + 1 < args.Length)
-                    {
-                        options.Target = args[++i];
-                    }
-                    break;
                 
                 default:
                     if (!args[i].StartsWith('-'))
@@ -2087,13 +2058,7 @@ public class DirectCompilerCLI
         // Set default output file for transpile mode
         if (!options.CompileMode && options.OutputFile == null && options.InputFile != null)
         {
-            var extension = options.Target?.ToLowerInvariant() switch
-            {
-                "javascript" or "js" => ".js",
-                "blazor" or "razor" => ".razor",
-                _ => ".cs"
-            };
-            options.OutputFile = Path.ChangeExtension(options.InputFile, extension);
+            options.OutputFile = Path.ChangeExtension(options.InputFile, ".cs");
         }
 
         return options;
@@ -2105,7 +2070,7 @@ public class DirectCompilerCLI
         Console.WriteLine();
         Console.WriteLine("Usage:");
         Console.WriteLine("  Transpile (default):");
-        Console.WriteLine("    cadenzac-core <input.cdz> [<output.cs>] [--target csharp|javascript|blazor]");
+        Console.WriteLine("    cadenzac-core <input.cdz> [<output.cs>]");
         Console.WriteLine();
         Console.WriteLine("  Direct compilation:");
         Console.WriteLine("    cadenzac-core --compile <input.cdz> [--output <output.exe>]");
@@ -2121,7 +2086,6 @@ public class DirectCompilerCLI
         Console.WriteLine("  --library, -l    Generate library (.dll) instead of executable");
         Console.WriteLine("  --debug, -d      Include debug symbols and disable optimizations");
         Console.WriteLine("  --output, -o     Specify output file path");
-        Console.WriteLine("  --target, -t     Target language for transpilation (csharp, javascript, blazor)");
         Console.WriteLine("  --project, -p    Compile multi-file project");
         Console.WriteLine("  --config         Path to cadenzac.json configuration file");
         Console.WriteLine("  --verbose        Show detailed compilation output");
@@ -2163,7 +2127,6 @@ public class CLIOptions
     public bool Run { get; set; }
     public bool Library { get; set; }
     public bool Debug { get; set; }
-    public string? Target { get; set; }
     public bool ShowHelp { get; set; }
     public bool ShowVersion { get; set; }
     

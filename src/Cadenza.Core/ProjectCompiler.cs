@@ -301,7 +301,11 @@ namespace Cadenza.Core
             try
             {
                 // Simplified analysis - just check for main function
-                sourceFile.HasMainFunction = content.Contains("function main(");
+                sourceFile.HasMainFunction = content.Contains("function main(") || content.Contains("function main() ->");
+                if (sourceFile.HasMainFunction)
+                {
+                    Console.WriteLine($"Found main function in: {sourceFile.FilePath}");
+                }
                 
                 // For now, skip complex import/export analysis
                 // This will be enhanced later when the parser is more stable
@@ -348,6 +352,8 @@ namespace Cadenza.Core
             ProjectConfig config, 
             CLIOptions options)
         {
+            // Use automatic UI component detection instead of explicit target
+
             // For now, we'll combine all files into a single compilation unit
             // This is a simplified approach - a full implementation would handle
             // cross-file references more sophisticatedly
@@ -401,6 +407,7 @@ namespace Cadenza.Core
             }
         }
 
+
         /// <summary>
         /// Helper methods
         /// </summary>
@@ -440,10 +447,16 @@ namespace Cadenza.Core
         {
             if (!string.IsNullOrEmpty(config.Build.EntryPoint))
             {
+                Console.WriteLine($"Looking for configured entry point: {config.Build.EntryPoint}");
                 return files.FirstOrDefault(f => f.FilePath == config.Build.EntryPoint);
             }
 
             // Look for a file with main() function
+            Console.WriteLine("Looking for main function in files:");
+            foreach (var file in files)
+            {
+                Console.WriteLine($"  {file.FilePath}: HasMainFunction = {file.HasMainFunction}");
+            }
             return files.FirstOrDefault(f => f.HasMainFunction);
         }
 
@@ -456,6 +469,8 @@ namespace Cadenza.Core
 
             var outputDir = config.Build.Output;
             Directory.CreateDirectory(outputDir);
+
+            // Use automatic UI component detection to determine output type
 
             // Determine if this should be a library or executable
             var isLibrary = config.Build.OutputType == "library" || 

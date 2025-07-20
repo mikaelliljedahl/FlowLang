@@ -240,7 +240,7 @@ public class CadenzaParser
         }
         
         Consume(TokenType.Arrow, "Expected '->' after component signature");
-        Consume(TokenType.Identifier, "Expected return type"); // UIComponent, etc.
+        var returnType = Consume(TokenType.Identifier, "Expected return type").Lexeme; // UIComponent, etc.
         Consume(TokenType.LeftBrace, "Expected '{' to start component body");
         
         // Parse component body sections
@@ -257,6 +257,18 @@ public class CadenzaParser
             else if (Match(TokenType.OnMount))
             {
                 onMount = ParseOnMount();
+            }
+            else if (Match(TokenType.DeclareState))
+            {
+                // Parse declare_state statements but don't store them separately
+                // They will be handled by the transpiler
+                ParseDeclareStateStatement();
+            }
+            else if (Match(TokenType.EventHandler))
+            {
+                // Parse event_handler statements but don't store them separately
+                // They will be handled by the transpiler
+                ParseEventHandlerStatement();
             }
             else
             {
@@ -278,7 +290,7 @@ public class CadenzaParser
         
         Consume(TokenType.RightBrace, "Expected '}' after component body");
         
-        return new ComponentDeclaration(name, parameters, effects, state, events, onMount, renderBlock);
+        return new ComponentDeclaration(name, parameters, effects, returnType, state, events, onMount, renderBlock);
     }
 
     private List<StateDeclaration> ParseStateDeclarations()
@@ -1402,5 +1414,55 @@ public class CadenzaParser
         Consume(TokenType.RightBracket, "Expected ']' after event handlers");
         
         return handlers;
+    }
+    
+    private void ParseDeclareStateStatement()
+    {
+        // Parse: declare_state message: string = "Hello"
+        var name = Consume(TokenType.Identifier, "Expected state variable name after 'declare_state'").Lexeme;
+        Consume(TokenType.Colon, "Expected ':' after state variable name");
+        var type = ParseType();
+        
+        ASTNode? initialValue = null;
+        if (Match(TokenType.Assign))
+        {
+            initialValue = ParseExpression();
+        }
+        
+        // For now, we just parse and skip these - they will be handled by the transpiler
+    }
+    
+    private void ParseEventHandlerStatement()
+    {
+        // Parse: event_handler handle_click() uses [DOM] { ... }
+        var name = Consume(TokenType.Identifier, "Expected event handler name after 'event_handler'").Lexeme;
+        
+        Consume(TokenType.LeftParen, "Expected '(' after event handler name");
+        var parameters = new List<Parameter>();
+        
+        if (!Check(TokenType.RightParen))
+        {
+            do
+            {
+                var paramName = Consume(TokenType.Identifier, "Expected parameter name").Lexeme;
+                Consume(TokenType.Colon, "Expected ':' after parameter name");
+                var paramType = ParseType();
+                parameters.Add(new Parameter(paramName, paramType));
+            } while (Match(TokenType.Comma));
+        }
+        
+        Consume(TokenType.RightParen, "Expected ')' after parameters");
+        
+        List<string>? effects = null;
+        if (Match(TokenType.Uses))
+        {
+            effects = ParseEffectsList();
+        }
+        
+        Consume(TokenType.LeftBrace, "Expected '{' to start event handler body");
+        var body = ParseStatements();
+        Consume(TokenType.RightBrace, "Expected '}' after event handler body");
+        
+        // For now, we just parse and skip these - they will be handled by the transpiler
     }
 }

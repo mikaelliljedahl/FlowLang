@@ -43,6 +43,7 @@ public class CadenzaLexer
         {"render", TokenType.Render},
         {"on_mount", TokenType.OnMount},
         {"event_handler", TokenType.EventHandler},
+        {"declare_state", TokenType.DeclareState},
         {"app_state", TokenType.AppState},
         {"action", TokenType.Action},
         {"updates", TokenType.Updates},

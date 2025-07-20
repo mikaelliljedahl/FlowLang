@@ -92,6 +92,7 @@ public enum TokenType
     Render,
     OnMount,
     EventHandler,
+    DeclareState,
     AppState,
     Action,
     Updates,
