@@ -26,7 +26,7 @@ public class Button : ComponentBase
     {
         builder.OpenComponent<button>(0);
         builder.AddAttribute(1, "text", text);
-        builder.AddAttribute(2, "class", ArithmeticExpression { Left = StringLiteral { Value = btn btn- }, Operator = +, Right = Identifier { Name = variant } });
+        builder.AddAttribute(2, "class", ("btn btn-" + variant));
         builder.AddAttribute(3, "disabled", disabled);
         builder.CloseComponent();
     }

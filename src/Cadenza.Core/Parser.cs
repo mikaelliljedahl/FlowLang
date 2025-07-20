@@ -316,15 +316,17 @@ public class CadenzaParser
             }
             else if (Match(TokenType.DeclareState))
             {
-                // Parse declare_state statements but don't store them separately
-                // They will be handled by the transpiler
-                ParseDeclareStateStatement();
+                // Parse declare_state statements and store them in the state list
+                if (state == null) state = new List<StateDeclaration>();
+                var stateDeclaration = ParseDeclareStateStatement();
+                state.Add(stateDeclaration);
             }
             else if (Match(TokenType.EventHandler))
             {
-                // Parse event_handler statements but don't store them separately
-                // They will be handled by the transpiler
-                ParseEventHandlerStatement();
+                // Parse and store event handler
+                if (events == null) events = new List<EventHandler>();
+                var eventHandler = ParseEventHandlerDeclaration();
+                events.Add(eventHandler);
             }
             else
             {
@@ -472,7 +474,32 @@ public class CadenzaParser
             // Could be a UI element or component instance
             var name = Advance().Lexeme;
             
-            if (Match(TokenType.LeftParen))
+            // Check if this is a known HTML element
+            if (IsHtmlElement(name))
+            {
+                // Always treat HTML elements as UIElement, regardless of syntax
+                var attributes = new List<UIAttribute>();
+                List<ASTNode> children = new List<ASTNode>();
+                
+                if (Match(TokenType.LeftParen))
+                {
+                    attributes = ParseUIAttributes();
+                    Consume(TokenType.RightParen, "Expected ')' after attributes");
+                }
+                
+                if (Match(TokenType.LeftBrace))
+                {
+                    while (!Check(TokenType.RightBrace) && !IsAtEnd())
+                    {
+                        var child = ParseRenderItem();
+                        if (child != null) children.Add(child);
+                    }
+                    Consume(TokenType.RightBrace, "Expected '}' after element children");
+                }
+                
+                return new UIElement(name, attributes, children);
+            }
+            else if (Match(TokenType.LeftParen))
             {
                 // Component instance with props
                 var props = ParseUIAttributes();
@@ -1472,7 +1499,7 @@ public class CadenzaParser
         return handlers;
     }
     
-    private void ParseDeclareStateStatement()
+    private StateDeclaration ParseDeclareStateStatement()
     {
         // Parse: declare_state message: string = "Hello"
         var name = Consume(TokenType.Identifier, "Expected state variable name after 'declare_state'").Lexeme;
@@ -1485,10 +1512,10 @@ public class CadenzaParser
             initialValue = ParseExpression();
         }
         
-        // For now, we just parse and skip these - they will be handled by the transpiler
+        return new StateDeclaration(name, type, initialValue);
     }
     
-    private void ParseEventHandlerStatement()
+    private EventHandler ParseEventHandlerDeclaration()
     {
         // Parse: event_handler handle_click() uses [DOM] { ... }
         var name = Consume(TokenType.Identifier, "Expected event handler name after 'event_handler'").Lexeme;
@@ -1519,6 +1546,27 @@ public class CadenzaParser
         var body = ParseStatements();
         Consume(TokenType.RightBrace, "Expected '}' after event handler body");
         
-        // For now, we just parse and skip these - they will be handled by the transpiler
+        return new EventHandler(name, parameters, effects, body);
+    }
+
+    /// <summary>
+    /// Checks if a name is a known HTML element that should be treated as UIElement
+    /// </summary>
+    private bool IsHtmlElement(string name)
+    {
+        return name switch
+        {
+            // Standard HTML elements
+            "div" or "span" or "p" or "a" or "img" or "h1" or "h2" or "h3" or "h4" or "h5" or "h6" or
+            "button" or "input" or "textarea" or "select" or "option" or "label" or "form" or
+            "ul" or "ol" or "li" or "table" or "tr" or "td" or "th" or "thead" or "tbody" or "tfoot" or
+            "header" or "footer" or "main" or "section" or "article" or "aside" or "nav" or
+            "details" or "summary" or "dialog" or "menu" or "menuitem" or
+            // Cadenza semantic elements (that map to HTML)
+            "container" or "heading" or "text_input" or "text" or "image" or "list" or "list_item" or
+            "table_row" or "table_header" or "table_cell" or "main_content" or "card" or
+            "form_header" or "form_fields" or "form_field" or "form_actions" => true,
+            _ => false
+        };
     }
 }
