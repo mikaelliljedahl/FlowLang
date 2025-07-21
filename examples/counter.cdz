@@ -1,6 +1,5 @@
 component Counter() 
     uses [DOM] 
-    state [count]
     events [on_increment, on_decrement]
     -> UIComponent 
 {
