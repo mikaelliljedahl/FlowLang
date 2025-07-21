@@ -3,15 +3,19 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Components.Endpoints;
 
 namespace Cadenza.Core;
 
@@ -34,7 +38,7 @@ public class CadenzaWebServer
     }
 
     /// <summary>
-    /// Starts the embedded web server and serves the Cadenza component
+    /// Starts the Blazor web server by launching the generated project as a subprocess
     /// </summary>
     public async Task StartAsync()
     {
@@ -49,23 +53,11 @@ public class CadenzaWebServer
             // Generate the Blazor project from the Cadenza component
             await _projectGenerator.GenerateBlazorProjectAsync(_options.InputFile, tempProjectDir);
             
-            // Create and start the web host
-            var host = CreateWebHost(tempProjectDir);
+            // Build the generated project
+            await BuildGeneratedProjectAsync(tempProjectDir);
             
-            Console.WriteLine($"✅ Web server ready!");
-            Console.WriteLine($"   URL: http://localhost:{_options.Port}");
-            Console.WriteLine($"   Component: {_options.InputFile}");
-            Console.WriteLine($"   Hot reload: {(_options.HotReload ? "enabled" : "disabled")}");
-            
-            if (_options.OpenBrowser)
-            {
-                OpenBrowser($"http://localhost:{_options.Port}");
-            }
-            
-            Console.WriteLine();
-            Console.WriteLine("Press Ctrl+C to stop the server.");
-            
-            await host.RunAsync();
+            // Launch the generated project as a subprocess
+            await LaunchBlazorProjectAsync(tempProjectDir);
         }
         finally
         {
@@ -77,58 +69,127 @@ public class CadenzaWebServer
         }
     }
 
-    private IHost CreateWebHost(string contentRoot)
+    /// <summary>
+    /// Launches the generated Blazor project as a subprocess
+    /// </summary>
+    private async Task LaunchBlazorProjectAsync(string projectDir)
     {
-        var builder = Host.CreateDefaultBuilder()
-            .ConfigureWebHostDefaults(webBuilder =>
+        // Find an available port if the specified port is in use
+        var availablePort = await FindAvailablePortAsync(_options.Port);
+        if (availablePort != _options.Port)
+        {
+            Console.WriteLine($"⚠️  Port {_options.Port} is in use, using port {availablePort} instead");
+        }
+        
+        Console.WriteLine($"🚀 Launching Blazor project on port {availablePort}...");
+        
+        var projectFile = Path.Combine(projectDir, "CadenzaWebApp.csproj");
+        var arguments = $"run --project \"{projectFile}\" --urls http://localhost:{availablePort}";
+        
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "dotnet",
+            Arguments = arguments,
+            WorkingDirectory = projectDir,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = false // Allow seeing the process for debugging
+        };
+
+        // Add environment variables for the subprocess
+        startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
+        startInfo.Environment["ASPNETCORE_URLS"] = $"http://localhost:{availablePort}";
+        
+        Console.WriteLine($"🔧 Executing: dotnet {arguments}");
+        Console.WriteLine($"🔧 Environment: ASPNETCORE_URLS=http://localhost:{availablePort}");
+
+        using var process = new System.Diagnostics.Process { StartInfo = startInfo };
+        
+        // Handle process output
+        process.OutputDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
             {
-                webBuilder
-                    .UseContentRoot(contentRoot)
-                    .UseUrls($"http://localhost:{_options.Port}")
-                    .ConfigureServices(services =>
-                    {
-                        services.AddRazorPages();
-                        services.AddServerSideBlazor();
-                        
-                        // Add Cadenza-specific services
-                        services.AddSingleton(_options);
-                        
-                        if (_options.HotReload)
-                        {
-                            services.AddSingleton<CadenzaHotReloadService>();
-                        }
-                    })
-                    .Configure(app =>
-                    {
-                        var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
-                        
-                        if (env.IsDevelopment())
-                        {
-                            app.UseDeveloperExceptionPage();
-                        }
-                        
-                        app.UseStaticFiles();
-                        app.UseRouting();
-                        
-                        app.UseEndpoints(endpoints =>
-                        {
-                            endpoints.MapRazorPages();
-                            endpoints.MapBlazorHub();
-                            
-                            if (_options.HotReload)
-                            {
-                                endpoints.MapPost("/_cadenza/reload", async context =>
-                                {
-                                    var hotReload = context.RequestServices.GetRequiredService<CadenzaHotReloadService>();
-                                    await hotReload.TriggerReloadAsync();
-                                    context.Response.StatusCode = 200;
-                                });
-                            }
-                        });
-                    });
-            });
+                Console.WriteLine($"[Blazor] {e.Data}");
+            }
+        };
+        
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                Console.WriteLine($"[Blazor Error] {e.Data}");
+            }
+        };
+
+        try
+        {
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
             
-        return builder.Build();
+            Console.WriteLine($"✅ Blazor server started!");
+            Console.WriteLine($"   URL: http://localhost:{availablePort}");
+            Console.WriteLine($"   Component: {_options.InputFile}");
+            Console.WriteLine($"   Process ID: {process.Id}");
+            
+            if (_options.OpenBrowser)
+            {
+                // Wait a moment for the server to start, then open browser
+                await Task.Delay(2000);
+                OpenBrowser($"http://localhost:{availablePort}");
+            }
+            
+            Console.WriteLine();
+            Console.WriteLine("Press Ctrl+C to stop the server.");
+            
+            // Wait for the process to exit or be cancelled
+            await process.WaitForExitAsync();
+            
+            Console.WriteLine($"Blazor server stopped with exit code: {process.ExitCode}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error starting Blazor project: {ex.Message}");
+            throw;
+        }
+    }
+    
+    /// <summary>
+    /// Finds an available port starting from the specified port
+    /// </summary>
+    private async Task<int> FindAvailablePortAsync(int startPort)
+    {
+        for (int port = startPort; port < startPort + 100; port++)
+        {
+            if (await IsPortAvailableAsync(port))
+            {
+                return port;
+            }
+        }
+        
+        // If we can't find an available port in the range, return a random high port
+        var random = new Random();
+        return random.Next(8000, 9000);
+    }
+    
+    /// <summary>
+    /// Checks if a port is available for binding
+    /// </summary>
+    private async Task<bool> IsPortAvailableAsync(int port)
+    {
+        try
+        {
+            var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, port);
+            listener.Start();
+            listener.Stop();
+            return true;
+        }
+        catch (System.Net.Sockets.SocketException)
+        {
+            return false;
+        }
     }
     
     private async Task BuildGeneratedProjectAsync(string projectDir)
@@ -138,7 +199,7 @@ public class CadenzaWebServer
         var buildProcess = new System.Diagnostics.ProcessStartInfo
         {
             FileName = "dotnet",
-            Arguments = "build --configuration Release --no-restore",
+            Arguments = "build --configuration Release --no-restore --verbosity normal",
             WorkingDirectory = projectDir,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -244,6 +305,7 @@ public class BlazorProjectGenerator
         // Create necessary directories matching standard Blazor structure
         Directory.CreateDirectory(Path.Combine(outputDir, "Components"));
         Directory.CreateDirectory(Path.Combine(outputDir, "Components", "Pages"));
+        Directory.CreateDirectory(Path.Combine(outputDir, "Components", "Layout"));
         Directory.CreateDirectory(Path.Combine(outputDir, "wwwroot"));
         Directory.CreateDirectory(Path.Combine(outputDir, "wwwroot", "css"));
         Directory.CreateDirectory(Path.Combine(outputDir, "wwwroot", "js"));
@@ -301,8 +363,9 @@ public class BlazorProjectGenerator
     
     private async Task GenerateAppRazorAsync(string outputDir, ComponentDeclaration component)
     {
-        // Generate App.razor for modern Blazor Web App
+        // Generate App.razor for modern Blazor Web App with proper namespace imports
         var appContent = $@"@using Microsoft.AspNetCore.Components.Web
+@using CadenzaWebApp.Components
 
 <!DOCTYPE html>
 <html lang=""en"">
@@ -335,16 +398,29 @@ public class BlazorProjectGenerator
         var appPath = Path.Combine(outputDir, "App.razor");
         await File.WriteAllTextAsync(appPath, appContent);
         
-        // Generate Components/Routes.razor component as suggested
+        // Generate Components/Routes.razor component with correct namespace references
         var routesContent = $@"@using CadenzaWebApp.Components.Pages
+@using CadenzaWebApp.Components.Layout
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 
-<Router AppAssembly=""typeof(Program).Assembly"">
+<Router AppAssembly=""typeof(CadenzaWebApp.App).Assembly"">
     <Found Context=""routeData"">
-        <RouteView RouteData=""routeData"" DefaultLayout=""typeof(MainLayout)"" />
+        <RouteView RouteData=""routeData"" DefaultLayout=""typeof(CadenzaWebApp.Components.Layout.MainLayout)"" />
         <FocusOnNavigate RouteData=""routeData"" Selector=""h1"" />
     </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout=""typeof(CadenzaWebApp.Components.Layout.MainLayout)"">
+            <div class=""page"" role=""main"">
+                <div style=""padding: 2rem; text-align: center;"">
+                    <h1>404 - Page Not Found</h1>
+                    <p>The requested page could not be found.</p>
+                    <a href=""/"" style=""color: #0066cc;"">Go Home</a>
+                </div>
+            </div>
+        </LayoutView>
+    </NotFound>
 </Router>";
         
         var routesPath = Path.Combine(outputDir, "Components", "Routes.razor");
@@ -406,12 +482,13 @@ namespace CadenzaWebApp.Components.Pages
     </main>
 </div>";
         
-        var layoutPath = Path.Combine(outputDir, "MainLayout.razor");
+        var layoutPath = Path.Combine(outputDir, "Components", "Layout", "MainLayout.razor");
         await File.WriteAllTextAsync(layoutPath, layoutContent);
         
-        // Generate Program.cs with modern .NET 8+ Blazor Web App syntax
+        // Generate Program.cs with modern .NET 10 Blazor Web App syntax
         var programContent = @"using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using CadenzaWebApp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -431,7 +508,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.MapRazorComponents<App>()
+app.MapRazorComponents<CadenzaWebApp.App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();";
@@ -539,6 +616,19 @@ button:disabled {
         
         var cssPath = Path.Combine(outputDir, "wwwroot", "css", "site.css");
         await File.WriteAllTextAsync(cssPath, cssContent);
+
+        var importsContent = @"@using System.Net.Http
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+@using CadenzaWebApp
+@using CadenzaWebApp.Components";
+        var importsPath = Path.Combine(outputDir, "Components", "_Imports.razor");
+        await File.WriteAllTextAsync(importsPath, importsContent);
     }
     
     private async Task CopyDemoFilesAsync(string outputDir)

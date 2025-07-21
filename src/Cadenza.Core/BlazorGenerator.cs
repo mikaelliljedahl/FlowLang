@@ -90,10 +90,9 @@ namespace Cadenza.Core
         /// </summary>
         private void GenerateComponentClass(ComponentDeclaration component)
         {
-            // Add single RouteAttribute for Blazor Router (equivalent to @page directive)
+            // Add RouteAttribute for Blazor Router (equivalent to @page directive)
+            // Use proper route format with leading slash
             _classContent.AppendLine($"[Microsoft.AspNetCore.Components.RouteAttribute(\"/{component.Name.ToLower()}\")]");
-            // Add render mode for interactive server components (remove abstract attribute)
-            // _classContent.AppendLine($"[Microsoft.AspNetCore.Components.RenderModeAttribute(Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer)]");
             _classContent.AppendLine($"public class {component.Name} : ComponentBase");
             _classContent.AppendLine("{");
             
