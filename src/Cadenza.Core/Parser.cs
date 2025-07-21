@@ -1483,20 +1483,19 @@ public class CadenzaParser
     
     private List<EventHandler> ParseEventHandlersList()
     {
-        var handlers = new List<EventHandler>();
-        
+        // The events [...] declaration is for metadata only - actual handlers are parsed separately
         Consume(TokenType.LeftBracket, "Expected '[' after events keyword");
         
+        // Skip the event names - they're just declarations, not implementations
         do
         {
-            var name = Consume(TokenType.Identifier, "Expected event handler name").Lexeme;
-            // Create placeholder event handlers - they will be parsed in the body
-            handlers.Add(new EventHandler(name, new List<Parameter>(), null, new List<ASTNode>()));
+            Consume(TokenType.Identifier, "Expected event handler name");
         } while (Match(TokenType.Comma));
         
         Consume(TokenType.RightBracket, "Expected ']' after event handlers");
         
-        return handlers;
+        // Return empty list - actual handlers will be added when event_handler statements are parsed
+        return new List<EventHandler>();
     }
     
     private StateDeclaration ParseDeclareStateStatement()

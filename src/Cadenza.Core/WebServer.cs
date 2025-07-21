@@ -398,7 +398,7 @@ public class BlazorProjectGenerator
         var appPath = Path.Combine(outputDir, "App.razor");
         await File.WriteAllTextAsync(appPath, appContent);
         
-        // Generate Components/Routes.razor component with correct namespace references
+        // Generate Components/Routes.razor component with correct namespace references and interactive render mode
         var routesContent = $@"@using CadenzaWebApp.Components.Pages
 @using CadenzaWebApp.Components.Layout
 @using Microsoft.AspNetCore.Components.Routing
@@ -406,7 +406,7 @@ public class BlazorProjectGenerator
 
 <Router AppAssembly=""typeof(CadenzaWebApp.App).Assembly"">
     <Found Context=""routeData"">
-        <RouteView RouteData=""routeData"" DefaultLayout=""typeof(CadenzaWebApp.Components.Layout.MainLayout)"" />
+        <RouteView RouteData=""routeData"" DefaultLayout=""typeof(CadenzaWebApp.Components.Layout.MainLayout)"" @rendermode=""InteractiveServer"" />
         <FocusOnNavigate RouteData=""routeData"" Selector=""h1"" />
     </Found>
     <NotFound>
@@ -485,7 +485,7 @@ namespace CadenzaWebApp.Components.Pages
         var layoutPath = Path.Combine(outputDir, "Components", "Layout", "MainLayout.razor");
         await File.WriteAllTextAsync(layoutPath, layoutContent);
         
-        // Generate Program.cs with modern .NET 10 Blazor Web App syntax
+        // Generate Program.cs with modern .NET 8+ Blazor Server syntax including SignalR
         var programContent = @"using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using CadenzaWebApp;
@@ -510,6 +510,9 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<CadenzaWebApp.App>()
     .AddInteractiveServerRenderMode();
+
+// Map SignalR hub for Blazor Server interactivity
+app.MapBlazorHub();
 
 app.Run();";
         

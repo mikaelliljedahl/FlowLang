@@ -177,10 +177,22 @@ namespace Cadenza.Core
             
             _classContent.AppendLine($"{indent}builder.OpenElement({elementSeq}, \"{tag}\");");
             
-            // Generate attributes
+            // Generate attributes FIRST (must come immediately after OpenElement)
             foreach (var attr in element.Attributes)
             {
-                GenerateAttributeRenderTree(attr, indent);
+                if (attr.Name != "text") // Skip text attributes - handle as content later
+                {
+                    GenerateAttributeRenderTree(attr, indent);
+                }
+            }
+            
+            // Generate text content AFTER all attributes
+            foreach (var attr in element.Attributes)
+            {
+                if (attr.Name == "text")
+                {
+                    GenerateTextContentRenderTree(attr, indent);
+                }
             }
             
             // Generate children
@@ -196,53 +208,53 @@ namespace Cadenza.Core
         }
 
         /// <summary>
-        /// Generates RenderTreeBuilder calls for attributes
+        /// Generates RenderTreeBuilder calls for attributes (excludes text content)
         /// </summary>
         private void GenerateAttributeRenderTree(UIAttribute attr, string indent)
         {
             var attrSeq = _sequenceNumber++;
+            var attributeName = MapCadenzaAttributeToBlazor(attr.Name);
             
-            // Special handling for text content
-            if (attr.Name == "text")
+            if (attributeName.StartsWith("on") && !attributeName.StartsWith("on_"))
             {
-                // Generate AddContent instead of AddAttribute for text
-                if (attr.Value is StringLiteral stringLiteral)
-                {
-                    _classContent.AppendLine($"{indent}builder.AddContent({attrSeq}, \"{stringLiteral.Value}\");");
-                }
-                else
-                {
-                    var expression = GenerateExpression(attr.Value);
-                    _classContent.AppendLine($"{indent}builder.AddContent({attrSeq}, {expression});");
-                }
+                // This is an event handler
+                var eventHandlerName = GenerateExpression(attr.Value);
+                _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", EventCallback.Factory.Create(this, {eventHandlerName}));");
+            }
+            else if (attr.Value is StringLiteral stringLiteral)
+            {
+                _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", \"{stringLiteral.Value}\");");
+            }
+            else if (attr.Value is Identifier identifier)
+            {
+                _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", {MapStateVariableName(identifier.Name)});");
+            }
+            else if (attr.Value is BooleanLiteral boolLiteral)
+            {
+                _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", {boolLiteral.Value.ToString().ToLower()});");
             }
             else
             {
-                var attributeName = MapCadenzaAttributeToBlazor(attr.Name);
-                
-                if (attributeName.StartsWith("on") && !attributeName.StartsWith("on_"))
-                {
-                    // This is an event handler
-                    var eventHandlerName = GenerateExpression(attr.Value);
-                    _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", EventCallback.Factory.Create(this, {eventHandlerName}));");
-                }
-                else if (attr.Value is StringLiteral stringLiteral)
-                {
-                    _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", \"{stringLiteral.Value}\");");
-                }
-                else if (attr.Value is Identifier identifier)
-                {
-                    _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", {MapStateVariableName(identifier.Name)});");
-                }
-                else if (attr.Value is BooleanLiteral boolLiteral)
-                {
-                    _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", {boolLiteral.Value.ToString().ToLower()});");
-                }
-                else
-                {
-                    var expression = GenerateExpression(attr.Value);
-                    _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", {expression});");
-                }
+                var expression = GenerateExpression(attr.Value);
+                _classContent.AppendLine($"{indent}builder.AddAttribute({attrSeq}, \"{attributeName}\", {expression});");
+            }
+        }
+        
+        /// <summary>
+        /// Generates RenderTreeBuilder calls for text content
+        /// </summary>
+        private void GenerateTextContentRenderTree(UIAttribute attr, string indent)
+        {
+            var contentSeq = _sequenceNumber++;
+            
+            if (attr.Value is StringLiteral stringLiteral)
+            {
+                _classContent.AppendLine($"{indent}builder.AddContent({contentSeq}, \"{stringLiteral.Value}\");");
+            }
+            else
+            {
+                var expression = GenerateExpression(attr.Value);
+                _classContent.AppendLine($"{indent}builder.AddContent({contentSeq}, {expression});");
             }
         }
 
