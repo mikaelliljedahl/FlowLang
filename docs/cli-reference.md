@@ -38,16 +38,16 @@ Commands can be run through the .NET CLI or using the standalone executable:
 
 ```bash
 # Using dotnet run (development)
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- <inputfile.cdz> <outputfile.cs>
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --compile <inputfile.cdz>
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run <inputfile.cdz>
+cadenzac <inputfile.cdz> <outputfile.cs>
+cadenzac --compile <inputfile.cdz>
+cadenzac --run <inputfile.cdz>
 
 # Using standalone executable (recommended)
 ./bin/release/cadenzac-core <inputfile.cdz> <outputfile.cs>
 ./bin/release/cadenzac-core --compile <inputfile.cdz>
 ./bin/release/cadenzac-core --run <inputfile.cdz>
 
-# Or use the simple wrapper script
+# Or use the Cadenza CLI (executable)
 ./cadenzac <inputfile.cdz>
 ```
 
@@ -96,10 +96,11 @@ cadenzac help new
 | [`compile`](#compile-command) | ✅ **WORKING** | Compile Cadenza to target language | Multi-target compilation |
 | [`run`](#run-command) | ✅ **WORKING** | Transpile and display a single file | Development and testing |
 | [`project`](#project-command) | 🔄 **NEW** | Compile multi-file projects | Project-level compilation |
+| [`serve`](#serve-command) | ✅ **WORKING** | Serve a compiled web application | Web application hosting |
 | [`new`](#new-command) | ❌ **Phase 5** | Create a new Cadenza project | Project initialization |
 | [`targets`](#targets-command) | ❌ **Phase 5** | List available compilation targets | Target information |
 | [`build`](#build-command) | ❌ **Phase 5** | Build the current project | Transpile all source files |
-| [`dev`](#dev-command) | ❌ **Phase 5** | Start development server | UI development |
+| [`dev`](#dev-command) | ✅ **WORKING** | Start development server | UI development |
 | [`test`](#test-command) | ❌ **Phase 5** | Run all tests in the project | Testing and validation |
 | [`lsp`](#lsp-command) | ❌ **Phase 5** | Start the Language Server Protocol server | IDE integration |
 | [`lint`](#lint-command) | ❌ **Phase 5** | Run static analysis and linting | Code quality analysis |
@@ -120,19 +121,19 @@ Compiles Cadenza source code directly to executable files or transpiles to targe
 ```bash
 # Direct compilation to executable (WORKING)
 ./bin/release/cadenzac-core --compile <input-file> [--output <output-file>]
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --compile <input-file>
+cadenzac --compile <input-file>
 
 # Transpilation to target language (WORKING)
 ./bin/release/cadenzac-core <input-file> <output-file> [--target <target>]
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- <input-file> <output-file>
+cadenzac <input-file> <output-file>
 
 # Compile and run immediately (WORKING)
 ./bin/release/cadenzac-core --run <input-file>
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run <input-file>
+cadenzac --run <input-file>
 
 # Generate library (WORKING)
 ./bin/release/cadenzac-core --library <input-file> [--output <output-file>]
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --library <input-file>
+cadenzac --library <input-file>
 ```
 
 #### Options
@@ -162,7 +163,7 @@ The `compile` command transpiles Cadenza source to various target platforms:
 ```bash
 # Transpile to C# (default) - WORKING
 ./bin/release/cadenzac-core backend/UserService.cdz backend/UserService.cs
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- backend/UserService.cdz backend/UserService.cs
+cadenzac backend/UserService.cdz backend/UserService.cs
 
 # Direct compilation to executable - WORKING
 ./bin/release/cadenzac-core --compile backend/UserService.cdz
@@ -170,7 +171,7 @@ dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- backend/UserServic
 
 # Compile and run immediately - WORKING
 ./bin/release/cadenzac-core --run backend/UserService.cdz
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run backend/UserService.cdz
+cadenzac  --run backend/UserService.cdz
 
 # Generate library - WORKING
 ./bin/release/cadenzac-core --library shared/Utils.cdz --output shared/Utils.dll
@@ -408,7 +409,7 @@ Example usage:
   cadenzac compile --target csharp backend_service.cdz
 ```
 
-### `dev` Command
+### `dev` Command ✅ **WORKING**
 
 Starts a development server for UI projects with hot reload and real-time compilation.
 
@@ -452,6 +453,46 @@ cadenzac dev --watch
 2. Open browser at `http://localhost:3000`
 3. Edit Cadenza UI components
 4. See changes reflected immediately
+
+### `serve` Command ✅ **WORKING**
+
+Serves a compiled Cadenza web application.
+
+#### Syntax
+
+```bash
+# Using standalone executable
+./bin/release/cadenzac-core --serve <input-file> [--port <port>]
+
+# Using the Cadenza CLI (if aliased or in PATH)
+cadenzac --serve <input-file> [--port <port>]
+```
+
+#### Options
+
+- `--port <port>`: Specify the port to serve the application on (default: 5150)
+
+#### Parameters
+
+- `<input-file>` (required): The compiled Cadenza web application file (e.g., a .cdz file that generates a web UI).
+
+#### Description
+
+The `serve` command compiles and hosts a Cadenza web application, making it accessible via a web browser. This is typically used for testing and demonstrating web UI components.
+
+#### Examples
+
+```bash
+# Serve a web application on the default port
+./bin/release/cadenzac-core --serve examples/counter.cdz
+
+# Serve a web application on a specific port
+./bin/release/cadenzac-core --serve examples/counter.cdz --port 8080
+
+# Using the Cadenza CLI (if aliased or in PATH)
+cadenzac --serve examples/counter.cdz
+cadenzac --serve examples/counter.cdz --port 8080
+```
 
 ### `new` Command ❌ **Phase 5 - Self-hosting migration**
 
@@ -684,10 +725,10 @@ Transpiles and displays the C# code for a single Cadenza file.
 ./bin/release/cadenzac-core --run <file.cdz>
 
 # Using dotnet run
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run <file.cdz>
+cadenzac  --run <file.cdz>
 
 # Legacy transpilation mode (shows C# code)
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- <file.cdz>
+cadenzac  <file.cdz>
 ```
 
 #### Parameters
@@ -707,7 +748,7 @@ The `run` command:
 ```bash
 # Run a single file - WORKING
 ./bin/release/cadenzac-core --run examples/hello.cdz
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run examples/hello.cdz
+cadenzac  --run examples/hello.cdz
 
 # Run with relative path - WORKING
 ./bin/release/cadenzac-core --run src/main.cdz
@@ -716,7 +757,7 @@ dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run examples/hel
 ./bin/release/cadenzac-core --run /path/to/project/examples/demo.cdz
 
 # Show transpiled C# code (legacy mode) - WORKING
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- examples/hello.cdz
+cadenzac  examples/hello.cdz
 ```
 
 #### Sample Output
@@ -844,11 +885,11 @@ The `help` command provides:
 ```bash
 # Show general help - WORKING
 ./bin/release/cadenzac-core --help
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --help
+cadenzac  --help
 
 # Show version - WORKING
 ./bin/release/cadenzac-core --version
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --version
+cadenzac  --version
 
 # Note: Command-specific help for new, build, run, test will be available in Phase 5
 ```
@@ -1342,7 +1383,7 @@ jobs:
 **Solution:**
 ```bash
 # Use full dotnet command (WORKING as of July 2025)
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --version
+cadenzac  --version
 
 # Or use standalone executable
 ./bin/release/cadenzac-core --version
@@ -1394,7 +1435,7 @@ cat cadenzac.json
 ```bash
 # Test individual files (WORKING)
 ./bin/release/cadenzac-core --run src/problematic_file.cdz
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run src/problematic_file.cdz
+cadenzac  --run src/problematic_file.cdz
 
 # Check syntax against language reference
 # See docs/language-reference.md
@@ -1431,10 +1472,10 @@ For additional debugging information:
 
 ```bash
 # Use verbose dotnet output (WORKING)
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj --verbosity detailed -- --run myfile.cdz
+cadenzac verbosity detailed --run myfile.cdz
 
 # Check generated files for traditional transpilation
-dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- myfile.cdz myfile.cs
+cadenzac  myfile.cdz myfile.cs
 cat myfile.cs
 ```
 
@@ -1444,7 +1485,7 @@ cat myfile.cs
    ```bash
    # WORKING as of July 2025
    ./bin/release/cadenzac-core --help
-   dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --help
+   cadenzac  --help
    ```
 
 2. **Documentation:**
@@ -1483,7 +1524,7 @@ cadenzac run examples/hello.cdz
    
    # New (WORKING as of July 2025)
    ./bin/release/cadenzac-core --run file.cdz
-   dotnet run --project src/Cadenza.Core/cadenzac-core.csproj -- --run file.cdz
+   cadenzac  --run file.cdz
    ```
 
 2. **Use project structure:**

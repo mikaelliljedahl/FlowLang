@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>cadenzac-core</AssemblyName>
+	
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +15,11 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="debug/**" />
+    <None Remove="debug/**" />
   </ItemGroup>
 
 </Project>

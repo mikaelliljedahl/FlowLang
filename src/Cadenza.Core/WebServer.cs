@@ -30,11 +30,19 @@ public class CadenzaWebServer
 {
     private readonly CadenzaWebServerOptions _options;
     private readonly BlazorProjectGenerator _projectGenerator;
+    private string? _currentProjectDir;
     
     public CadenzaWebServer(CadenzaWebServerOptions options)
     {
         _options = options;
         _projectGenerator = new BlazorProjectGenerator();
+        
+        // Setup cleanup on process termination
+        Console.CancelKeyPress += (sender, e) => {
+            e.Cancel = true; // Prevent immediate termination
+            CleanupTempDirectory();
+            Environment.Exit(0);
+        };
     }
 
     /// <summary>
@@ -44,9 +52,10 @@ public class CadenzaWebServer
     {
         Console.WriteLine($"🌐 Starting Cadenza web server on port {_options.Port}...");
         
-        // Create a temporary directory for the generated Blazor project
-        var tempProjectDir = Path.Combine(Path.GetTempPath(), $"cadenza-web-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempProjectDir);
+        // Create a debug directory for easier inspection of generated files
+        _currentProjectDir = Path.Combine(Directory.GetCurrentDirectory(), "debug", $"cadenza-web-{DateTime.Now:yyyyMMdd-HHmmss}");
+        Directory.CreateDirectory(_currentProjectDir);
+        var tempProjectDir = _currentProjectDir;
         
         try
         {
@@ -62,9 +71,26 @@ public class CadenzaWebServer
         finally
         {
             // Clean up temporary directory
-            if (Directory.Exists(tempProjectDir))
+            CleanupTempDirectory();
+        }
+    }
+
+    /// <summary>
+    /// Cleans up the temporary project directory
+    /// </summary>
+    private void CleanupTempDirectory()
+    {
+        if (!string.IsNullOrEmpty(_currentProjectDir) && Directory.Exists(_currentProjectDir))
+        {
+            try
             {
-                Directory.Delete(tempProjectDir, true);
+                Console.WriteLine($"🧹 Cleaning up temporary directory: {_currentProjectDir}");
+                Directory.Delete(_currentProjectDir, true);
+                _currentProjectDir = null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️  Warning: Could not clean up temporary directory: {ex.Message}");
             }
         }
     }
@@ -403,10 +429,11 @@ public class BlazorProjectGenerator
 @using CadenzaWebApp.Components.Layout
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
 
 <Router AppAssembly=""typeof(CadenzaWebApp.App).Assembly"">
     <Found Context=""routeData"">
-        <RouteView RouteData=""routeData"" DefaultLayout=""typeof(CadenzaWebApp.Components.Layout.MainLayout)"" @rendermode=""InteractiveServer"" />
+        <RouteView DefaultLayout=""typeof(CadenzaWebApp.Components.Layout.MainLayout)"" @rendermode=""@(new InteractiveServerRenderMode(prerender: false))"" />
         <FocusOnNavigate RouteData=""routeData"" Selector=""h1"" />
     </Found>
     <NotFound>

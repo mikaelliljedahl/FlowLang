@@ -75,6 +75,7 @@ namespace Cadenza.Core
         {
             _usedNamespaces.Add("Microsoft.AspNetCore.Components");
             _usedNamespaces.Add("Microsoft.AspNetCore.Components.Rendering");
+            _usedNamespaces.Add("System.Text.Json.Serialization");
             
             if (component.Effects != null)
             {
@@ -172,7 +173,7 @@ namespace Cadenza.Core
         /// </summary>
         private void GenerateElementRenderTree(UIElement element, string indent)
         {
-            var tag = MapCadenzaElementToHtml(element.Tag);
+            var tag = MapCadenzaElementToHtml(element.Tag, element.Attributes);
             var elementSeq = _sequenceNumber++;
             
             _classContent.AppendLine($"{indent}builder.OpenElement({elementSeq}, \"{tag}\");");
@@ -180,7 +181,7 @@ namespace Cadenza.Core
             // Generate attributes FIRST (must come immediately after OpenElement)
             foreach (var attr in element.Attributes)
             {
-                if (attr.Name != "text") // Skip text attributes - handle as content later
+                if (attr.Name != "text" && !IsSemanticAttribute(element.Tag, attr.Name)) // Skip text and semantic attributes
                 {
                     GenerateAttributeRenderTree(attr, indent);
                 }
@@ -416,7 +417,7 @@ namespace Cadenza.Core
         }
         
         /// <summary>
-        /// Generates service injection properties
+        /// Generates service injection properties with JsonIgnore to avoid serialization issues
         /// </summary>
         private void GenerateServiceInjections(List<string>? effects)
         {
@@ -428,7 +429,10 @@ namespace Cadenza.Core
             foreach (var effect in effects)
             {
                 var serviceType = MapEffectToBlazorService(effect);
-                _classContent.AppendLine($"    [Inject] private {serviceType} {effect}Service {{ get; set; }} = default!;");
+                // Use JsonIgnore to prevent serialization issues with injected services
+                _classContent.AppendLine($"    [Inject, JsonIgnore]");
+                _classContent.AppendLine($"    private {serviceType} {effect}Service {{ get; set; }} = default!;");
+                _classContent.AppendLine();
             }
         }
 
@@ -507,14 +511,14 @@ namespace Cadenza.Core
         }
 
         /// <summary>
-        /// Maps Cadenza element names to HTML tags
+        /// Maps Cadenza element names to HTML tags, considering semantic attributes
         /// </summary>
-        private string MapCadenzaElementToHtml(string cadenzaElement)
+        private string MapCadenzaElementToHtml(string cadenzaElement, List<UIAttribute>? attributes = null)
         {
             return cadenzaElement switch
             {
                 "container" => "div",
-                "heading" => "h1",
+                "heading" => GetHeadingTag(attributes),
                 "button" => "button",
                 "text_input" => "input",
                 "text" => "span",
@@ -532,6 +536,35 @@ namespace Cadenza.Core
                 "form_field" => "div",
                 "form_actions" => "div",
                 _ => cadenzaElement
+            };
+        }
+
+        /// <summary>
+        /// Gets the appropriate heading tag based on level attribute
+        /// </summary>
+        private string GetHeadingTag(List<UIAttribute>? attributes)
+        {
+            if (attributes == null) return "h1";
+            
+            var levelAttr = attributes.FirstOrDefault(a => a.Name == "level");
+            if (levelAttr?.Value is NumberLiteral numLiteral)
+            {
+                var level = Math.Max(1, Math.Min(6, numLiteral.Value)); // Clamp between h1 and h6
+                return $"h{level}";
+            }
+            
+            return "h1"; // Default
+        }
+
+        /// <summary>
+        /// Determines if an attribute is semantic (not a real HTML attribute)
+        /// </summary>
+        private bool IsSemanticAttribute(string elementTag, string attributeName)
+        {
+            return elementTag switch
+            {
+                "heading" => attributeName == "level",
+                _ => false
             };
         }
 
