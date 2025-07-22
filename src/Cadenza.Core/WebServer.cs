@@ -424,17 +424,33 @@ public class BlazorProjectGenerator
         var appPath = Path.Combine(outputDir, "App.razor");
         await File.WriteAllTextAsync(appPath, appContent);
         
-        // Generate Components/Routes.razor component with correct namespace references and interactive render mode
+        // Generate Components/Routes.razor component using route template matching
         var routesContent = $@"@using CadenzaWebApp.Components.Pages
 @using CadenzaWebApp.Components.Layout
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Web.Virtualization
+@inject NavigationManager NavigationManager
 
 <Router AppAssembly=""typeof(CadenzaWebApp.App).Assembly"">
     <Found Context=""routeData"">
-        <RouteView DefaultLayout=""typeof(CadenzaWebApp.Components.Layout.MainLayout)"" @rendermode=""@(new InteractiveServerRenderMode(prerender: false))"" />
-        <FocusOnNavigate RouteData=""routeData"" Selector=""h1"" />
+        <LayoutView Layout=""typeof(CadenzaWebApp.Components.Layout.MainLayout)"">
+            @{{
+                var currentPath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+                if (currentPath == ""counter"")
+                {{
+                    <Counter @rendermode=""InteractiveServer"" />
+                }}
+                else if (currentPath == """")
+                {{
+                    <Home @rendermode=""InteractiveServer"" />
+                }}
+                else
+                {{
+                    <div>Unknown route: @currentPath</div>
+                }}
+            }}
+        </LayoutView>
     </Found>
     <NotFound>
         <PageTitle>Not found</PageTitle>
@@ -512,7 +528,7 @@ namespace CadenzaWebApp.Components.Pages
         var layoutPath = Path.Combine(outputDir, "Components", "Layout", "MainLayout.razor");
         await File.WriteAllTextAsync(layoutPath, layoutContent);
         
-        // Generate Program.cs with modern .NET 8+ Blazor Server syntax including SignalR
+        // Generate Program.cs with interactive server rendering
         var programContent = @"using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using CadenzaWebApp;
@@ -537,9 +553,6 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<CadenzaWebApp.App>()
     .AddInteractiveServerRenderMode();
-
-// Map SignalR hub for Blazor Server interactivity
-app.MapBlazorHub();
 
 app.Run();";
         
